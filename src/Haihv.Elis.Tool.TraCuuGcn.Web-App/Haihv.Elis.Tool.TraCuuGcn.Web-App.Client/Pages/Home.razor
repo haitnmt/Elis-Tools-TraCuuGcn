@@ -12,6 +12,19 @@
                 }
             </MudStack>
         </MudItem>
+        @if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            <MudItem xs="12" md="6" lg="4">
+                <MudStack>
+                    <ThongTinChuSuDung/>
+                    <ThongTinThuaDat/>
+                    <ThongTinTaiSan/>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <ThuaDatLocation/>
+            </MudItem>
+        }
     </MudGrid>
 </MudStack>
 @code {

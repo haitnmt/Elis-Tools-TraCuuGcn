@@ -46,10 +46,7 @@ else
                 <MudCardContent>
                     <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
                     <MudDivider/>
-                    <MudField Label="Mã Giấy chứng nhận" Variant="Variant.Text">
-                        @_giayChungNhan.MaGcn
-                    </MudField>
-                    <MudField Label="Số phát hành" Variant="Variant.Text">
+                    <MudField Label="Số phát hành (Serial)" Variant="Variant.Text">
                         @_giayChungNhan.Serial
                     </MudField>
                     <MudField Label="Ngày ký" Variant="Variant.Text">
@@ -70,6 +67,8 @@ else
     [Inject] protected IHttpClientFactory HttpClientFactory { get; set; } = null!;
     private HttpClient _httpClient = null!;
     [Parameter] public string? Query { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
     
     private const string Url = "/elis/search";
     private string? _query;

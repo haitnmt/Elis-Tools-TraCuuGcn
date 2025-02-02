@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
+builder.Services.AddAuthorizationCore();
 builder.Services.AddMudServices();
 builder.Services.AddHttpClient(
     "Auth",
