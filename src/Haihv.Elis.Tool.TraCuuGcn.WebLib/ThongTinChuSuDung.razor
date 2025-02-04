@@ -3,23 +3,8 @@
         <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
         <MudDivider/>
         <MudAlert Severity="Severity.Warning">
-            Chưa thực hiện
+            Đang thực hiện
         </MudAlert>
-        <AuthorizeView>
-            <Authorized>
-                <MudAlert Severity="Severity.Warning">
-                    Chưa thực hiện
-                </MudAlert>
-            </Authorized>
-            <NotAuthorized>
-                <MudStack Row="true">
-                    <MudAlert Severity="Severity.Warning">
-                        Vui lòng xác thực để xem chi tiết
-                    </MudAlert>
-                    <MudButton>Xác thực</MudButton>
-                </MudStack>
-            </NotAuthorized>
-        </AuthorizeView>
     </MudCardContent>
 </MudCard>
 @code {

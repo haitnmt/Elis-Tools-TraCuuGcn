@@ -25,17 +25,17 @@ public sealed class TokenProvider(
             new("SoDinhDanh", chuSuDung.SoDinhDanh),
             new("HoVaTen", chuSuDung.HoVaTen)
         };
-
+        var expires = DateTime.UtcNow.AddMinutes(expiryMinutes);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(expiryMinutes),
+            Expires = expires,
             Issuer = issuer,
             Audience = audience,
             SigningCredentials = credentials
         };
 
-        return new AccessToken(tokenHandler.CreateToken(tokenDescriptor), id);
+        return new AccessToken(tokenHandler.CreateToken(tokenDescriptor), id, string.Empty, expires);
     }
 }
 

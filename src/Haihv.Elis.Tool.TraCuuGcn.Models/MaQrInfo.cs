@@ -8,9 +8,9 @@ public class MaQrInfo
     public string? TenPhanMem { get; set; }
     public string? MaHoSoTthc { get; set; }
     public string? SerialNumber { get; set; }
-    public string? MaGcn { get; set; }
-    public long MaGcnInDatabase { get; set; }
+    public string? MaGiayChungNhan { get; set; }
+    public long MaGcnElis { get; set; }
     public DateTime ThoiGianChinhSua { get; set; }
     public int SecurityCode { get; set; }
-    
+    public bool HieuLuc { get; set; }
 }

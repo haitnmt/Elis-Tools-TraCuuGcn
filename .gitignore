@@ -76,5 +76,6 @@
 #Log
 /src/**/logs/
 
-#Scripts PowerShell
-/src/**/*.ps1
+#Environment
+/src/**/.env
+**/.env

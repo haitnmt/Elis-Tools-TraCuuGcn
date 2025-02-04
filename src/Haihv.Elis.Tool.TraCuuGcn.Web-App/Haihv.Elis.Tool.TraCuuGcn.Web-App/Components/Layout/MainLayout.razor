@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿
+@inherits LayoutComponentBase
 @* Required *@
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -24,7 +25,11 @@
         @Body
     </MudMainContent>
     <MudAppBar Bottom="true" Dense="true" Color="Color.Dark">
-        haihv.vn
+        <MudText Typo="Typo.caption">
+            © @(DateTime.Today.Year) vpdkbacninh.vn | haihv.vn
+        </MudText>
+        <MudSpacer/>
+        <Version/>
     </MudAppBar>
 </MudLayout>
 

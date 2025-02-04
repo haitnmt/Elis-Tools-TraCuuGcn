@@ -8,25 +8,37 @@
                 <SearchBar AutoStopCamera="true" @bind-Result="@_searchQuery"/>
                 @if (!string.IsNullOrWhiteSpace(_searchQuery))
                 { 
-                    <ThongTinMaQr Query="@_searchQuery"/>
+                    <ThongTinGiayChungNhan Query="@_searchQuery"
+                                           @bind-MaGcnElis="@_maGcnElis"/>
                 }
             </MudStack>
         </MudItem>
-        @if (!string.IsNullOrWhiteSpace(_searchQuery))
+        @if (_maGcnElis > 0)
         {
-            <MudItem xs="12" md="6" lg="4">
-                <MudStack>
-                    <ThongTinChuSuDung/>
-                    <ThongTinThuaDat/>
-                    <ThongTinTaiSan/>
-                </MudStack>
-            </MudItem>
-            <MudItem xs="12" md="6" lg="4">
-                <ThuaDatLocation/>
-            </MudItem>
+            <AuthorizeView>
+                <Authorized>
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudStack>
+                            <ThongTinChuSuDung/>
+                            <ThongTinThuaDat/>
+                            <ThongTinTaiSan/>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12" md="6" lg="4">
+                        <ThuaDatLocation/>
+                    </MudItem>
+                </Authorized>
+                <NotAuthorized>
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudAlert Severity="Severity.Warning">Bạn cần đăng nhập để xem thông tin chi tiết</MudAlert>
+                    </MudItem>
+                </NotAuthorized>
+            </AuthorizeView>
         }
     </MudGrid>
 </MudStack>
+<About/>
 @code {
     private string? _searchQuery;
+    private long _maGcnElis;
 }

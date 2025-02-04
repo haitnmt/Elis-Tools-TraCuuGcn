@@ -1,5 +1,6 @@
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Haihv.Elis.Tool.TraCuuGcn.Web_Api.Settings;
+using Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
 using LanguageExt;
 using LanguageExt.Common;
 using ZiggyCreatures.Caching.Fusion;
@@ -9,26 +10,26 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Web_Api.Data;
 public class SearchService(IGcnQrService gcnQrService, IGiayChungNhanService giayChungNhanService,
     ILogger logger, IFusionCache fusionCache) : ISearchService
 {
-    public async Task<Result<GiayChungNhanWithMaQrInfo>> GetResultAsync(string? query)
+    public async Task<Result<GiayChungNhanInfo>> GetResultAsync(string? query)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
-            return new Result<GiayChungNhanWithMaQrInfo>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
+            return new Result<GiayChungNhanInfo>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
         }
-        var giayChungNhanWithMaQrInfo = await GetInDatabaseAsync(query);
-        if (giayChungNhanWithMaQrInfo is null)
+        var giayChungNhanInfo = await GetInDatabaseAsync(query);
+        if (giayChungNhanInfo is null)
         {
-            return new Result<GiayChungNhanWithMaQrInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
+            return new Result<GiayChungNhanInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
         }
-        var maGcn = giayChungNhanWithMaQrInfo.GiayChungNhan?.MaGcn ?? giayChungNhanWithMaQrInfo.MaQrInfo?.MaGcnInDatabase ?? 0;
-        if (maGcn <= 0) return giayChungNhanWithMaQrInfo;
+        var maGcn = giayChungNhanInfo.MaGcnElis;
+        if (maGcn <= 0) return giayChungNhanInfo;
         var cacheKey = CacheSettings.KeySearch(query);
         await fusionCache.SetAsync(cacheKey, maGcn);
-        return giayChungNhanWithMaQrInfo;
+        return giayChungNhanInfo;
 
     }
 
-    private async Task<GiayChungNhanWithMaQrInfo?> GetInDatabaseAsync(string query, CancellationToken cancellationToken = default)
+    private async Task<GiayChungNhanInfo?> GetInDatabaseAsync(string query, CancellationToken cancellationToken = default)
     {
         var cacheKey = CacheSettings.KeySearch(query);
         var maGcn = await fusionCache.GetOrDefaultAsync<long>(cacheKey, token: cancellationToken);
@@ -54,7 +55,7 @@ public class SearchService(IGcnQrService gcnQrService, IGiayChungNhanService gia
                     return null;
                 }
 
-                maGcn = maQrInfo.MaGcnInDatabase;
+                maGcn = maQrInfo.MaGcnElis;
                 giayChungNhan = await giayChungNhanService.GetAsync(maGcn: maGcn, cancellationToken: cancellationToken);
             }
             else
@@ -84,6 +85,6 @@ public class SearchService(IGcnQrService gcnQrService, IGiayChungNhanService gia
         }
         
         _ = fusionCache.SetAsync(cacheKey, cacheKey, token: cancellationToken).AsTask();
-        return new GiayChungNhanWithMaQrInfo(giayChungNhan, maQrInfo);
+        return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
     }
 }

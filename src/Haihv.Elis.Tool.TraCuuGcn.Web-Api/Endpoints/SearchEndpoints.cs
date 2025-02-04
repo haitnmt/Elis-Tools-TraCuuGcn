@@ -17,8 +17,8 @@ public static class SearchEndpoints
     {
         var result = await searchService.GetResultAsync(query);
         return await Task.FromResult(result.Match(
-            info=> Results.Ok(new Response<GiayChungNhanWithMaQrInfo>(info)),
-            ex => Results.BadRequest(new Response<GiayChungNhanWithMaQrInfo>(ex.Message))));
+            info=> Results.Ok(new Response<GiayChungNhanInfo>(info)),
+            ex => Results.BadRequest(new Response<GiayChungNhanInfo>(ex.Message))));
     }
     
 }

@@ -1,0 +1,22 @@
+﻿@inject ISnackbar Snackbar
+<MudFab Class="object-right-bottom"
+        Color="Color.Info" 
+        StartIcon="@Icons.Material.Filled.Info" 
+        Size="Size.Small" 
+        OnClick="OnClick"/>
+<style>
+    .object-right-bottom {
+        position: fixed;
+        bottom: 58px;
+        right: 10px;
+    }
+</style>
+@code {
+
+    private void OnClick()
+    {
+        Snackbar.Add("Phiên bản thử nghiệm", Severity.Info);
+        Snackbar.Add("Hệ thống đang trong quá trình phát triển", Severity.Info);
+        Snackbar.Add("Cảm ơn bạn đã sử dụng", Severity.Info);
+    }
+}

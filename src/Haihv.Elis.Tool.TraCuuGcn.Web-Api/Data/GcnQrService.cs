@@ -87,9 +87,10 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                      SELECT GuidID AS Id,
                             MaGCN AS MaGcn,
                             MaQR AS MaQr,
-                            MaHoaQR AS HashQr
+                            MaHoaQR AS HashQr,
+                            HieuLuc
                      FROM GCNQR
-                     WHERE (LOWER(MaQR) = LOWER({maQr}) OR LOWER(MaHoaQR) = LOWER({hashQr}) OR MaGCN = {maGcn}) AND HieuLuc = 1
+                     WHERE (LOWER(MaQR) = LOWER({maQr}) OR LOWER(MaHoaQR) = LOWER({hashQr}) OR MaGCN = {maGcn}) AND MaGCN > 0
                      """);
                 var qrInData = await query.QueryFirstOrDefaultAsync<dynamic?>(cancellationToken: cancellationToken);
                 if (qrInData is null) continue;
@@ -101,9 +102,10 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                         cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
                         token: cancellationToken);
                 }
-                maQrInfo.MaGcnInDatabase = qrInData.MaGcn;
-                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnInDatabase), maQrInfo, TimeSpan.FromDays(60), token: cancellationToken).AsTask();
-                _ = fusionCache.SetAsync(CacheSettings.ConnectionName(maQrInfo.MaGcnInDatabase), connection.Name,
+                maQrInfo.MaGcnElis = qrInData.MaGcn;
+                maQrInfo.HieuLuc = qrInData.HieuLuc > 0;
+                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo, TimeSpan.FromDays(60), token: cancellationToken).AsTask();
+                _ = fusionCache.SetAsync(CacheSettings.ConnectionName(maQrInfo.MaGcnElis), connection.Name,
                     TimeSpan.FromDays(60),
                     token: cancellationToken).AsTask();
                 return maQrInfo;

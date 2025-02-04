@@ -44,7 +44,7 @@ public static class MaQrExtension
             TenPhanMem = tenPhanMem,
             MaHoSoTthc = maHoSoTthc,
             SerialNumber = serialNumber,
-            MaGcn = maGcn,
+            MaGiayChungNhan = maGcn,
             SecurityCode = securityCode
         };
     }

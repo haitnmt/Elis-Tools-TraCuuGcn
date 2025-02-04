@@ -1,0 +1,10 @@
+**/appsettings.Development.json
+*.Development.json
+.dockerignore
+.env
+.git
+.gitignore
+.vs
+.vscode
+*/bin
+*/obj

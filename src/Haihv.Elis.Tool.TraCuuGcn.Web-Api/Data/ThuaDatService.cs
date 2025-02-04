@@ -45,12 +45,12 @@ public class ThuaDatService(
     /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    private async Task<ThuaDat?> GetThuaDatInDatabaseAsync(long? maGcn,
+    private async Task<ThuaDat?> GetThuaDatInDatabaseAsync(long maGcn = 0,
         CancellationToken cancellationToken = default)
     {
-        if (maGcn is null or <= 0) return null;
+        if (maGcn <= 0) return null;
         var giayChungNhanResult =
-            await giayChungNhanService.GetResultAsync(maGcn: maGcn.Value, cancellationToken: cancellationToken);
+            await giayChungNhanService.GetResultAsync(maGcn: maGcn, cancellationToken: cancellationToken);
         return await giayChungNhanResult.Match(
             giayChungNhan => GetThuaDatInDatabaseAsync(giayChungNhan, cancellationToken),
             ex => throw ex);
@@ -62,14 +62,12 @@ public class ThuaDatService(
     /// <param name="giayChungNhan">Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    private async Task<ThuaDat?> GetThuaDatInDatabaseAsync(GiayChungNhan? giayChungNhan,
+    private async Task<ThuaDat?> GetThuaDatInDatabaseAsync(GiayChungNhan giayChungNhan,
         CancellationToken cancellationToken = default)
     {
-        if (giayChungNhan is null ||
-            giayChungNhan.MaDangKy == 0 ||
+        if (giayChungNhan.MaDangKy == 0 ||
             giayChungNhan.MaGcn == 0 ||
-            string.IsNullOrWhiteSpace(giayChungNhan.Serial) ||
-            string.IsNullOrWhiteSpace(giayChungNhan.SoVaoSo)) return null;
+            string.IsNullOrWhiteSpace(giayChungNhan.Serial)) return null;
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(
             CacheSettings.ConnectionName(giayChungNhan.MaGcn),
             token: cancellationToken);

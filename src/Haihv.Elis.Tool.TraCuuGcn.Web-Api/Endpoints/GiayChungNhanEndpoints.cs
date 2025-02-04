@@ -72,17 +72,17 @@ public static class GiayChungNhanEndpoints
     /// <summary>
     /// Lấy thông tin Thửa Đất công khai theo Giấy Chứng Nhận.
     /// </summary>
-    /// <param name="maGcn">Số serial của Giấy Chứng Nhận.</param>
+    /// <param name="maGcnElis">Số serial của Giấy Chứng Nhận.</param>
     /// <param name="logger">Logger để ghi log.</param>
     /// <param name="thuaDatService">Dịch vụ Giấy Chứng Nhận.</param>
     /// <returns>Kết quả truy vấn Thửa Đất công khai.</returns>
-    private static async Task<IResult> GetThuaDatPublicAsync([FromQuery] long maGcn,
+    private static async Task<IResult> GetThuaDatPublicAsync([FromQuery] long maGcnElis,
         ILogger<Program> logger,
         IThuaDatService thuaDatService)
     {
-        var result = await thuaDatService.GetResultAsync(maGcn);
+        var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
-            thuaDat => Results.Ok(thuaDat.ConvertToThuaDatPublic()),
-            ex => Results.BadRequest(ex.Message)));
+            thuaDat => Results.Ok(new Response<ThuaDatPublic>(thuaDat.ConvertToThuaDatPublic())),
+            ex => Results.BadRequest(new Response<ThuaDatPublic>(ex.Message))));
     }
 }

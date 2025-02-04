@@ -2,7 +2,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace Haihv.Tool.Extensions.String;
+namespace Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
 
 /// <summary>
 /// Lớp mở rộng để tính toán băm.

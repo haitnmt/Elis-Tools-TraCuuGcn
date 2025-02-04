@@ -1,0 +1,241 @@
+﻿@using System.Net.Http.Json
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+
+@if (!_dataLoaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_error) || _giayChungNhanInfo == null)
+    {
+        <MudAlert Severity="Severity.Error">
+            @(string.IsNullOrWhiteSpace(_error) ? "Không có thông tin" : _error)
+        </MudAlert>
+        <MudButton EndIcon="@Icons.Material.Filled.Refresh" 
+                   Color="Color.Secondary" 
+                   Variant="Variant.Text" 
+                   OnClick="LoadDataAsync">Thử lại</MudButton>
+    }
+    else
+    {
+        <MudStack>
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
+                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                        <MudGrid>
+                            <MudItem xs="12" lg="6">
+                                <MudField Label="Số phát hành Giấy chứng nhận (Serial)" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.Serial
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" lg="6">
+                                <MudField Label="Mã Giấy chứng nhận" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.MaGiayChungNhan
+                                </MudField>
+                            </MudItem>
+                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.DonVi))
+                            {
+                                <MudItem xs="12">
+                                    <MudField Label="Đơn vị cấp Giấy chứng nhận [Mã đơn vị]" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.DonVi
+                                    </MudField>
+                                </MudItem>
+                            }
+                            @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
+                            {
+                                <MudItem xs="12" lg="6">
+                                    <MudField Label="Ngày ký" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
+                                    </MudField>
+                                </MudItem>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
+                            {
+                                <MudItem xs="12" lg="6">
+                                    <MudField Label="Người ký" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.NguoiKy
+                                    </MudField>
+                                </MudItem>
+                            }
+                            <MudItem xs="12" lg="6">
+                                <MudField Label="Mã hồ sơ thủ tục hành chính" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.MaHoSo
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" lg="6">
+                                <MudField Label="Số vào sổ" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.SoVaoSo
+                                </MudField>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                    <AuthorizeView>
+                        <NotAuthorized>
+                            @if (!_thuaDatLoaded)
+                            {
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+                            }
+                            else
+                            {
+                                if (_thuaDatPublic == null || !string.IsNullOrWhiteSpace(_errorLoadThuaDat))
+                                {
+                                    <MudAlert Severity="Severity.Error">
+                                        @(string.IsNullOrWhiteSpace(_errorLoadThuaDat) ? "Không có thông tin" : _errorLoadThuaDat)
+                                    </MudAlert>
+                                    <MudButton EndIcon="@Icons.Material.Filled.Refresh" 
+                                               Color="Color.Secondary" 
+                                               Variant="Variant.Text" 
+                                               OnClick="LoadThuaDatAsync">Thử lại</MudButton>
+                                }
+                                else
+                                {
+                                    <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
+                                        <MudGrid>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Tờ bản đồ" Variant="Variant.Text">
+                                                    @_thuaDatPublic.ToBanDo
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Thửa đất số" Variant="Variant.Text">
+                                                    @_thuaDatPublic.ThuaDatSo
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Diện tích" Variant="Variant.Text">
+                                                    @_thuaDatPublic.DienTich
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <MudField Label="Địa chỉ" Variant="Variant.Text">
+                                                    @_thuaDatPublic.DiaChi
+                                                </MudField>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudPaper>
+                                }
+                            }
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </MudCardContent>
+            </MudCard>
+        </MudStack>
+    }
+}
+
+
+@code {
+    [Inject] protected IHttpClientFactory HttpClientFactory { get; set; } = null!;
+    private HttpClient _httpClient = null!;
+    [Parameter] public string? Query { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
+    [Parameter] public long MaGcnElis { get; set; }
+    [Parameter] public EventCallback<long> MaGcnElisChanged { get; set; }
+
+    private const string Url = "/elis/search";
+    private const string UrlThuaDat = "/elis/thua-dat-public";
+    private string? _query;
+    private GiayChungNhanInfo? _giayChungNhanInfo;
+    private ThuaDatPublic? _thuaDatPublic;
+    private string? _error;
+    private bool _dataLoaded;
+    private bool _thuaDatLoaded;
+
+    protected override void OnInitialized()
+    {
+        _httpClient = HttpClientFactory.CreateClient("Endpoint");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Query == _query) return;
+        _query = Query;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_query))
+        {
+            return;
+        }
+        _error = null;
+        _dataLoaded = false;
+        StateHasChanged();
+        _giayChungNhanInfo = null;
+        var url = $"{Url}?query={_query}";
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
+            if (response?.Value == null)
+            {
+                _error = response?.ErrorMsg ?? "Không có thông tin Giấy chứng nhận";
+                return;
+            }
+            _giayChungNhanInfo = response.Value;
+        }
+        catch (Exception e)
+        {
+            _error = "Lỗi khi tải thông tin Giấy chứng nhận";
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _dataLoaded = true;
+            StateHasChanged();
+            if (_giayChungNhanInfo != null)
+            {
+                if (MaGcnElis != _giayChungNhanInfo.MaGcnElis)
+                {
+                    MaGcnElis = _giayChungNhanInfo.MaGcnElis;
+                    await MaGcnElisChanged.InvokeAsync(MaGcnElis);
+                    await LoadThuaDatAsync();
+                }
+            }
+            else
+            {
+                MaGcnElis = 0;
+                await MaGcnElisChanged.InvokeAsync(MaGcnElis);
+            }
+        }
+    }
+    
+    private string? _errorLoadThuaDat;
+    private async Task LoadThuaDatAsync()
+    {
+        if (_giayChungNhanInfo == null)
+        {
+            return;
+        }
+        _errorLoadThuaDat = null;
+        _thuaDatLoaded = false;
+        StateHasChanged();
+        _thuaDatPublic = null;
+        var url = $"{UrlThuaDat}?maGcnElis={_giayChungNhanInfo.MaGcnElis}";
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<Response<ThuaDatPublic>>(url);
+            if (response?.Value == null)
+            {
+                _errorLoadThuaDat = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
+                return;
+            }
+
+            _thuaDatPublic = response.Value;
+        }
+        catch (Exception e)
+        {
+            _errorLoadThuaDat = "Lỗi khi tải thông tin Thửa đất";
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _thuaDatLoaded = true;
+            StateHasChanged();
+        }
+    }
+
+}
