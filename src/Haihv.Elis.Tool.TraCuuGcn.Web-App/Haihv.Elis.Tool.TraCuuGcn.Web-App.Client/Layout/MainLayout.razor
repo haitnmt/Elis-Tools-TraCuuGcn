@@ -1,5 +1,5 @@
-﻿
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
+
 @* Required *@
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -29,7 +29,10 @@
             © @(DateTime.Today.Year) vpdkbacninh.vn | haihv.vn
         </MudText>
         <MudSpacer/>
-        <Version/>
+        <MudStack Row="true" AlignItems="AlignItems.Center">
+            <Version/>
+            <About/>
+        </MudStack>
     </MudAppBar>
 </MudLayout>
 

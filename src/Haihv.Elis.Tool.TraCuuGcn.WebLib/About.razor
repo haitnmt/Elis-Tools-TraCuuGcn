@@ -1,22 +1,32 @@
-﻿@inject ISnackbar Snackbar
-<MudFab Class="object-right-bottom"
-        Color="Color.Info" 
-        StartIcon="@Icons.Material.Filled.Info" 
+﻿
+<MudIconButton Color="Color.Info" 
+        Icon="@Icons.Material.Filled.Info" 
         Size="Size.Small" 
         OnClick="OnClick"/>
-<style>
-    .object-right-bottom {
-        position: fixed;
-        bottom: 58px;
-        right: 10px;
-    }
-</style>
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="_isOpen" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.BottomRight">
+    <MudAlert Variant="Variant.Outlined" Severity="Severity.Info" NoIcon="true">
+        <MudStack>
+            <MudText Typo="Typo.caption">
+                Phiên bản thử nghiệm
+            </MudText>
+            <MudText Typo="Typo.caption">
+                Hệ thống đang trong quá trình phát triển
+            </MudText>
+            <MudText Typo="Typo.caption">
+                Cảm ơn bạn đã sử dụng
+            </MudText>
+        </MudStack>
+    </MudAlert>
+</MudPopover>
 @code {
-
-    private void OnClick()
+    private bool _isOpen = false;
+    private async Task OnClick()
     {
-        Snackbar.Add("Phiên bản thử nghiệm", Severity.Info);
-        Snackbar.Add("Hệ thống đang trong quá trình phát triển", Severity.Info);
-        Snackbar.Add("Cảm ơn bạn đã sử dụng", Severity.Info);
+        _isOpen = !_isOpen;
+        if (_isOpen)
+        {
+            await Task.Delay(2000);
+            _isOpen = false;
+        }
     }
 }

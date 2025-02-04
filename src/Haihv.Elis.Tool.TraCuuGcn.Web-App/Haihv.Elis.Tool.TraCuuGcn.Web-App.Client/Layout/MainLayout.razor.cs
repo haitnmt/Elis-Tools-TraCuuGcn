@@ -1,4 +1,4 @@
-﻿namespace Haihv.Elis.Tool.TraCuuGcn.Web_App.Components.Layout;
+﻿namespace Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Layout;
 
 public partial class MainLayout
 {

@@ -22,8 +22,4 @@
       <_ContentIncludedByDefault Remove="Components\Layout\NavMenu.razor" />
     </ItemGroup>
 
-    <ItemGroup>
-      <AdditionalFiles Include="Components\Layout\MainLayout.razor" />
-    </ItemGroup>
-
 </Project>
