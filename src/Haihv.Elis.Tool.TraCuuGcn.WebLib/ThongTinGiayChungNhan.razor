@@ -1,5 +1,6 @@
 ﻿@using System.Net.Http.Json
 @using Haihv.Elis.Tool.TraCuuGcn.Models
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 
 @if (!_dataLoaded)
 {
@@ -121,20 +122,27 @@ else
                     </AuthorizeView>
                 </MudCardContent>
             </MudCard>
-            <MudAlert Severity="Severity.Warning" Dense="true" ShowCloseIcon="true">
-                <MudText Typo="Typo.body1">
-                    Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác
-                </MudText>
-                <MudText Typo="Typo.caption">
-                    Vui lòng liên hệ với @_giayChungNhanInfo.DonVi để xác minh thông tin
-                </MudText>
-            </MudAlert>
+            @if (_appSettings is not null && _appSettings.IsTrialVersion)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" ShowCloseIcon="true">
+                    <MudText Typo="Typo.body1">
+                        Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác
+                    </MudText>
+                    <MudText Typo="Typo.caption">
+                        Vui lòng liên hệ với @_giayChungNhanInfo.DonVi để xác minh thông tin
+                    </MudText>
+                </MudAlert>
+            }
+
         </MudStack>
     }
 }
 
 @code {
-    [Inject] protected IHttpClientFactory HttpClientFactory { get; set; } = null!;
+    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
+    [Inject] private AppSettingsService AppSettingService { get; set; } = null!;
+
+    private AppSettings? _appSettings = null!;
     private HttpClient _httpClient = null!;
     [Parameter] public string? Query { get; set; }
     [Parameter] public string? Error { get; set; }
@@ -154,6 +162,7 @@ else
     protected override void OnInitialized()
     {
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
+        _appSettings = AppSettingService.AppSettings;
     }
 
     protected override async Task OnParametersSetAsync()
