@@ -35,8 +35,11 @@ else
                        @onclick="ToggleCamera"/>
     </MudStack>
     <div class="scanner-container" style="@(_isCameraActive ? "display: flex;" : "display: none;")">
-        <video class="video @(_isCameraActive ? "video-active" : "")" id="camera-preview" @ref="_videoElement">
+        <video class="video @(_isCameraActive ? "video-active" : "")" 
+               id="camera-preview" 
+               @ref="_videoElement" >
         </video>
+        <div class="scanner-frame" @ref="_canvasElement"></div>
         <MudButton class="camera-stop-button"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Stop"
@@ -73,6 +76,17 @@ else
         height: 100%;
         z-index: 1001;
     }
+    .scanner-frame {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 230px;
+        height: 230px;
+        border: 2px solid red;
+        transform: translate(-50%, -50%);
+        box-sizing: border-box;
+        z-index: 1001;
+    }
     .camera-stop-button {
         position: absolute;
         bottom: 58px;
@@ -86,6 +100,7 @@ else
     [Parameter] public string Result { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ResultChanged { get; set; }
     private ElementReference _videoElement;
+    private ElementReference _canvasElement;
     private bool _hasCamera;
     private bool _isCameraActive;
     private IBrowserFile? _uploadedImage;
@@ -109,7 +124,7 @@ else
     {
         if (!_isCameraActive)
         {
-            await ZxingService.StartCameraScan(_videoElement, DotNetObjectReference.Create(this));
+            await ZxingService.StartCameraScan(_videoElement, _canvasElement, DotNetObjectReference.Create(this));
         }
         else
         {

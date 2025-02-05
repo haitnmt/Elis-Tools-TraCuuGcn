@@ -14,7 +14,7 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     public async Task InitializeAsync()
     {
         if (_isInitialized) return;
-        await jsRuntime.InvokeAsync<IJSObjectReference>("import", "https://unpkg.com/@zxing/library@latest");
+        await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js");
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScanner.js");
         _zxingReader = await jsRuntime.InvokeAsync<IJSObjectReference>("eval", "new window.ZXing.BrowserMultiFormatReader()");
         _hasCamera = await CheckCameraAvailability();
@@ -42,12 +42,13 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         return await jsRuntime.InvokeAsync<string>("scanFromImage", _zxingReader, imageDataUrl);
     }
     
-    public async Task StartCameraScan(ElementReference videoElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
+    public async Task StartCameraScan(ElementReference videoElement, ElementReference _canvasElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
     {
         _cameraStream = await jsRuntime.InvokeAsync<IJSObjectReference>(
             "startCameraScan",
             _zxingReader,
             videoElement,
+            _canvasElement,
             dotNetObjectReference);
     }
 
