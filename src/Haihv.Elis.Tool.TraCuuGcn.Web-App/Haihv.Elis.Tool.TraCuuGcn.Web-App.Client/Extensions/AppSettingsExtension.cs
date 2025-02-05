@@ -1,21 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Extensions;
+namespace Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Extensions;
 
-public static class AppSettingsExtension
+internal static class AppSettingsExtension
 {
-    public static void AddAppSettingsServices(this IServiceCollection services)
+    public static void AddAppSettingsServices(this WebAssemblyHostBuilder builder, AppSettings appSettings)
     {
-        
+        builder.Services.AddScoped<AppSettingsService>(_ => new AppSettingsService(appSettings));
     }
-}
-
-public sealed class AppSettingsServices(string? baseUrl = null)
-{
-    private readonly HttpClient _httpClient = new HttpClient(
-    {
-        BaseAddress = new Uri(baseUrl)
-    });
-    public string? ApiEndpoint { get; set; }
-    public  bool IsTrialVersion { get; set; }
 }

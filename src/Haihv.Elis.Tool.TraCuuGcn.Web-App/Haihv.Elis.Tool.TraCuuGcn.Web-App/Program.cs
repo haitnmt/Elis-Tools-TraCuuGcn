@@ -13,12 +13,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
+builder.Services.AddScoped<ZxingService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthorizationCore();
+builder.AddAppSettingsServices();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
 {
@@ -26,7 +29,7 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
 }
 builder.Services.AddHttpClient(
     "Endpoint", client => client.BaseAddress = new Uri(apiEndpoint));
-builder.Services.AddScoped<ZxingService>();
+
 
 
 var app = builder.Build();

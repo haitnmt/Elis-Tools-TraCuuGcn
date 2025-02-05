@@ -121,10 +121,17 @@ else
                     </AuthorizeView>
                 </MudCardContent>
             </MudCard>
+            <MudAlert Severity="Severity.Warning" Dense="true" ShowCloseIcon="true">
+                <MudText Typo="Typo.body1">
+                    Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác
+                </MudText>
+                <MudText Typo="Typo.caption">
+                    Vui lòng liên hệ với @_giayChungNhanInfo.DonVi để xác minh thông tin
+                </MudText>
+            </MudAlert>
         </MudStack>
     }
 }
-
 
 @code {
     [Inject] protected IHttpClientFactory HttpClientFactory { get; set; } = null!;

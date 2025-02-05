@@ -3,18 +3,17 @@ using System.Reflection;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
-public sealed class AppSettingsServices(string baseUrl)
+public sealed class AppSettingsService(AppSettings appSettings)
 {
-    private readonly HttpClient _httpClient = new()
-    {
-        BaseAddress = new Uri(baseUrl)
-    };
+    public AppSettings AppSettings { get; private set; } = appSettings;
 
-    public AppSettings AppSettings => GetAppSettings().Result;
-    
-    private async Task<AppSettings> GetAppSettings()
+    public static async Task<AppSettings> GetAppSettings(string baseUrl)
     {
-        var appSettings =  await _httpClient.GetFromJsonAsync<AppSettings>("/api/appsettings");
+        HttpClient httpClient = new()
+        {
+            BaseAddress = new Uri(baseUrl)
+        };
+        var appSettings =  await httpClient.GetFromJsonAsync<AppSettings>("/api/appsettings");
         if (appSettings == null)
             return new AppSettings
             {

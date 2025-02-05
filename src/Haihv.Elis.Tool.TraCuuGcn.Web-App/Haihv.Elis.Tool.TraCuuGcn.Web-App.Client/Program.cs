@@ -1,13 +1,13 @@
 using Blazored.LocalStorage;
+using Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-
+builder.Services.AddScoped<ZxingService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();
@@ -15,10 +15,11 @@ builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthorizationCore();
 
+var baseUrl = builder.HostEnvironment.BaseAddress;
+var appSettings = await AppSettingsService.GetAppSettings(baseUrl);
+var apiEndpoint = appSettings.ApiEndpoint;
 // Tải cấu hình từ Blazor Server
-var httpClient = new HttpClient{ BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-var response = await httpClient.GetStringAsync("/api/apiEndpoint");
-var apiEndpoint = response.Trim('"');
+
 // Kiểm tra xem API URL hợp lệ hay không
 if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 {
@@ -27,8 +28,7 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 builder.Services.AddHttpClient(
         "Endpoint",
         opt => opt.BaseAddress = validUri);
-
-
-builder.Services.AddScoped<ZxingService>();
+// Đăng ký dịch vụ cấu hình ứng dụng
+builder.AddAppSettingsServices(appSettings);
 
 await builder.Build().RunAsync();
