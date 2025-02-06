@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.Services.AddScoped<ZxingService>();
+builder.Services.AddScoped<BarcodeScannerService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();

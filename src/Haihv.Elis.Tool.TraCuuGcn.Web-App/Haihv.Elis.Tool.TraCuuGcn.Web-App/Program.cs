@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
-builder.Services.AddScoped<ZxingService>();
+builder.Services.AddScoped<BarcodeScannerService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddMudServices();

@@ -152,6 +152,22 @@ window.startCameraScanQr = async (videoElementId, dotNetHelper) => {
 };
 
 /*************************************************************
+ * Dừng quét QR Code bằng jsQR
+ *************************************************************/
+window.stopCameraScanQr = (videoElementId) => {
+    const videoElement = document.getElementById(videoElementId);
+    if (!videoElement) {
+        console.error(`Không tìm thấy phần tử video với id = ${videoElementId}`);
+        return;
+    }
+    const stream = videoElement.srcObject;
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    videoElement.srcObject = null;
+};
+
+/*************************************************************
  * Quét Code128 từ ảnh tĩnh bằng QuaggaJS
  *************************************************************/
 window.scanImageForCode128 = async (imageUrl) => {

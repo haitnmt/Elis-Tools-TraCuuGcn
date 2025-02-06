@@ -1,7 +1,5 @@
 @inject IJSRuntime JsRuntime
-@inject ZxingService ZxingService
-@using Microsoft.AspNetCore.Components.Forms
-@using Microsoft.JSInterop
+@inject BarcodeScannerService BarcodeScannerService
 @implements IAsyncDisposable
 @attribute [StreamRendering]
 
@@ -32,8 +30,20 @@ else
         <MudIconButton Color="Color.Primary" Disabled="!_hasCamera"
                        Size="Size.Small"
                        Icon="@Icons.Material.Filled.QrCodeScanner"
-                       @onclick="ToggleCamera"/>
+                       @onclick="ToggleScanQr"/>
+
+            @*<MudIconButton Color="Color.Primary" Disabled="true"
+                           Size="Size.Small"
+                           Icon="@Material.Filled.Barcode"
+                           @onclick="ToggleScanBarCode"/>*@
+        
     </MudStack>
+    @if(string.IsNullOrWhiteSpace(_result) && !string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">
+            <MudText Typo="Typo.body2">@_errorMessage</MudText>
+        </MudAlert>
+    }
     <div class="scanner-container" style="@(_isCameraActive ? "display: flex;" : "display: none;")">
         <video class="video @(_isCameraActive ? "video-active" : "")" 
                id="camera-preview" 
@@ -43,7 +53,7 @@ else
         <MudButton class="camera-stop-button"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Stop"
-                   @onclick="ToggleCamera">
+                   @onclick="@(_isQrScanner ? ToggleScanQr : ToggleScanBarCode)">
             Dừng quét
         </MudButton>
     </div>
@@ -108,34 +118,36 @@ else
     private string _errorMessage = string.Empty;
     private bool _isLoaded;
     private string _loadingMessage = "Đang tải thư viện quét mã QR...";
+    private bool _isQrScanner;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await ZxingService.InitializeAsync();
-            _hasCamera = ZxingService.HasCamera();
+            await BarcodeScannerService.InitializeAsync();
+            _hasCamera = BarcodeScannerService.HasCamera();
             _isLoaded = true;
             StateHasChanged();
         }
     }
     
-    private async Task ToggleCamera()
+    private async Task ToggleScanBarCode()
     {
         if (!_isCameraActive)
         {
-            await ZxingService.StartCameraScan(_videoElement, _canvasElement, DotNetObjectReference.Create(this));
+            _isQrScanner = false;
+            await BarcodeScannerService.StartCameraScanCode128(_videoElement, DotNetObjectReference.Create(this));
         }
         else
         {
-            await ZxingService.StopCameraScan();
+            await BarcodeScannerService.StopCameraScanCode128();
         }
 
         _isCameraActive = !_isCameraActive;
     }
     
     [JSInvokable]
-    public void HandleScanResult(string text)
+    public void HandleScanCode128Result(string text)
     {
         _result = text;
         _errorMessage = string.Empty;
@@ -143,7 +155,37 @@ else
         ResultChanged.InvokeAsync(_result);
         if (AutoStopCamera)
         {
-            _ = ZxingService.StopCameraScan();
+            _ = BarcodeScannerService.StopCameraScanCode128();
+            _isCameraActive = false;
+        }
+        StateHasChanged();
+    }
+    
+    private async Task ToggleScanQr()
+    {
+        if (!_isCameraActive)
+        {
+            _isQrScanner = true;
+            await BarcodeScannerService.StartCameraScanQr(_videoElement, DotNetObjectReference.Create(this));
+        }
+        else
+        {
+            await BarcodeScannerService.StopCameraScanQr();
+        }
+
+        _isCameraActive = !_isCameraActive;
+    }
+    
+    [JSInvokable]
+    public void HandleScanQrResult(string text)
+    {
+        _result = text;
+        _errorMessage = string.Empty;
+        Result = _result;
+        ResultChanged.InvokeAsync(_result);
+        if (AutoStopCamera)
+        {
+            _ = BarcodeScannerService.StopCameraScanQr();
             _isCameraActive = false;
         }
         StateHasChanged();
@@ -157,17 +199,16 @@ else
     }
 
     private async Task ScanFromImage()
-    {
+    {   
         if (_uploadedImage == null) return;
-
+        _errorMessage = string.Empty;
         try
         {
-            _result = await ZxingService.ScanFromImage(_uploadedImage);
+            _result = await BarcodeScannerService.ScanFromImage(_uploadedImage);
             Result = _result;
             await ResultChanged.InvokeAsync(_result);
-            _errorMessage = string.Empty;
         }
-        catch (JSException jsEx) when (jsEx.Message.Contains("Không tìm thấy mã trong ảnh"))
+        catch (JSException jsEx) when (jsEx.Message.Contains("Không tìm thấy QR Code trong ảnh."))
         {
             _errorMessage = "Không tìm thấy mã trong ảnh. Vui lòng thử lại với ảnh khác.";
         }
@@ -181,7 +222,14 @@ else
     {
         if (_isCameraActive)
         {
-            await ZxingService.StopCameraScan();
+            if (_isQrScanner)
+            {
+                await BarcodeScannerService.StopCameraScanQr();
+            }
+            else
+            {
+                await BarcodeScannerService.StopCameraScanCode128();
+            }
         }
     }
 
