@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.WebLib;
+namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.wwwroot;
 
 public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
 {
