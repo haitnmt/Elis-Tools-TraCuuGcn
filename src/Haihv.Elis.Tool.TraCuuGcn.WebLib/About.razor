@@ -3,17 +3,17 @@
         Icon="@Icons.Material.Filled.Info" 
         Size="Size.Small" 
         OnClick="OnClick"/>
-<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="_isOpen" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.BottomRight">
+<MudPopover OverflowBehavior="OverflowBehavior.FlipNever" Open="_isOpen" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.BottomRight" Class="pa-1">
     <MudAlert Variant="Variant.Outlined" Severity="Severity.Info" NoIcon="true">
         <MudStack>
             <MudText Typo="Typo.caption">
-                Phiên bản thử nghiệm
-            </MudText>
-            <MudText Typo="Typo.caption">
                 Hệ thống đang trong quá trình phát triển
             </MudText>
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <Version/>
+            </MudHidden>
             <MudText Typo="Typo.caption">
-                Cảm ơn bạn đã sử dụng
+                Cảm ơn bạn đã sử dụng!
             </MudText>
         </MudStack>
     </MudAlert>

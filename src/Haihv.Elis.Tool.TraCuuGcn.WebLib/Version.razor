@@ -18,9 +18,10 @@
     {
         _appSettings = AppSettingService.AppSettings;
         var appVersion = _appSettings.AppVersion ?? Assembly.GetExecutingAssembly().GetName().Version!.ToString();
+        var phienBan = _appSettings.IsDemoVersion ? "Phiên bản thử nhiệm" : "Phiên bản";
         _version = string.IsNullOrWhiteSpace(_appSettings.ApiVersion) ?
-            $"Phiên bản: {appVersion}" :
-            $"Phiên bản: {appVersion} - {_appSettings.ApiVersion}" ;
+            $"{phienBan}: {appVersion}" :
+            $"{phienBan}: {appVersion} - {_appSettings.ApiVersion}" ;
     }
     
 }

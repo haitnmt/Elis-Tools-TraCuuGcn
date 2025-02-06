@@ -65,9 +65,7 @@ public class ThuaDatService(
     private async Task<ThuaDat?> GetThuaDatInDatabaseAsync(GiayChungNhan giayChungNhan,
         CancellationToken cancellationToken = default)
     {
-        if (giayChungNhan.MaDangKy == 0 ||
-            giayChungNhan.MaGcn == 0 ||
-            string.IsNullOrWhiteSpace(giayChungNhan.Serial)) return null;
+        if (giayChungNhan.MaDangKy == 0 || giayChungNhan.MaGcn == 0 ) return null;
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(
             CacheSettings.ConnectionName(giayChungNhan.MaGcn),
             token: cancellationToken);

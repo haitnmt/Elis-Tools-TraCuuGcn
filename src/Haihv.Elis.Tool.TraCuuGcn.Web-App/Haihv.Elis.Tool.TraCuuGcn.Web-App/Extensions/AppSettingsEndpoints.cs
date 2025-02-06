@@ -28,6 +28,8 @@ internal static class AppSettingsEndpoints
 }
 internal static class AppSettingsExtension
 {
+    private const string SettingsDemoKey = "IsDemo";
+    private const string SettingsApiEndpointKey = "ApiEndpoint";
     internal static void AddAppSettingsServices(this WebApplicationBuilder builder)
     {
         var appSettings = builder.Configuration.GetAppSettingsAsync().Result;
@@ -43,13 +45,13 @@ internal static class AppSettingsExtension
 
     private static async Task<AppSettings> GetAppSettingsAsync(this IConfiguration configuration)
     {
-        var apiEndpoint = configuration["ApiEndpoint"];
+        var apiEndpoint = configuration[SettingsApiEndpointKey];
         if (string.IsNullOrWhiteSpace(apiEndpoint))
         {
             return new AppSettings
             {
                 ApiEndpoint = apiEndpoint,
-                IsTrialVersion = configuration["IsTrialVersion"]?.ToLower() == "true",
+                IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
             };
         }
@@ -63,7 +65,7 @@ internal static class AppSettingsExtension
                 return new AppSettings
                 {
                     ApiEndpoint = apiEndpoint,
-                    IsTrialVersion = configuration["IsTrialVersion"]?.ToLower() == "true",
+                    IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
                     AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
                 };
             }
@@ -71,7 +73,7 @@ internal static class AppSettingsExtension
             apiVersion = apiVersion.Trim().Trim('"');
             return new AppSettings{
                 ApiEndpoint = apiEndpoint,
-                IsTrialVersion = configuration["IsTrialVersion"]?.ToLower() == "true",
+                IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
                 ApiVersion = apiVersion,
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
             };
@@ -82,7 +84,7 @@ internal static class AppSettingsExtension
             return new AppSettings
             {
                 ApiEndpoint = apiEndpoint,
-                IsTrialVersion = configuration["IsTrialVersion"]?.ToLower() == "true",
+                IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
             };
         }

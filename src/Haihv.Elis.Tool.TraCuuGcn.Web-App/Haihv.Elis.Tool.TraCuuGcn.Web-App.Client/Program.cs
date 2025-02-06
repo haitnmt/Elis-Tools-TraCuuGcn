@@ -1,13 +1,12 @@
 using Blazored.LocalStorage;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Extensions;
-using Haihv.Elis.Tool.TraCuuGcn.WebLib;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.Services.AddScoped<BarcodeScannerService>();
+builder.Services.AddScoped<ZxingService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();

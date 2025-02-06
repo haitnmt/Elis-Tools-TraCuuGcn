@@ -8,7 +8,7 @@ public static class GiayChungNhanExtension
         donVi = string.IsNullOrWhiteSpace(donVi) ? donVi : $"{donVi} [{maQrInfo?.MaDonVi}]";
         return new GiayChungNhanInfo(
             giayChungNhan?.MaGcn ?? maQrInfo?.MaGcnElis ?? 0,
-            giayChungNhan?.Serial ?? maQrInfo?.SerialNumber ?? string.Empty,
+            !string.IsNullOrWhiteSpace(giayChungNhan?.Serial) ? giayChungNhan.Serial : maQrInfo?.SerialNumber,
             maQrInfo?.MaGiayChungNhan ?? string.Empty,
             donVi,
             maQrInfo?.MaHoSoTthc ?? string.Empty,

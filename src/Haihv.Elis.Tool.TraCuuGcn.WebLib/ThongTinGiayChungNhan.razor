@@ -122,7 +122,7 @@ else
                     </AuthorizeView>
                 </MudCardContent>
             </MudCard>
-            @if (_appSettings is not null && _appSettings.IsTrialVersion)
+            @if (_appSettings is not null && _appSettings.IsDemoVersion)
             {
                 <MudAlert Severity="Severity.Warning" Dense="true" ShowCloseIcon="true">
                     <MudText Typo="Typo.body1">

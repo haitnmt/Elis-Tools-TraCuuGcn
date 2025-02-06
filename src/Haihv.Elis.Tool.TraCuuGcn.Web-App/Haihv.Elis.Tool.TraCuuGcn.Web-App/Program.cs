@@ -1,10 +1,8 @@
 using Blazored.LocalStorage;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Components;
 using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
-using Haihv.Elis.Tool.TraCuuGcn.WebLib;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Components.Authorization;
-using MudBlazor;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
-builder.Services.AddScoped<BarcodeScannerService>();
+builder.Services.AddScoped<ZxingService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddMudServices();

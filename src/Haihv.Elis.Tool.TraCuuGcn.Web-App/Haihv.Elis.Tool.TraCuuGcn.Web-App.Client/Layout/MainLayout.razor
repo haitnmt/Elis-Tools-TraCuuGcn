@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+@attribute [StreamRendering]
 @* Required *@
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -30,7 +30,9 @@
         </MudText>
         <MudSpacer/>
         <MudStack Row="true" AlignItems="AlignItems.Center">
-            <Version/>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <Version/>
+            </MudHidden>
             <About/>
         </MudStack>
     </MudAppBar>

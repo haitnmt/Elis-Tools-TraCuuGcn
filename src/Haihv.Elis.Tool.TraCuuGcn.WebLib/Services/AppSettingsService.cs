@@ -18,7 +18,7 @@ public sealed class AppSettingsService(AppSettings appSettings)
             return new AppSettings
             {
                 AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString(),
-                IsTrialVersion = true
+                IsDemoVersion = true
             };
         return appSettings;
     }
@@ -29,6 +29,6 @@ public sealed class AppSettings
     public string? ApiEndpoint { get; set; }
     public string? ApiVersion { get; set; }
     public string? AppVersion { get; set; }
-    public  bool IsTrialVersion { get; set; }
+    public  bool IsDemoVersion { get; set; }
     
 }

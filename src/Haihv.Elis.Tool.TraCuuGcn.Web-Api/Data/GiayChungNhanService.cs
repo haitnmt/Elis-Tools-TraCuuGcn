@@ -81,7 +81,7 @@ public sealed class GiayChungNhanService(
                             NguoiKy, 
                             SoVaoSo
                      FROM GCNQSDD
-                     WHERE SoSerial IS NOT NULL AND SoSerial <> N'' AND MaGcn > 0 AND 
+                     WHERE MaGcn > 0 AND 
                            (LOWER(SoSerial) = LOWER({serial}) OR MaGCN = {maGcn} OR MaVach = {maVachString})
                      """);
                 giayChungNhan =
