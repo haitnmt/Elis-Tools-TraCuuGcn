@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Dapper" Version="2.1.35" />
+        <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="Elastic.Serilog.Sinks" Version="8.12.3" />
         <PackageReference Include="InterpolatedSql.Dapper" Version="2.3.0" />
         <PackageReference Include="LanguageExt.Core" Version="4.4.9" />
@@ -24,7 +24,7 @@
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
         <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.4.0" />
         <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.1.0" />
     </ItemGroup>
 
