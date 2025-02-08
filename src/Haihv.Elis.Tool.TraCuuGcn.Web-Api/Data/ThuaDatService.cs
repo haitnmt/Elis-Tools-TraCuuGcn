@@ -14,7 +14,7 @@ public class ThuaDatService(
     ILogger logger,
     IFusionCache fusionCache) : IThuaDatService
 {
-    private record ThuaDatToBanDo(string SoTo, string SoThua, string DiaChi);
+    private record ThuaDatToBanDo(int MaDvhc, string SoTo, string SoThua, string DiaChi, string GhiChu);
 
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
@@ -82,6 +82,7 @@ public class ThuaDatService(
                 await GetThuaDatToBanDoAsync(giayChungNhan.MaDangKy, connectionString, cancellationToken);
             if (thuaDatToBanDo is null) return null;
             return new ThuaDat(
+                thuaDatToBanDo.MaDvhc,
                 thuaDatToBanDo.SoThua,
                 thuaDatToBanDo.SoTo,
                 thuaDatToBanDo.DiaChi,
@@ -89,7 +90,8 @@ public class ThuaDatService(
                 loaiDat,
                 thoiHan,
                 hinhThuc,
-                nguonGoc
+                nguonGoc,
+                thuaDatToBanDo.GhiChu
             );
         }
         catch (Exception e)
@@ -111,7 +113,8 @@ public class ThuaDatService(
                  SELECT TBD.SoTo AS SoTo, 
                         TD.ThuaDatSo AS SoThua, 
                         TBD.MaDVHC AS maDvhc,
-                        TD.DiaChi AS DiaChi
+                        TD.DiaChi AS DiaChi,
+                        TBD.GhiChu AS GhiChu
                  FROM ThuaDat TD 
                      INNER JOIN ToBanDo TBD ON TD.MaToBanDo = TBD.MaToBanDo 
                      INNER JOIN DangKyQSDD DK ON TD.MaThuaDat = DK.MaThuaDat
@@ -127,10 +130,13 @@ public class ThuaDatService(
                 $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";
             string soThua = thuaDatToBanDo.SoThua.ToString();
             string toBanDo = thuaDatToBanDo.SoTo.ToString();
+            string ghiChu = thuaDatToBanDo.GhiChu?.ToString() ?? string.Empty;
             return new ThuaDatToBanDo(
+                maDvhc,
                 toBanDo.Trim(),
                 soThua.Trim(),
-                diaChi.Trim().VietHoaDauChuoi()
+                diaChi.Trim().VietHoaDauChuoi(),
+                ghiChu.Trim().VietHoaDauChuoi()
             );
         }
         catch (Exception e)

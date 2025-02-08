@@ -30,7 +30,7 @@ else
         <MudIconButton Color="Color.Primary" Disabled="!_hasCamera"
                        Size="Size.Small"
                        Icon="@Icons.Material.Filled.QrCodeScanner"
-                       @onclick="ToggleScan"/>
+                       @onclick="ToggleCamera"/>
 
     </MudStack>
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
@@ -49,7 +49,7 @@ else
         <MudButton class="camera-stop-button"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Stop"
-                   @onclick="ToggleScan">
+                   @onclick="ToggleCamera">
             Dừng quét
         </MudButton>
     </div>
@@ -128,31 +128,22 @@ else
         }
     }
 
-    private async Task ToggleScan()
+    private async Task ToggleCamera()
     {
         if (!_isCameraActive)
         {
-            try
-            {
-                await ZxingService.StartCameraScan(_videoElement, _canvasElement, DotNetObjectReference.Create(this));
-                _isCameraActive = true;
-            }
-            catch (Exception e)
-            {
-                _errorMessage = e.Message;
-            }
+            await ZxingService.StartCameraScan(_videoElement, DotNetObjectReference.Create(this));
         }
         else
         {
             await ZxingService.StopCameraScan();
-            _isCameraActive = false;
         }
 
-        StateHasChanged();
+        _isCameraActive = !_isCameraActive;
     }
 
     [JSInvokable]
-    public void HandleScanQrResult(string text)
+    public void HandleScanResult(string text)
     {
         _result = text;
         _errorMessage = string.Empty;

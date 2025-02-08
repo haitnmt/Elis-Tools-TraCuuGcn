@@ -114,6 +114,14 @@ else
                                                     @_thuaDatPublic.DiaChi
                                                 </MudField>
                                             </MudItem>
+                                            @if(!string.IsNullOrWhiteSpace(_thuaDatPublic.GhiChu))
+                                            {
+                                                <MudItem xs="12">
+                                                    <MudField Label="Ghi chú" Variant="Variant.Text">
+                                                        @_thuaDatPublic.GhiChu
+                                                    </MudField>
+                                                </MudItem>
+                                            }
                                         </MudGrid>
                                     </MudPaper>
                                 }

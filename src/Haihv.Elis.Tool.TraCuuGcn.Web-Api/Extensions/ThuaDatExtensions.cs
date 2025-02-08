@@ -7,10 +7,12 @@ public static class ThuaDatExtensions
     public static ThuaDatPublic ConvertToThuaDatPublic(this ThuaDat thuaDat)
     {
         return new ThuaDatPublic(
+            thuaDat.MaDvhc,
             thuaDat.ThuaDatSo,
             thuaDat.ToBanDo,
             thuaDat.DiaChi,
-            thuaDat.DienTich
+            thuaDat.DienTich,
+            thuaDat.GhiChu
         );
     }
 }

@@ -1,6 +1,7 @@
 ﻿namespace Haihv.Elis.Tool.TraCuuGcn.Models;
 
 public record ThuaDat(
+    int MaDvhc,
     string ThuaDatSo,
     string ToBanDo,
     string DiaChi,
@@ -8,5 +9,6 @@ public record ThuaDat(
     string LoaiDat,
     string ThoiHan,
     string HinhThuc,
-    string NguonGoc
+    string NguonGoc,
+    string GhiChu
 );

@@ -6,6 +6,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
 public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
 {
+    private IJSObjectReference? _zxingReader;
     private IJSObjectReference? _cameraStream;
     private bool _isInitialized;
     private bool _hasCamera;
@@ -15,6 +16,7 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         if (_isInitialized) return;
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js");
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScannerZxing.js");
+        _zxingReader = await jsRuntime.InvokeAsync<IJSObjectReference>("initZxingReader");
         _hasCamera = await CheckCameraAvailability();
         _isInitialized = true;
     }
@@ -38,12 +40,12 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         return await jsRuntime.InvokeAsync<string>("scanFromImage", imageDataUrl);
     }
     
-    public async Task StartCameraScan(ElementReference videoElement, ElementReference canvasElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
+    public async Task StartCameraScan(ElementReference videoElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
     {
         _cameraStream = await jsRuntime.InvokeAsync<IJSObjectReference>(
             "startCameraScan",
+            _zxingReader,
             videoElement,
-            canvasElement,
             dotNetObjectReference);
     }
 
@@ -51,12 +53,16 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     {
         if (_cameraStream != null)
         {
-            await jsRuntime.InvokeVoidAsync("stopCameraScan");
+            await jsRuntime.InvokeVoidAsync("stopCameraScan",_zxingReader);
             await _cameraStream.DisposeAsync();
         }
     }
     public async ValueTask DisposeAsync()
     {
         await StopCameraScan();
+        if (_zxingReader != null)
+        {
+            await _zxingReader.DisposeAsync();
+        }
     }
 }
