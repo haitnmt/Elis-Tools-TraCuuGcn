@@ -10,13 +10,15 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     private IJSObjectReference? _cameraStream;
     private bool _isInitialized;
     private bool _hasCamera;
-
+    //private const string UrlZxingJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js";
+    private const string UrlZxingJs = "https://unpkg.com/@zxing/library@latest/umd/index.min.js";
+    private readonly string _urlBarcodeScannerJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScannerZxing.js" + "?v=" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     public async Task InitializeAsync()
     {
         if (_isInitialized) return;
-        await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js");
-        await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScannerZxing.js");
-        _zxingReader = await jsRuntime.InvokeAsync<IJSObjectReference>("initZxingReader");
+        await jsRuntime.InvokeAsync<IJSObjectReference>("import", UrlZxingJs);
+        await jsRuntime.InvokeAsync<IJSObjectReference>("import", _urlBarcodeScannerJs);
+        _zxingReader = await jsRuntime.InvokeAsync<IJSObjectReference>("initZxingReader"); 
         _hasCamera = await CheckCameraAvailability();
         _isInitialized = true;
     }
