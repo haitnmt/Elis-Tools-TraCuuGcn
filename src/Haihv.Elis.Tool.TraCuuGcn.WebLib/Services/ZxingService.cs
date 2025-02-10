@@ -18,7 +18,6 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         if (_isInitialized) return;
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", UrlZxingJs);
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", _urlBarcodeScannerJs);
-        _zxingReader = await jsRuntime.InvokeAsync<IJSObjectReference>("initZxingReader"); 
         _hasCamera = await CheckCameraAvailability();
         _isInitialized = true;
     }
@@ -44,24 +43,26 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     
     public async Task StartCameraScan(ElementReference videoElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
     {
+        _zxingReader ??= await jsRuntime.InvokeAsync<IJSObjectReference>("initZxingReader");
+        
         _cameraStream = await jsRuntime.InvokeAsync<IJSObjectReference>(
             "startCameraScan",
             _zxingReader,
             videoElement,
             dotNetObjectReference);
+
     }
 
     public async Task StopCameraScan()
     {
         if (_cameraStream != null)
         {
-            await jsRuntime.InvokeVoidAsync("stopCameraScan",_zxingReader);
+            await jsRuntime.InvokeVoidAsync("stopCameraScan", _cameraStream);
             await _cameraStream.DisposeAsync();
         }
     }
     public async ValueTask DisposeAsync()
     {
-        await StopCameraScan();
         if (_zxingReader != null)
         {
             await _zxingReader.DisposeAsync();
