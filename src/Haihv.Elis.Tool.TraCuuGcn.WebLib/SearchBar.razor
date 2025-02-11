@@ -12,38 +12,41 @@
 }
 else
 {
-    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
-        <MudTextField @bind-Value="@_result" Label="Nhập thông tin tìm kiếm"
-            HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr" />
-        <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Search"
-            OnClick="OnClickSearch" />
-        <MudFileUpload T="IBrowserFile" FilesChanged="HandleImageUpload!">
-            <ActivatorContent>
-                <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Image">
-                </MudIconButton>
-            </ActivatorContent>
-        </MudFileUpload>
-        <MudIconButton Color="Color.Primary" Disabled="!_hasCamera" Size="Size.Small"
-            Icon="@Icons.Material.Filled.QrCodeScanner" @onclick="ToggleCamera" />
-
+    <MudStack>
+        <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
+            <MudTextField @bind-Value="@_result" Label="Nhập thông tin tìm kiếm"
+                          HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr" />
+            <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Search"
+                           OnClick="OnClickSearch" />
+            <MudFileUpload T="IBrowserFile" FilesChanged="HandleImageUpload!">
+                <ActivatorContent>
+                    <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Image">
+                    </MudIconButton>
+                </ActivatorContent>
+            </MudFileUpload>
+            <MudIconButton Color="Color.Primary" Disabled="!_hasCamera" Size="Size.Small"
+                           Icon="@Icons.Material.Filled.QrCodeScanner" @onclick="ToggleCamera" />
+        </MudStack>
+        <MudStack Class="@(_isCameraActive ? "" : "invisible")" AlignItems="AlignItems.Center">
+            @*<video @ref="_videoElement" id="camera-preview"
+                   class="video"
+                   autoplay muted>
+            </video>*@
+            <MudButton class="camera-stop-button" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Stop"
+                       @onclick="ToggleCamera">
+                Dừng quét
+            </MudButton>
+        </MudStack>
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Error" Dense="true">
+                <MudText Typo="Typo.body2">@_errorMessage</MudText>
+            </MudAlert>
+        }
     </MudStack>
-    @if (!string.IsNullOrWhiteSpace(_errorMessage))
-    {
-        <MudAlert Severity="Severity.Error" Dense="true">
-            <MudText Typo="Typo.body2">@_errorMessage</MudText>
-        </MudAlert>
-    }
-    <div class="scanner-container" style="@(_isCameraActive ? "display: flex;" : "display: none;")">
-        <video @ref="_videoElement" id="camera-preview"
-               class="video @(_isCameraActive ? "video-active" : "")" 
-              autoplay muted>
-        </video>
-        <div @ref="_canvasElement" id="scanner-canvas" class="scanner-canvas"></div>
-        <MudButton class="camera-stop-button" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Stop"
-            @onclick="ToggleCamera">
-            Dừng quét
-        </MudButton>
-    </div>
+    @* <div class="scanner-container" style="@(_isCameraActive ? "display: flex;" : "display: none;")"> *@
+    @*     <div @ref="_canvasElement" id="scanner-canvas" class="scanner-canvas"></div> *@
+    @* </div> *@
 }
 <style>
     .scanner-container {
@@ -60,10 +63,9 @@ else
     }
 
     .video {
-        width: 100%;
-        height: 100%;
+        width: 300px;
+        height: 300px;
         object-fit: cover;
-        z-index: 1001;
     }
 
     .video-active {
@@ -101,7 +103,6 @@ else
     [Parameter] public EventCallback<string> ResultChanged { get; set; }
     [Parameter] public EventCallback<bool> IsCameraActiveChanged { get; set; }
     private ElementReference _videoElement;
-    private ElementReference? _canvasElement;
     private bool _isCameraActive;
     private bool _hasCamera;
     private IBrowserFile? _uploadedImage;
@@ -123,7 +124,9 @@ else
     
     private async Task ToggleCamera()
     {
-        if (!_isCameraActive)
+        _isCameraActive = !_isCameraActive;
+        await IsCameraActiveChanged.InvokeAsync(_isCameraActive);
+        if (_isCameraActive)
         {
             await ZxingService.StartCameraScan(_videoElement, DotNetObjectReference.Create(this));
         }
@@ -132,8 +135,6 @@ else
             await ZxingService.StopCameraScan();
         }
         
-        _isCameraActive = !_isCameraActive;
-        await IsCameraActiveChanged.InvokeAsync(_isCameraActive);
     }
 
     [JSInvokable]
