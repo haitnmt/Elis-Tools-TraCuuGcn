@@ -9,19 +9,19 @@ public interface IAuthService
 {
     Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung);
     Task Logout();
-    Task<AuthResult> RefreshToken();
 }
 
 public class AuthService(
-    HttpClient httpClient,
+    IHttpClientFactory httpClientFactory,
     ILocalStorageService localStorage,
     AuthenticationStateProvider authStateProvider)
     : IAuthService
 {
     private readonly JwtAuthStateProvider _jwtAuthStateProvider = (JwtAuthStateProvider)authStateProvider;  
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("Endpoint");
     public async Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung)
     {
-        var response = await httpClient.PostAsJsonAsync("/elis/auth", authChuSuDung);
+        var response = await _httpClient.PostAsJsonAsync("/elis/auth", authChuSuDung);
         
         if (!response.IsSuccessStatusCode)
             return new AuthResult { Error = "Login failed" };
@@ -42,20 +42,7 @@ public class AuthService(
     {
         await localStorage.RemoveItemAsync("authToken");
         await localStorage.RemoveItemAsync("refreshToken");
-        _jwtAuthStateProvider.NotifyUserChanged(_jwtAuthStateProvider.AnonymousUser);
-    }
-
-    public async Task<AuthResult> RefreshToken()
-    {
-        var refreshToken = await localStorage.GetItemAsync<string>("refreshToken");
-        
-        var response = await httpClient.PostAsJsonAsync("/elis/auth/refresh", new 
-        {
-            RefreshToken = refreshToken
-            
-        });
-        return new AuthResult();
-        // Xử lý tương tự login
+        _jwtAuthStateProvider.NotifyUserChanged(JwtAuthStateProvider.AnonymousUser);
     }
 }
 

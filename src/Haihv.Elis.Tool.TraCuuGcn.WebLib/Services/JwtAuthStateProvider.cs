@@ -39,7 +39,7 @@ public class JwtAuthStateProvider(ILocalStorageService localStorage) : Authentic
 
     private static AuthenticationState CreateAnonymousUser() => 
         new(new ClaimsPrincipal(new ClaimsIdentity()));
-    public AuthenticationState AnonymousUser => CreateAnonymousUser();
+    public static AuthenticationState AnonymousUser => CreateAnonymousUser();
     public void NotifyUserChanged(AuthenticationState state)
     {
         NotifyAuthenticationStateChanged(Task.FromResult(state));

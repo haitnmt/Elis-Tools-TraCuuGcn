@@ -33,7 +33,6 @@ else
             <MudText Typo="Typo.body2">@_errorMessage</MudText>
         </MudAlert>
     }
-
     <div class="scanner-container" style="@(_isCameraActive ? "display: flex;" : "display: none;")">
         <video @ref="_videoElement" id="camera-preview"
                class="video @(_isCameraActive ? "video-active" : "")" 
@@ -80,8 +79,8 @@ else
         position: absolute;
         top: 50%;
         left: 50%;
-        width: 300px;
-        height: 300px;
+        width: 245px;
+        height: 245px;
         border: 2px solid red;
         transform: translate(-50%, -50%);
         box-sizing: border-box;
@@ -100,10 +99,11 @@ else
     [Parameter] public bool AutoStopCamera { get; set; }
     [Parameter] public string Result { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ResultChanged { get; set; }
+    [Parameter] public EventCallback<bool> IsCameraActiveChanged { get; set; }
     private ElementReference _videoElement;
     private ElementReference? _canvasElement;
-    private bool _hasCamera;
     private bool _isCameraActive;
+    private bool _hasCamera;
     private IBrowserFile? _uploadedImage;
     private string _result = string.Empty;
     private string _errorMessage = string.Empty;
@@ -131,8 +131,9 @@ else
         {
             await ZxingService.StopCameraScan();
         }
-
+        
         _isCameraActive = !_isCameraActive;
+        await IsCameraActiveChanged.InvokeAsync(_isCameraActive);
     }
 
     [JSInvokable]

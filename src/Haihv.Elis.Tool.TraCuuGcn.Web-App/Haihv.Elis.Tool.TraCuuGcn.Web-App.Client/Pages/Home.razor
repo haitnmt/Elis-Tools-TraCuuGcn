@@ -1,10 +1,12 @@
 ﻿@page "/"
 
-<MudStack Class="ma-2" Style="@(string.IsNullOrWhiteSpace(_searchQuery) ? "height: calc((1 / 3)*(100vh - 50px))" : "")" Justify="Justify.FlexEnd">
+<MudStack Class="ma-2" Style="@(string.IsNullOrWhiteSpace(_searchQuery) && _isCameraActive ? "height: calc((1 / 3)*(100vh - 50px))" : "")" Justify="Justify.FlexEnd">
     <MudGrid Justify="Justify.Center">
         <MudItem xs="12" md="6" lg="4">
             <MudStack>
-                <SearchBar AutoStopCamera="true" @bind-Result="@_searchQuery"/>
+                <SearchBar AutoStopCamera="true" 
+                           IsCameraActiveChanged="b => _isCameraActive = b"
+                           @bind-Result="@_searchQuery"/>
                 @if (!string.IsNullOrWhiteSpace(_searchQuery))
                 { 
                     <ThongTinGiayChungNhan Query="@_searchQuery"
@@ -29,14 +31,43 @@
                 </Authorized>
                 <NotAuthorized>
                     <MudItem xs="12" md="6" lg="4">
-                        <MudAlert Severity="Severity.Warning">Bạn cần đăng nhập để xem thông tin chi tiết</MudAlert>
+                        <MudAlert Severity="Severity.Warning">
+                            <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Start" Spacing="0">
+                                <MudText Typo="Typo.body1">
+                                    Bạn cần xác thực thông tin để xem thông tin chi tiết
+                                </MudText>
+                                <MudButton Variant="Variant.Text"
+                                           Color="Color.Info"
+                                           FullWidth="false"
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.Verified"
+                                           OnClick="OpenAuthDialog">
+                                    Xác thực
+                                </MudButton>
+                            </MudStack>
+                        </MudAlert>
                     </MudItem>
                 </NotAuthorized>
             </AuthorizeView>
         }
     </MudGrid>
 </MudStack>
+@inject IDialogService DialogService
 @code {
     private string? _searchQuery;
     private long _maGcnElis;
+    private bool _isCameraActive;
+    private Task OpenAuthDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true
+        };
+        var parameters = new DialogParameters<AuthByChuSuDung>
+        {
+            { x => x.MaGcnElis, _maGcnElis },
+            { x => x.Success, false },
+        };
+        return DialogService.ShowAsync<AuthByChuSuDung>(null,  parameters, options);
+    }
 }

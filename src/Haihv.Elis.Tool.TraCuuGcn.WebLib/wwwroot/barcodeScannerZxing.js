@@ -11,12 +11,12 @@ window.checkCameraAvailability = async () => {
 // Khởi tạo ZXing Reader
 window.initZxingReader = async () => {
     // Thiết lập các hints tối ưu cho QR Code và Code 128
-    //const hints = new Map();
-    //hints.set(ZXing.DecodeHintType.TRY_HARDER, true);           // Cố gắng quét kỹ hơn
-    //hints.set(ZXing.DecodeHintType.PURE_BARCODE, false);        // Tắt chế độ pure barcode để xử lý tốt hơn với hình ảnh không hoàn hảo
-    //hints.set(ZXing.DecodeHintType.CHARACTER_SET, 'UTF-8');     // Hỗ trợ ký tự UTF-8
-    //hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, ['QR_CODE', 'CODE_128']); // Chỉ tập trung vào 2 định dạng này
-    //hints.set(ZXing.DecodeHintType.ALSO_INVERTED, true);        // Hỗ trợ cả mã đảo ngược màu
+    // const hints = new Map();
+    // hints.set(ZXing.DecodeHintType.TRY_HARDER, true);           // Cố gắng quét kỹ hơn
+    // hints.set(ZXing.DecodeHintType.PURE_BARCODE, false);        // Tắt chế độ pure barcode để xử lý tốt hơn với hình ảnh không hoàn hảo
+    // hints.set(ZXing.DecodeHintType.CHARACTER_SET, 'UTF-8');     // Hỗ trợ ký tự UTF-8
+    // hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, ['QR_CODE', 'CODE_128']); // Chỉ tập trung vào 2 định dạng này
+    // hints.set(ZXing.DecodeHintType.ALSO_INVERTED, true);        // Hỗ trợ cả mã đảo ngược màu
     let reader = new window.ZXing.BrowserMultiFormatReader();
     reader.timeBetweenDecodingAttempts = 200;
     return reader;
@@ -67,7 +67,7 @@ window.startCameraScan = async (reader, videoElement, dotNetHelper) => {
                 console.error('Scanning error:', error);
             }
         };
-
+        
         // 5. Bắt đầu decode
         await reader.decodeFromStream(stream, videoElement, decodeCallback);
 
@@ -92,10 +92,22 @@ window.stopCameraScan = (scannerObj) => {
     }
 };
 
+// Khởi tạo ZXing Reader
+window.initZxingReaderDecodeFromImage = async () => {
+    // Thiết lập các hints tối ưu cho QR Code và Code 128
+    const hints = new Map();
+    hints.set(ZXing.DecodeHintType.TRY_HARDER, true);           // Cố gắng quét kỹ hơn
+    hints.set(ZXing.DecodeHintType.PURE_BARCODE, false);        // Tắt chế độ pure barcode để xử lý tốt hơn với hình ảnh không hoàn hảo
+    hints.set(ZXing.DecodeHintType.CHARACTER_SET, 'UTF-8');     // Hỗ trợ ký tự UTF-8
+    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, ['QR_CODE', 'CODE_128']); // Chỉ tập trung vào 2 định dạng này
+    hints.set(ZXing.DecodeHintType.ALSO_INVERTED, true);        // Hỗ trợ cả mã đảo ngược màu
+    return new window.ZXing.BrowserMultiFormatReader(hints);
+}
+
 // Xử lý ảnh từ URL
 window.scanFromImage = async (imageUrl) => {
     try {
-        const reader = await initZxingReader();
+        const reader = await initZxingReaderDecodeFromImage();
         // Tải và xử lý ảnh
         const result = await reader.decodeFromImageUrl(imageUrl);
         if(result === null || result.text === null || result.text === '' || result.text === undefined) {

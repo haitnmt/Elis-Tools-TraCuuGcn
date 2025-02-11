@@ -1,0 +1,71 @@
+﻿@using Haihv.Elis.Tool.TraCuuGcn.Models
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.End"> 
+            <MudAvatar Color="Color.Warning" Variant="Variant.Outlined">
+                <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium"/>
+            </MudAvatar>
+            <MudText Typo="Typo.h6"
+                     Color="Color.Warning">
+                Xác thực thông tin chủ sử dụng
+            </MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Số định danh" 
+                      Variant="Variant.Text" 
+                      HelperText="Số căn cước, CCCD, CMND, Mã số doanh nghiệp,... in trên Giấy chứng nhận"
+                      @bind-Value="@_soDinhDanh"/>
+        <MudTextField Label="Tên chủ sử dụng"
+                      Variant="Variant.Text"
+                      HelperText="Họ và tên chủ sử dụng, tên doanh nghiệp, người đại diện, ... in trên Giấy chứng nhận"
+                      @bind-Value="@_tenChuSuDung"/>
+        @if(_authResult is not null && !_authResult.Success)
+        {
+            <MudAlert Severity="Severity.Error">
+                <MudText Typo="Typo.body1">Xác thực không thành công</MudText>
+                <MudText Typo="Typo.body2">@_authResult.Error</MudText>
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton 
+            Variant="Variant.Filled" 
+            Color="Color.Primary"
+            Disabled="_processing"
+            OnClick="XacThuc">
+            @if (_processing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Đang xác thực</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.button">Xác thực</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+@inject IAuthService AuthService
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public long MaGcnElis { get; set; }
+    [Parameter] public bool Success { get; set; }
+    [Parameter] public EventCallback<bool> SuccessChanged { get; set; }
+    private string _soDinhDanh = string.Empty;
+    private string _tenChuSuDung = string.Empty;
+    private bool _processing = false;
+    private AuthResult? _authResult;
+    private async Task XacThuc()
+    {
+        _processing = true;
+        _authResult = await AuthService.LoginByChuSuDung(new AuthChuSuDung(MaGcnElis, _soDinhDanh, _tenChuSuDung));
+        if (_authResult.Success)
+        {
+            Success = true;
+            await SuccessChanged.InvokeAsync(Success);
+        }
+        _processing = false;
+    }
+}
