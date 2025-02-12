@@ -15,28 +15,29 @@ else
     <MudStack>
         <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
             <MudTextField @bind-Value="@_result" Label="Nhập thông tin tìm kiếm"
-                          HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr" />
+                HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr" />
             <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Search"
-                           OnClick="OnClickSearch" />
+                OnClick="OnClickSearch" />
             <MudFileUpload T="IBrowserFile" FilesChanged="HandleImageUpload!">
                 <ActivatorContent>
                     <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Image">
                     </MudIconButton>
                 </ActivatorContent>
             </MudFileUpload>
-            <MudIconButton Color="Color.Primary" Disabled="!_hasCamera" Size="Size.Small"
-                           Icon="@Icons.Material.Filled.QrCodeScanner" @onclick="ToggleCamera" />
+            <MudIconButton Color="Color.Primary" Disabled="@(!_hasCamera || _isCameraActive)" Size="Size.Small"
+                Icon="@Icons.Material.Filled.QrCodeScanner" @onclick="ToggleCamera" />
         </MudStack>
-        <MudStack Class="@(_isCameraActive ? "" : "invisible")" AlignItems="AlignItems.Center">
-            @*<video @ref="_videoElement" id="camera-preview"
-                   class="video"
-                   autoplay muted>
-            </video>*@
-            <MudButton class="camera-stop-button" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Stop"
-                       @onclick="ToggleCamera">
-                Dừng quét
-            </MudButton>
-        </MudStack>
+        @if (_isCameraActive)
+        {
+            <MudStack AlignItems="AlignItems.Center">
+                <video playsinline @ref="_videoElement" id="camera-preview" style="width: 300px; height: 300px; object-fit: cover"
+                    autoplay muted>
+                </video>
+                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Stop" @onclick="ToggleCamera">
+                    Dừng quét
+                </MudButton>
+            </MudStack>
+        }
         @if (!string.IsNullOrWhiteSpace(_errorMessage))
         {
             <MudAlert Severity="Severity.Error" Dense="true">
@@ -44,64 +45,14 @@ else
             </MudAlert>
         }
     </MudStack>
-    @* <div class="scanner-container" style="@(_isCameraActive ? "display: flex;" : "display: none;")"> *@
-    @*     <div @ref="_canvasElement" id="scanner-canvas" class="scanner-canvas"></div> *@
-    @* </div> *@
 }
-<style>
-    .scanner-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        z-index: 1000;
-    }
-
-    .video {
-        width: 300px;
-        height: 300px;
-        object-fit: cover;
-    }
-
-    .video-active {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1001;
-    }
-
-    .scanner-canvas {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 245px;
-        height: 245px;
-        border: 2px solid red;
-        transform: translate(-50%, -50%);
-        box-sizing: border-box;
-        z-index: 1002;
-    }
-
-    .camera-stop-button {
-        position: absolute;
-        bottom: 58px;
-        right: 10px;
-        z-index: 1003;
-    }
-</style>
 
 @code {
     [Parameter] public bool AutoStopCamera { get; set; }
     [Parameter] public string Result { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> ResultChanged { get; set; }
     [Parameter] public EventCallback<bool> IsCameraActiveChanged { get; set; }
+    
     private ElementReference _videoElement;
     private bool _isCameraActive;
     private bool _hasCamera;
@@ -121,20 +72,23 @@ else
             StateHasChanged();
         }
     }
-    
+
     private async Task ToggleCamera()
     {
         _isCameraActive = !_isCameraActive;
+        StateHasChanged();
         await IsCameraActiveChanged.InvokeAsync(_isCameraActive);
         if (_isCameraActive)
         {
+            // Đợi render xong video element
+            await Task.Yield();
             await ZxingService.StartCameraScan(_videoElement, DotNetObjectReference.Create(this));
         }
         else
         {
             await ZxingService.StopCameraScan();
         }
-        
+
     }
 
     [JSInvokable]
@@ -168,10 +122,12 @@ else
         try
         {
             _result = await ZxingService.ScanFromImage(_uploadedImage);
+            if (string.IsNullOrWhiteSpace(_result))
+                _errorMessage = "Không tìm thấy mã QR hoặc mã vạch trong ảnh. Vui lòng thử lại với ảnh khác!";
         }
-        catch (JSException jsEx) when (jsEx.Message.Contains("Không tìm thấy mã QR hoặc Code 128 trong ảnh"))
+        catch (JSException jsEx) when (jsEx.Message.Contains("Không tìm thấy mã QR hoặc mã vạch trong ảnh"))
         {
-            _errorMessage = "Không tìm thấy mã trong ảnh. Vui lòng thử lại với ảnh khác.";
+            _errorMessage = "Không tìm thấy mã QR hoặc mã vạch trong ảnh. Vui lòng thử lại với ảnh khác!";
         }
         catch (Exception ex)
         {
@@ -179,7 +135,7 @@ else
         }
         finally
         {
-            Result = _result;
+            Result = _result ?? string.Empty;
             await ResultChanged.InvokeAsync(_result);
         }
     }

@@ -106,15 +106,34 @@ window.initZxingReaderDecodeFromImage = async () => {
 
 // Xử lý ảnh từ URL
 window.scanFromImage = async (imageUrl) => {
+    const decodeImage = async (reader) => {
+        try {
+            const result = await reader.decodeFromImageUrl(imageUrl);
+            if (result && result.text) {
+                return result.text;
+            }
+            return null;    
+        } catch (error) {
+            return 'Error: ' + error.message;
+        }
+    };
+
     try {
         const reader = await initZxingReaderDecodeFromImage();
-        // Tải và xử lý ảnh
-        const result = await reader.decodeFromImageUrl(imageUrl);
-        if(result === null || result.text === null || result.text === '' || result.text === undefined) {
-            return new Error('Không tìm thấy mã QR hoặc Code 128 trong ảnh');
+        let result = await decodeImage(reader);
+        if (!result || result.startsWith('Error')) {
+            const readerQr = new window.ZXing.BrowserQRCodeReader();
+            result = await decodeImage(readerQr);
         }
-        return result.text;
+        if (!result || result.startsWith('Error')) {
+            const readerCode128 = new window.ZXing.BrowserCode128Reader();
+            result = await decodeImage(readerCode128);
+        }
+        if (!result || result.startsWith('Error')) {
+            throw new Error('Không tìm thấy mã QR hoặc mã vạch trong ảnh');
+        }
+        return result;
     } catch (error) {
-        throw new Error('Không tìm thấy mã QR hoặc Code 128 trong ảnh');
+        throw new Error('Không tìm thấy mã QR hoặc mã vạch trong ảnh');
     }
 };
