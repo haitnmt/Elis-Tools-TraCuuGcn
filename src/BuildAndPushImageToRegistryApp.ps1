@@ -12,12 +12,13 @@ function Get-EnvVariables {
     }
     else {
         Write-Host "Warning: .env file not found" -ForegroundColor Yellow
-        $TAG=latest
-        $REGISTRY_URL=cr.haihv.vn
-        $USERNAME=haihv
-        $PASSWORD=Abc@1234
+        $TAG = latest
+        $REGISTRY_URL = cr.haihv.vn
+        $USERNAME = haihv
+        $PASSWORD = Abc@1234
     }
 }
+
 # Load environment variables at start
 Get-EnvVariables
 $ImageName = "app-tracuugcn"

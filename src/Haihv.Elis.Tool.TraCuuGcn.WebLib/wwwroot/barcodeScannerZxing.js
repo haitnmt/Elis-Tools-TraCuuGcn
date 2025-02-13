@@ -112,28 +112,23 @@ window.scanFromImage = async (imageUrl) => {
             if (result && result.text) {
                 return result.text;
             }
-            return null;    
-        } catch (error) {
-            return 'Error: ' + error.message;
+            return null;
+        } catch (error)
+        {
+            console.error('Error when decoding image:', error);
+            return null;
         }
     };
-
-    try {
-        const reader = await initZxingReaderDecodeFromImage();
-        let result = await decodeImage(reader);
-        if (!result || result.startsWith('Error')) {
-            const readerQr = new window.ZXing.BrowserQRCodeReader();
-            result = await decodeImage(readerQr);
-        }
-        if (!result || result.startsWith('Error')) {
-            const readerCode128 = new window.ZXing.BrowserCode128Reader();
-            result = await decodeImage(readerCode128);
-        }
-        if (!result || result.startsWith('Error')) {
-            throw new Error('Không tìm thấy mã QR hoặc mã vạch trong ảnh');
-        }
-        return result;
-    } catch (error) {
-        throw new Error('Không tìm thấy mã QR hoặc mã vạch trong ảnh');
+    let result = null;
+    const reader = await initZxingReaderDecodeFromImage();
+    result = await decodeImage(reader);
+    if (!result) {
+        const codeReader = new ZXing.BrowserMultiFormatReader()
+        result = await decodeImage(codeReader);
     }
+    if (!result) {
+        console.error('No barcode found');
+        throw new Error('No barcode found');
+    }
+    return result;
 };

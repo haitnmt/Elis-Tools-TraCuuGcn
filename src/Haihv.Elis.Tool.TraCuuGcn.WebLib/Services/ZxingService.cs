@@ -28,17 +28,20 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     {
         return await jsRuntime.InvokeAsync<bool>("checkCameraAvailability");
     }
-    public async Task<string> ScanFromImage(IBrowserFile uploadedImage)
+    public async Task<string?> ScanFromImage(IBrowserFile uploadedImage)
     {
         ArgumentNullException.ThrowIfNull(uploadedImage);
-
+        // Kiểm tra file tải lên có phải là ảnh không?
+        if (!uploadedImage.ContentType.StartsWith("image/"))
+        {
+            throw new InvalidOperationException("Tệp tải lên không phải là ảnh!");
+        }
         await using var stream = uploadedImage.OpenReadStream();
         await using var ms = new MemoryStream();
         await stream.CopyToAsync(ms);
         var imageBytes = ms.ToArray();
         var imageDataUrl = $"data:{uploadedImage.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
-
-        return await jsRuntime.InvokeAsync<string>("scanFromImage", imageDataUrl);
+        return await jsRuntime.InvokeAsync<string?>("scanFromImage", imageDataUrl) ;
     }
     
     public async Task StartCameraScan(ElementReference videoElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
@@ -50,7 +53,6 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
             _zxingReader,
             videoElement,
             dotNetObjectReference);
-
     }
 
     public async Task StopCameraScan()

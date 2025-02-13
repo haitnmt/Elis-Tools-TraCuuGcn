@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -8,8 +8,8 @@
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>0.5.9172.3</AssemblyVersion>
-        <FileVersion>0.5.9172.3</FileVersion>
+        <AssemblyVersion>0.5.9175.3</AssemblyVersion>
+        <FileVersion>0.5.9175.3</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>

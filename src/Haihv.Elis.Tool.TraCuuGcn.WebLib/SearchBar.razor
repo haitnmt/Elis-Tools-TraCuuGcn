@@ -18,7 +18,9 @@ else
                 HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr" />
             <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Search"
                 OnClick="OnClickSearch" />
-            <MudFileUpload T="IBrowserFile" FilesChanged="HandleImageUpload!">
+            <MudFileUpload T="IBrowserFile" 
+                           FilesChanged="HandleImageUpload!"
+                           Accept=".png, .jpg, .jpeg, .bmp, .gif">
                 <ActivatorContent>
                     <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Image">
                     </MudIconButton>
@@ -57,7 +59,7 @@ else
     private bool _isCameraActive;
     private bool _hasCamera;
     private IBrowserFile? _uploadedImage;
-    private string _result = string.Empty;
+    private string? _result = string.Empty;
     private string _errorMessage = string.Empty;
     private bool _isLoaded;
     private string _loadingMessage = "Đang tải thư viện quét mã QR...";
@@ -76,10 +78,12 @@ else
     private async Task ToggleCamera()
     {
         _isCameraActive = !_isCameraActive;
-        StateHasChanged();
         await IsCameraActiveChanged.InvokeAsync(_isCameraActive);
         if (_isCameraActive)
         {
+            _errorMessage = string.Empty;
+            _result = string.Empty;
+            StateHasChanged();
             // Đợi render xong video element
             await Task.Yield();
             await ZxingService.StartCameraScan(_videoElement, DotNetObjectReference.Create(this));
@@ -88,29 +92,30 @@ else
         {
             await ZxingService.StopCameraScan();
         }
-
     }
-
+    
     [JSInvokable]
     public void HandleScanResult(string text)
     {
-        _result = text;
-        _errorMessage = string.Empty;
-        Result = _result;
-        ResultChanged.InvokeAsync(_result);
         if (AutoStopCamera)
         {
             _ = ZxingService.StopCameraScan();
             _isCameraActive = false;
         }
-
+        _result = text;
+        _errorMessage = string.Empty;
+        Result = text;
+        ResultChanged.InvokeAsync(Result);
         StateHasChanged();
     }
 
     private async Task HandleImageUpload(IBrowserFile file)
     {
+        if (_isCameraActive)
+        {
+            await ToggleCamera();
+        }
         _uploadedImage = file;
-        _errorMessage = string.Empty;
         await ScanFromImage();
     }
 
@@ -118,25 +123,24 @@ else
     {
         if (_uploadedImage == null) return;
         _errorMessage = string.Empty;
-        _result = string.Empty;
         try
         {
             _result = await ZxingService.ScanFromImage(_uploadedImage);
             if (string.IsNullOrWhiteSpace(_result))
                 _errorMessage = "Không tìm thấy mã QR hoặc mã vạch trong ảnh. Vui lòng thử lại với ảnh khác!";
         }
-        catch (JSException jsEx) when (jsEx.Message.Contains("Không tìm thấy mã QR hoặc mã vạch trong ảnh"))
+        catch (Exception exZxing) when (exZxing.Message.Contains("No barcode found"))
         {
             _errorMessage = "Không tìm thấy mã QR hoặc mã vạch trong ảnh. Vui lòng thử lại với ảnh khác!";
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Lỗi ảnh: {ex.Message}";
+            _errorMessage = $"Lỗi: {ex.Message}";
         }
         finally
         {
             Result = _result ?? string.Empty;
-            await ResultChanged.InvokeAsync(_result);
+            await ResultChanged.InvokeAsync(Result);
         }
     }
 
@@ -150,7 +154,12 @@ else
 
     private void OnClickSearch()
     {
-        Result = _result;
+        if (_isCameraActive)
+        {
+            _ = ToggleCamera();
+        }
+        _errorMessage = string.Empty;
+        Result = _result ?? string.Empty;
         ResultChanged.InvokeAsync(_result);
     }
 
