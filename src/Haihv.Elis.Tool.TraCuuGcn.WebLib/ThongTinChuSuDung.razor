@@ -1,12 +1,115 @@
-<MudCard>
-    <MudCardContent>
-        <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
-        <MudDivider/>
-        <MudAlert Severity="Severity.Warning">
-            Đang thực hiện
-        </MudAlert>
-    </MudCardContent>
-</MudCard>
+@using System.Net.Http.Json
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+
+<AuthorizeView>
+    <Authorized>
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
+                <MudDivider/>
+                @if (!_isLoading)
+                {
+                    <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+                }
+                else if (_chuSuDungInfo == null)
+                {
+                    <MudAlert Severity="Severity.Error">
+                        Không tìm thấy thông tin chủ sử dụng
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudField Label="Tên chủ sử dụng">
+                        @_chuSuDungInfo.ChuSuDung.Ten
+                    </MudField>
+                    <MudField Label="Số định danh">
+                        @_chuSuDungInfo.ChuSuDung.GiayTo
+                    </MudField>
+                    <MudField Label="Địa chỉ">
+                        @_chuSuDungInfo.ChuSuDung.DiaChi
+                    </MudField>
+                    @if (_chuSuDungInfo.ChuSuDungQuanHe != null)
+                    {
+                        <MudField Label="Người có quan hệ">
+                            @_chuSuDungInfo.ChuSuDungQuanHe.Ten
+                        </MudField>
+                        <MudField Label="Số định danh">
+                            @_chuSuDungInfo.ChuSuDungQuanHe.GiayTo
+                        </MudField>
+                        <MudField Label="Địa chỉ">
+                            @_chuSuDungInfo.ChuSuDungQuanHe.DiaChi
+                        </MudField>
+                    }
+                }
+            </MudCardContent>
+        </MudCard>
+    </Authorized>
+    <NotAuthorized>
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
+                <MudDivider/>
+                <MudAlert Severity="Severity.Error">
+                    Bạn không có quyền truy cập
+                </MudAlert>
+            </MudCardContent>
+        </MudCard>
+    </NotAuthorized>
+</AuthorizeView>
+
+@inject IAuthService AuthService
+@inject IHttpClientFactory HttpClientFactory
+@inject AppSettingsService AppSettingService
+
 @code {
+    [Parameter] public long? MaGcnElis { get; set; }
+    private AppSettings? _appSettings = null!;
+    private HttpClient _httpClient = null!;
+    private const string UrlGetThongTinChuSuDung = "/elis/chuSuDung";
+    private ChuSuDungInfo? _chuSuDungInfo;
+    private string? _error = string.Empty;
+    private long? _maGcnElis;
+    private bool _isLoading;
+    protected override void OnInitialized()
+    {
+        _httpClient = HttpClientFactory.CreateClient("Endpoint");
+        _appSettings = AppSettingService.AppSettings;
+        
+    }
     
+    protected override async Task OnParametersSetAsync()
+    {
+        if (MaGcnElis > 0 || MaGcnElis == _maGcnElis) return;
+        _maGcnElis = MaGcnElis;
+        await LoadDataAsync();
+    }
+    
+    private async Task LoadDataAsync()
+    {
+        _error = null;
+        _isLoading = true;
+        StateHasChanged();
+        _chuSuDungInfo = null;
+        var url = $"{UrlGetThongTinChuSuDung}?maGcnElis={_maGcnElis}";
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<Response<ChuSuDungInfo>>(url);
+            if (response?.Value == null)
+            {
+                _error = response?.ErrorMsg ?? "Không có thông tin Giấy chứng nhận";
+                return;
+            }
+            _chuSuDungInfo = response.Value;
+        }
+        catch (Exception e)
+        {
+            _error = "Lỗi khi tải thông tin Giấy chứng nhận";
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
 }

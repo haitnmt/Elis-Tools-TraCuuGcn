@@ -22,7 +22,7 @@
                 <Authorized>
                     <MudItem xs="12" md="6" lg="4">
                         <MudStack>
-                            <ThongTinChuSuDung/>
+                            <ThongTinChuSuDung MaGcnElis="_maGcnElis"/>
                             <ThongTinThuaDat/>
                             <ThongTinTaiSan/>
                         </MudStack>
@@ -72,4 +72,5 @@
         };
         return DialogService.ShowAsync<AuthByChuSuDung>(null,  parameters, options);
     }
+    
 }

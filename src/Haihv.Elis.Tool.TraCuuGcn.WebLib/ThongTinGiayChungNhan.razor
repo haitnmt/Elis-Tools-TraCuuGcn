@@ -150,10 +150,12 @@ else
         </MudStack>
     }
 }
+
 @inject IAuthService AuthService
+@inject  IHttpClientFactory HttpClientFactory
+@inject AppSettingsService AppSettingService
+
 @code {
-    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
-    [Inject] private AppSettingsService AppSettingService { get; set; } = null!;
 
     private AppSettings? _appSettings = null!;
     private HttpClient _httpClient = null!;
@@ -180,7 +182,7 @@ else
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Query == _query) return;
+        if (string.IsNullOrWhiteSpace(Query) ||  Query == _query) return;
         _query = Query;
         await LoadDataAsync();
     }

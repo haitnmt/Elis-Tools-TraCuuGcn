@@ -29,7 +29,7 @@ public class AuthService(
 
         var authResponse = await response.Content.ReadFromJsonAsync<AccessToken>();
         
-        await SetLocalStorageAsync(authResponse, authChuSuDung.MaGcnElis);
+        await SetLocalStorageAsync(authResponse, authChuSuDung.MaGcnElis, authChuSuDung.SoDinhDanh);
         
         var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
         
@@ -38,16 +38,17 @@ public class AuthService(
         return new AuthResult { Success = true };
     }
     
-    private async Task SetLocalStorageAsync(AccessToken? accessToken = null, long maGcnElis = 0)
+    private async Task SetLocalStorageAsync(AccessToken? accessToken = null, long maGcnElis = 0, string maDinhDanh = "")
     {
         if (accessToken is not null && maGcnElis > 0)
         {
             await localStorage.SetItemAsync("authToken", accessToken.Token);
             await localStorage.SetItemAsync("refreshToken", accessToken.RefreshToken);
             await localStorage.SetItemAsync("maGcnElis", maGcnElis);
+            await localStorage.SetItemAsync("maDinhDanh", maDinhDanh);
         }
     }
-
+    
     public async Task<bool> CheckAuthorByMaGcnElis(long maGcnElis)
     {
         if (maGcnElis <= 0)
