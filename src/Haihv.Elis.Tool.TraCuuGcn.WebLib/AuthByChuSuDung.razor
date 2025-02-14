@@ -2,7 +2,7 @@
 <MudDialog>
     <TitleContent>
         <MudStack Row="true" AlignItems="AlignItems.End"> 
-            <MudAvatar Color="Color.Warning" Variant="Variant.Outlined">
+            <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Rounded="true">
                 <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Medium"/>
             </MudAvatar>
             <MudText Typo="Typo.h6"
@@ -55,7 +55,7 @@
     [Parameter] public EventCallback<bool> SuccessChanged { get; set; }
     private string _soDinhDanh = string.Empty;
     private string _tenChuSuDung = string.Empty;
-    private bool _processing = false;
+    private bool _processing;
     private AuthResult? _authResult;
     private async Task XacThuc()
     {
@@ -65,6 +65,7 @@
         {
             Success = true;
             await SuccessChanged.InvokeAsync(Success);
+            MudDialog.Close(DialogResult.Ok(true));
         }
         _processing = false;
     }

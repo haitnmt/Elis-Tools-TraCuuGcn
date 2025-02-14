@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.TraCuuGcn.Models", "src\Haihv.Elis.Tool.TraCuuGcn.Models\Haihv.Elis.Tool.TraCuuGcn.Models.csproj", "{55C52921-5475-41EC-A526-2AB2433D025D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.TraCuuGcn.Web-Api", "src\Haihv.Elis.Tool.TraCuuGcn.Web-Api\Haihv.Elis.Tool.TraCuuGcn.Web-Api.csproj", "{AD396453-59E3-4C81-A42C-82160B23129A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.TraCuuGcn.Api", "src\Haihv.Elis.Tool.TraCuuGcn.Api\Haihv.Elis.Tool.TraCuuGcn.Api.csproj", "{AD396453-59E3-4C81-A42C-82160B23129A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.TraCuuGcn.WebLib", "src\Haihv.Elis.Tool.TraCuuGcn.WebLib\Haihv.Elis.Tool.TraCuuGcn.WebLib.csproj", "{F6FFBC59-D485-4B3E-93FF-9239235F24CA}"
 EndProject

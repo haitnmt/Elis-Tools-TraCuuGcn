@@ -8,6 +8,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 public interface IAuthService
 {
     Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung);
+    Task<bool> CheckAuthorByMaGcnElis(long maGcnElis);
     Task Logout();
 }
 
@@ -28,8 +29,7 @@ public class AuthService(
 
         var authResponse = await response.Content.ReadFromJsonAsync<AccessToken>();
         
-        await localStorage.SetItemAsync("authToken", authResponse?.Token);
-        await localStorage.SetItemAsync("refreshToken", authResponse?.RefreshToken);
+        await SetLocalStorageAsync(authResponse, authChuSuDung.MaGcnElis);
         
         var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
         
@@ -37,11 +37,29 @@ public class AuthService(
         
         return new AuthResult { Success = true };
     }
+    
+    private async Task SetLocalStorageAsync(AccessToken? accessToken = null, long maGcnElis = 0)
+    {
+        if (accessToken is not null && maGcnElis > 0)
+        {
+            await localStorage.SetItemAsync("authToken", accessToken.Token);
+            await localStorage.SetItemAsync("refreshToken", accessToken.RefreshToken);
+            await localStorage.SetItemAsync("maGcnElis", maGcnElis);
+        }
+    }
 
+    public async Task<bool> CheckAuthorByMaGcnElis(long maGcnElis)
+    {
+        if (maGcnElis <= 0)
+            return false;
+        var maGcn = await localStorage.GetItemAsync<long>("maGcnElis");
+        return maGcn == maGcnElis;
+    }
     public async Task Logout()
     {
         await localStorage.RemoveItemAsync("authToken");
         await localStorage.RemoveItemAsync("refreshToken");
+        await localStorage.RemoveItemAsync("maGcnElis");
         _jwtAuthStateProvider.NotifyUserChanged(JwtAuthStateProvider.AnonymousUser);
     }
 }

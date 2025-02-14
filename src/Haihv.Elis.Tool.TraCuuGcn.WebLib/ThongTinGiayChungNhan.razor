@@ -150,7 +150,7 @@ else
         </MudStack>
     }
 }
-
+@inject IAuthService AuthService
 @code {
     [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
     [Inject] private AppSettingsService AppSettingService { get; set; } = null!;
@@ -220,6 +220,9 @@ else
                 if (MaGcnElis != _giayChungNhanInfo.MaGcnElis)
                 {
                     MaGcnElis = _giayChungNhanInfo.MaGcnElis;
+                    // Kiểm tra thông tin Xác thực
+                    if (!await AuthService.CheckAuthorByMaGcnElis(MaGcnElis))
+                       await AuthService.Logout();
                     await MaGcnElisChanged.InvokeAsync(MaGcnElis);
                     await LoadThuaDatAsync();
                 }
