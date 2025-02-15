@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Data;
+namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 public sealed class ChuSuDungService(
     IGiayChungNhanService giayChungNhanService,

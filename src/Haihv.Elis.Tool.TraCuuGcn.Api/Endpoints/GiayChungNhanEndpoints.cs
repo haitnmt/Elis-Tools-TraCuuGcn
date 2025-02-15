@@ -1,6 +1,6 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Data;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;

@@ -1,3 +1,4 @@
+@using System.Text.Json
 
 <MudCard>
     <MudText Typo="Typo.h6">Vị trí thửa đất trên bản đồ vệ tinh</MudText>
@@ -8,7 +9,7 @@
                 {
                     <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
                 }
-                else if (_position == null)
+                else if (string.IsNullOrWhiteSpace(_geoJson))
                 {
                     <MudAlert Severity="Severity.Error">
                         Không tìm thấy vị trí thửa đất
@@ -29,8 +30,60 @@
         </AuthorizeView>
     </MudCardContent>
 </MudCard>
+
+@inject IHttpClientFactory HttpClientFactory
+@inject LeafletMapService LeafletMapService
+
 @code 
 {
+    [Parameter] public long? MaGcnElis { get; set; }
+    private HttpClient? _httpClient;
+    private string? _geoJson;
+    private string? _error = string.Empty;
+    private long? _maGcnElis;
     private bool _isLoading;
-    private Position? _position;
+    private const string GetToaDoThuaDatUrl = "/geo/toaDoThua";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && !string.IsNullOrWhiteSpace(_geoJson)) return;
+        _maGcnElis = MaGcnElis;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _error = null;
+        _isLoading = true;
+        StateHasChanged();
+        _geoJson = null;
+        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        var url = $"{GetToaDoThuaDatUrl}?maGcnElis={_maGcnElis}";
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadAsStringAsync();
+                _geoJson = JsonSerializer.Serialize(
+                    JsonSerializer.Deserialize<object>(result));
+                await LeafletMapService.UpdateMapAsync(_geoJson);
+            }
+            else
+            {
+                _error = "Không tìm thấy vị trí thửa đất";
+            }
+            _isLoading = false;
+        }
+        catch (Exception e)
+        {
+            _error = "Lỗi khi tải vị trí thửa đất";
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
 }

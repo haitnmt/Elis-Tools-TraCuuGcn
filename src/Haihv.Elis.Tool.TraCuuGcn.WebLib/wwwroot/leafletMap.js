@@ -6,6 +6,7 @@ window.leafletMapInterop = {
     thuaDatsLayer: null,
     netNhasLayer: null,
     longDuongsLayer: null,
+    tamThuaDatsLayer: null,
     addOverlayMaps: true,
     initializeMap: function () {
         // Khởi tạo bản đồ với trung tâm là Bắc Ninh
@@ -173,6 +174,7 @@ window.leafletMapInterop = {
             const thuaDats = processLayer(parsedData.thuaDats);
             const netNhas = processLayer(parsedData.netNhas);
             const longDuongs = processLayer(parsedData.longDuongs);
+            const tamThuaDats = processLayer(parsedData.tamThuaDats);
 
             // Xóa các lớp GeoJSON cũ nếu có
             if (this.thuaDatsLayer) {
@@ -189,6 +191,7 @@ window.leafletMapInterop = {
             }
 
             // Tạo các lớp GeoJSON mới
+            // Tạo lớp thửa đất
             this.thuaDatsLayer = L.geoJSON(thuaDats, {
                 style: function () {
                     return { color: 'red', weight: 1, fillOpacity: 0.1 };
@@ -202,7 +205,8 @@ window.leafletMapInterop = {
                     }
                 }
             });
-
+            
+            // Tạo lớp nét nhà
             this.netNhasLayer = L.geoJSON(netNhas, {
                 style: function () {
                     return { color: 'blue', weight: 2, dashArray: '5,5' };
@@ -216,8 +220,23 @@ window.leafletMapInterop = {
                     }
                 }
             });
-
+            
+            // Tạo lớp lòng đường
             this.longDuongsLayer = L.geoJSON(longDuongs, {
+                style: function () {
+                    return { color: 'red', weight: 5, dashArray: '10,10' };
+                },
+                onEachFeature: function (feature, layer) {
+                    if (feature.properties) {
+                        const popupContent = Object.entries(feature.properties)
+                            .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+                            .join('<br>');
+                        layer.bindPopup(popupContent);
+                    }
+                }
+            });
+            // Tạo lớp tâm thửa đất
+            this.tamThuaDatsLayer = L.geoJSON(tamThuaDats, {
                 style: function () {
                     return { color: 'orange', weight: 2, dashArray: '5,5' };
                 },

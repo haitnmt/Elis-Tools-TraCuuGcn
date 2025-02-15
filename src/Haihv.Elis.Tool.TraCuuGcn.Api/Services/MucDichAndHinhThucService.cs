@@ -1,7 +1,7 @@
 ﻿using InterpolatedSql.Dapper;
 using ILogger = Serilog.ILogger;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Data;
+namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 public class MucDichAndHinhThucService(string connectionString, ILogger logger)
 {

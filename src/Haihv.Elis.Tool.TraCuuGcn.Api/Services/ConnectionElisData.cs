@@ -4,7 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Data;
+namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 /// <summary>
 /// Interface cho dữ liệu kết nối ELIS.

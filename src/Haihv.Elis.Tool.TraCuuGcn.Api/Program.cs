@@ -1,8 +1,8 @@
 using System.Text;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Data;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -59,6 +59,8 @@ builder.Services.AddSingleton<IChuSuDungService, ChuSuDungService>();
 builder.Services.AddSingleton<IThuaDatService, ThuaDatService>();
 // Add SearchService
 builder.Services.AddSingleton<ISearchService, SearchService>();
+// Add GeoService
+builder.Services.AddSingleton<IGeoService, GeoService>();
 
 // Add AuthenticationService
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
@@ -98,6 +100,7 @@ app.MapChuSuDungEndpoints();
 app.MapAuthenticationEndpoints();
 app.MapSearchEndpoints();
 app.MapAppSettingsEndpoints();
+app.MapGeoEndPoints();
 
 // Authentication and Authorization
 app.UseAuthentication();

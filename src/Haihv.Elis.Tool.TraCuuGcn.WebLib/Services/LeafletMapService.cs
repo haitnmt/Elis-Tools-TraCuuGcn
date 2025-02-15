@@ -16,6 +16,12 @@ public class LeafletMapService(IJSRuntime jsRuntime) : IAsyncDisposable
         _isInitialized = true;
     }
     
+    public async Task UpdateMapAsync(string geoJson)
+    {
+        if (!_isInitialized) await InitializeAsync();
+        await jsRuntime.InvokeVoidAsync("leafletMapInterop.updateMap", geoJson);
+    }
+    
     public async ValueTask DisposeAsync()
     {
         if (_isInitialized)
