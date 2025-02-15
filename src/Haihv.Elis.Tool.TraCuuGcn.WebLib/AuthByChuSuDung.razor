@@ -29,8 +29,14 @@
         }
     </DialogContent>
     <DialogActions>
-        <MudButton 
-            Variant="Variant.Filled" 
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Secondary"
+                   Disabled="_processing"
+                   OnClick="MudDialog.Cancel">
+            Hủy bỏ
+        </MudButton>
+        <MudButton
+            Variant="Variant.Filled"
             Color="Color.Primary"
             Disabled="_processing"
             OnClick="XacThuc">
@@ -51,8 +57,6 @@
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public long MaGcnElis { get; set; }
-    [Parameter] public bool Success { get; set; }
-    [Parameter] public EventCallback<bool> SuccessChanged { get; set; }
     private string _soDinhDanh = string.Empty;
     private string _tenChuSuDung = string.Empty;
     private bool _processing;
@@ -63,9 +67,11 @@
         _authResult = await AuthService.LoginByChuSuDung(new AuthChuSuDung(MaGcnElis, _soDinhDanh, _tenChuSuDung));
         if (_authResult.Success)
         {
-            Success = true;
-            await SuccessChanged.InvokeAsync(Success);
-            MudDialog.Close(DialogResult.Ok(true));
+            MudDialog.Close(DialogResult.Ok(MaGcnElis));
+        }
+        else
+        {
+            MudDialog.Cancel();
         }
         _processing = false;
     }

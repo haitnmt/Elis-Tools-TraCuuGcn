@@ -1,12 +1,138 @@
-<MudCard>
-    <MudCardContent>
-        <MudText Typo="Typo.h6">Thông tin thửa đất</MudText>
-        <MudDivider/>
-        <MudAlert Severity="Severity.Warning">
-            Đang thực hiện
-        </MudAlert>
-    </MudCardContent>
-</MudCard>
+@using System.Net.Http.Json
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+
+<AuthorizeView>
+    <Authorized>
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Thông tin chi tiết thửa đất</MudText>
+                @if (_isLoading)
+                {
+                    <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+                }
+                else if (_thuaDat == null)
+                {
+                    <MudAlert Severity="Severity.Error">
+                        Không tìm thấy thông tin Thửa đất
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="6" lg="4">
+                                <MudField Label="Tờ bản đồ" Variant="Variant.Text">
+                                    @_thuaDat.ToBanDo
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="6" lg="4">
+                                <MudField Label="Thửa đất số" Variant="Variant.Text">
+                                    @_thuaDat.ThuaDatSo
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="6" lg="4">
+                                <MudField Label="Diện tích" Variant="Variant.Text">
+                                    @_thuaDat.DienTich
+                                </MudField>
+                            </MudItem>
+                            <MudFlexBreak />
+                            <MudItem xs="6" lg="6">
+                                <MudField Label="Loại đất" Variant="Variant.Text">
+                                    @_thuaDat.LoaiDat
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="6" lg="6">
+                                <MudField Label="Thời hạn" Variant="Variant.Text">
+                                    @_thuaDat.ThoiHan
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudField Label="Hình thức sử dụng" Variant="Variant.Text">
+                                    @_thuaDat.HinhThuc
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudField Label="Nguồn gốc sử dụng" Variant="Variant.Text">
+                                    @_thuaDat.NguonGoc
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudField Label="Địa chỉ" Variant="Variant.Text">
+                                    @_thuaDat.DiaChi
+                                </MudField>
+                            </MudItem>
+                            @if(!string.IsNullOrWhiteSpace(_thuaDat.GhiChu))
+                            {
+                                <MudItem xs="12">
+                                    <MudField Label="Ghi chú" Variant="Variant.Text">
+                                        @_thuaDat.GhiChu
+                                    </MudField>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                }
+            </MudCardContent>
+        </MudCard>
+    </Authorized>
+    <NotAuthorized>
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
+                <MudDivider/>
+                <MudAlert Severity="Severity.Error">
+                    Bạn không có quyền truy cập
+                </MudAlert>
+            </MudCardContent>
+        </MudCard>
+    </NotAuthorized>
+</AuthorizeView>
+
+@inject IAuthService AuthService
+@inject IHttpClientFactory HttpClientFactory
+
 @code {
-    
+    [Parameter] public long? MaGcnElis { get; set; }
+    private HttpClient? _httpClient;
+    private const string UrlGetThongTinThuaDat = "/elis/thua-dat";
+    private ThuaDat? _thuaDat;
+    private string? _error = string.Empty;
+    private long? _maGcnElis;
+    private bool _isLoading;
+    protected override async Task OnParametersSetAsync()
+    {
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _thuaDat is not null) return;
+        _maGcnElis = MaGcnElis;
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _error = null;
+        _isLoading = true;
+        StateHasChanged();
+        _thuaDat = null;
+        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        var url = $"{UrlGetThongTinThuaDat}?maGcnElis={_maGcnElis}";
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<Response<ThuaDat>>(url);
+            if (response?.Value == null)
+            {
+                _error = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
+                return;
+            }
+            _thuaDat = response.Value;
+        }
+        catch (Exception e)
+        {
+            _error = "Lỗi khi tải thông tin Thửa đất";
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
 }

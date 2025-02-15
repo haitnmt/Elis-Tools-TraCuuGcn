@@ -44,13 +44,13 @@ public static class GiayChungNhanEndpoints
     /// <summary>
     /// Lấy thông tin Thửa Đất theo Giấy Chứng Nhận.
     /// </summary>
-    /// <param name="maGcn">Mã GCN của Giấy Chứng Nhận.</param>
+    /// <param name="maGcnElis">Mã GCN của Giấy Chứng Nhận.</param>
     /// <param name="httpContext">Ngữ cảnh HTTP hiện tại.</param>
     /// <param name="logger">Logger để ghi log.</param>
     /// <param name="authenticationService">Dịch vụ xác thực.</param>
     /// <param name="thuaDatService">Dịch vụ Giấy Chứng Nhận.</param>
     /// <returns>Kết quả truy vấn Thửa Đất.</returns>
-    private static async Task<IResult> GetThuaDatAsync([FromQuery] long maGcn,
+    private static async Task<IResult> GetThuaDatAsync([FromQuery] long maGcnElis,
         HttpContext httpContext,
         ILogger<Program> logger,
         IAuthenticationService authenticationService,
@@ -58,15 +58,15 @@ public static class GiayChungNhanEndpoints
     {
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
-        if (!await authenticationService.CheckAuthenticationAsync(maGcn, user))
+        if (!await authenticationService.CheckAuthenticationAsync(maGcnElis, user))
         {
             return Results.Unauthorized();
         }
 
-        var result = await thuaDatService.GetResultAsync(maGcn);
+        var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
-            Results.Ok,
-            ex => Results.BadRequest(ex.Message)));
+            rs => Results.Ok(new Response<ThuaDat>(rs)),
+            ex => Results.BadRequest(new Response<ThuaDat>(ex.Message))));
     }
 
     /// <summary>

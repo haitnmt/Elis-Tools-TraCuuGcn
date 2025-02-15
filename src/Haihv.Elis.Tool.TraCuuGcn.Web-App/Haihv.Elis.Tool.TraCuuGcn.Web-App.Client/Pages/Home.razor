@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 
 <MudStack Class="ma-2" 
           Style="@(string.IsNullOrWhiteSpace(_searchQuery) && !_isCameraActive ? "height: calc((1 / 3)*(100vh - 50px))" : "")" 
@@ -12,7 +13,38 @@
                 @if (!string.IsNullOrWhiteSpace(_searchQuery))
                 { 
                     <ThongTinGiayChungNhan Query="@_searchQuery"
-                                           @bind-MaGcnElis="@_maGcnElis"/>
+                                           @bind-MaGcnElis="@_maGcnElis"
+                                           DonViChanged="donVi => _donVi = donVi"/>
+                    @if (_maGcnElis > 0)
+                    {
+                        <AuthorizeView>
+                            <Authorized>
+                                @if (_isAuthSuccess)
+                                {
+                                    <ThongTinChuSuDung MaGcnElis="_maGcnElis"/>
+                                }
+                            </Authorized>
+                            <NotAuthorized>
+                                <MudItem xs="12" md="6" lg="4">
+                                    <MudAlert Severity="Severity.Warning">
+                                        <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Start" Spacing="0">
+                                            <MudText Typo="Typo.body1">
+                                                Bạn cần xác thực thông tin để xem thông tin chi tiết
+                                            </MudText>
+                                            <MudButton Variant="Variant.Text"
+                                                       Color="Color.Info"
+                                                       FullWidth="false"
+                                                       Size="Size.Small"
+                                                       StartIcon="@Icons.Material.Filled.Verified"
+                                                       OnClick="OpenAuthDialog">
+                                                Xác thực
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudAlert>
+                                </MudItem>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    }
                 }
             </MudStack>
         </MudItem>
@@ -20,46 +52,55 @@
         {
             <AuthorizeView>
                 <Authorized>
-                    <MudItem xs="12" md="6" lg="4">
-                        <MudStack>
-                            <ThongTinChuSuDung MaGcnElis="_maGcnElis"/>
-                            <ThongTinThuaDat/>
-                            <ThongTinTaiSan/>
-                        </MudStack>
-                    </MudItem>
-                    <MudItem xs="12" md="6" lg="4">
-                        <ThuaDatLocation/>
-                    </MudItem>
-                </Authorized>
-                <NotAuthorized>
-                    <MudItem xs="12" md="6" lg="4">
-                        <MudAlert Severity="Severity.Warning">
-                            <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Start" Spacing="0">
-                                <MudText Typo="Typo.body1">
-                                    Bạn cần xác thực thông tin để xem thông tin chi tiết
-                                </MudText>
-                                <MudButton Variant="Variant.Text"
-                                           Color="Color.Info"
-                                           FullWidth="false"
-                                           Size="Size.Small"
-                                           StartIcon="@Icons.Material.Filled.Verified"
-                                           OnClick="OpenAuthDialog">
-                                    Xác thực
-                                </MudButton>
+                    @if (_isAuthSuccess)
+                    {
+                        <MudItem xs="12" md="6" lg="4">
+                            <MudStack>
+                                <ThongTinThuaDat MaGcnElis="_maGcnElis"/>
+                                <ThongTinTaiSan/>
                             </MudStack>
-                        </MudAlert>
-                    </MudItem>
-                </NotAuthorized>
+                        </MudItem>
+                        <MudItem xs="12" md="6" lg="4">
+                            <ThuaDatLocation/>
+                        </MudItem>
+                    }
+                </Authorized>
             </AuthorizeView>
         }
     </MudGrid>
+    @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
+    {
+        <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Center">
+            <MudAlert Severity="Severity.Warning" ShowCloseIcon="true">
+                <MudText Typo="Typo.body2">
+                    Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác.
+                </MudText>
+                <MudStack Class="pt-1" Spacing="0">
+                    <MudText Typo="Typo.caption">
+                        Vui lòng xác minh thông tin tại:
+                    </MudText>
+                    <MudText Typo="Typo.caption">
+                        @_donVi
+                    </MudText>
+                </MudStack>
+            </MudAlert>
+        </MudStack>
+    }
 </MudStack>
 @inject IDialogService DialogService
+@inject AppSettingsService AppSettingService
 @code {
     private string? _searchQuery;
     private long _maGcnElis;
     private bool _isCameraActive;
-    private Task OpenAuthDialog()
+    private bool _isAuthSuccess = true;
+    private AppSettings? _appSettings;
+    private string? _donVi;
+    protected override void OnInitialized()
+    {
+        _appSettings = AppSettingService.AppSettings;
+    }
+    private async Task OpenAuthDialog()
     {
         var options = new DialogOptions
         {
@@ -68,9 +109,13 @@
         var parameters = new DialogParameters<AuthByChuSuDung>
         {
             { x => x.MaGcnElis, _maGcnElis },
-            { x => x.Success, false },
         };
-        return DialogService.ShowAsync<AuthByChuSuDung>(null,  parameters, options);
+        var authorByChuSuDung = await DialogService.ShowAsync<AuthByChuSuDung>(null,  parameters, options);
+        var result = await authorByChuSuDung.Result;
+        
+        _isAuthSuccess = result is not null && !result.Canceled;
+        
+        StateHasChanged();
     }
     
 }

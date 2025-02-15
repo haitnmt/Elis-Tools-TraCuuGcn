@@ -13,6 +13,7 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<JwtAuthorizationHandler>();
 
 var baseUrl = builder.HostEnvironment.BaseAddress;
 var appSettings = await AppSettingsService.GetAppSettings(baseUrl);
@@ -21,12 +22,13 @@ var apiEndpoint = appSettings.ApiEndpoint;
 
 // Kiểm tra xem API URL hợp lệ hay không
 if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
-{
+{ 
         throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
 builder.Services.AddHttpClient(
         "Endpoint",
-        opt => opt.BaseAddress = validUri);
+        opt => opt.BaseAddress = validUri)
+        .AddHttpMessageHandler<JwtAuthorizationHandler>();
 // Đăng ký dịch vụ cấu hình ứng dụng
 builder.AddAppSettingsServices(appSettings);
 

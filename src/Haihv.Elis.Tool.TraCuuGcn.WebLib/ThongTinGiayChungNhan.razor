@@ -135,35 +135,22 @@ else
                     </AuthorizeView>
                 </MudCardContent>
             </MudCard>
-            @if (_appSettings is not null && _appSettings.IsDemoVersion)
-            {
-                <MudAlert Severity="Severity.Warning" Dense="true" ShowCloseIcon="true">
-                    <MudText Typo="Typo.body1">
-                        Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác
-                    </MudText>
-                    <MudText Typo="Typo.caption">
-                        Vui lòng liên hệ với @_giayChungNhanInfo.DonVi để xác minh thông tin
-                    </MudText>
-                </MudAlert>
-            }
-
         </MudStack>
     }
 }
 
 @inject IAuthService AuthService
 @inject  IHttpClientFactory HttpClientFactory
-@inject AppSettingsService AppSettingService
 
 @code {
-
-    private AppSettings? _appSettings = null!;
+    
     private HttpClient _httpClient = null!;
     [Parameter] public string? Query { get; set; }
     [Parameter] public string? Error { get; set; }
     [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
     [Parameter] public long MaGcnElis { get; set; }
     [Parameter] public EventCallback<long> MaGcnElisChanged { get; set; }
+    [Parameter] public EventCallback<string> DonViChanged { get; set; }
 
     private const string Url = "/elis/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
@@ -177,7 +164,6 @@ else
     protected override void OnInitialized()
     {
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
-        _appSettings = AppSettingService.AppSettings;
     }
 
     protected override async Task OnParametersSetAsync()
@@ -227,6 +213,7 @@ else
                        await AuthService.Logout();
                     await MaGcnElisChanged.InvokeAsync(MaGcnElis);
                     await LoadThuaDatAsync();
+                    await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
                 }
             }
             else

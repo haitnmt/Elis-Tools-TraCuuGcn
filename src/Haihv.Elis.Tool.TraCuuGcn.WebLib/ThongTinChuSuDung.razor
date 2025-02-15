@@ -6,8 +6,7 @@
         <MudCard>
             <MudCardContent>
                 <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
-                <MudDivider/>
-                @if (!_isLoading)
+                @if (_isLoading)
                 {
                     <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
                 }
@@ -19,27 +18,33 @@
                 }
                 else
                 {
-                    <MudField Label="Tên chủ sử dụng">
-                        @_chuSuDungInfo.ChuSuDung.Ten
-                    </MudField>
-                    <MudField Label="Số định danh">
-                        @_chuSuDungInfo.ChuSuDung.GiayTo
-                    </MudField>
-                    <MudField Label="Địa chỉ">
-                        @_chuSuDungInfo.ChuSuDung.DiaChi
-                    </MudField>
-                    @if (_chuSuDungInfo.ChuSuDungQuanHe != null)
-                    {
-                        <MudField Label="Người có quan hệ">
-                            @_chuSuDungInfo.ChuSuDungQuanHe.Ten
-                        </MudField>
-                        <MudField Label="Số định danh">
-                            @_chuSuDungInfo.ChuSuDungQuanHe.GiayTo
-                        </MudField>
-                        <MudField Label="Địa chỉ">
-                            @_chuSuDungInfo.ChuSuDungQuanHe.DiaChi
-                        </MudField>
-                    }
+                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="6">
+                                <MudText Typo="Typo.body2">
+                                    @_chuSuDungInfo.ChuSuDung.Ten;
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudText Typo="Typo.body2">
+                                    @_chuSuDungInfo.ChuSuDung.GiayTo
+                                </MudText>
+                            </MudItem>
+                            @if (_chuSuDungInfo.ChuSuDungQuanHe != null)
+                            {
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.body2">
+                                        @_chuSuDungInfo.ChuSuDungQuanHe.Ten;
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.body2">
+                                        @_chuSuDungInfo.ChuSuDungQuanHe.GiayTo
+                                    </MudText>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
                 }
             </MudCardContent>
         </MudCard>
@@ -59,27 +64,18 @@
 
 @inject IAuthService AuthService
 @inject IHttpClientFactory HttpClientFactory
-@inject AppSettingsService AppSettingService
 
 @code {
     [Parameter] public long? MaGcnElis { get; set; }
-    private AppSettings? _appSettings = null!;
-    private HttpClient _httpClient = null!;
+    private HttpClient? _httpClient;
     private const string UrlGetThongTinChuSuDung = "/elis/chuSuDung";
     private ChuSuDungInfo? _chuSuDungInfo;
     private string? _error = string.Empty;
     private long? _maGcnElis;
     private bool _isLoading;
-    protected override void OnInitialized()
-    {
-        _httpClient = HttpClientFactory.CreateClient("Endpoint");
-        _appSettings = AppSettingService.AppSettings;
-        
-    }
-    
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 || MaGcnElis == _maGcnElis) return;
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _chuSuDungInfo is not null) return;
         _maGcnElis = MaGcnElis;
         await LoadDataAsync();
     }
@@ -90,20 +86,21 @@
         _isLoading = true;
         StateHasChanged();
         _chuSuDungInfo = null;
+        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
         var url = $"{UrlGetThongTinChuSuDung}?maGcnElis={_maGcnElis}";
         try
         {
             var response = await _httpClient.GetFromJsonAsync<Response<ChuSuDungInfo>>(url);
             if (response?.Value == null)
             {
-                _error = response?.ErrorMsg ?? "Không có thông tin Giấy chứng nhận";
+                _error = response?.ErrorMsg ?? "Không có thông tin Chủ sử dụng";
                 return;
             }
             _chuSuDungInfo = response.Value;
         }
         catch (Exception e)
         {
-            _error = "Lỗi khi tải thông tin Giấy chứng nhận";
+            _error = "Lỗi khi tải thông tin Chủ sử dụng";
             Console.WriteLine(e);
         }
         finally
