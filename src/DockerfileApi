@@ -7,7 +7,7 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Haihv.Elis.Tool.TraCuuGcn.Web-Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj", "Haihv.Elis.Tool.TraCuuGcn.Api/"]
+COPY ["Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj", "Haihv.Elis.Tool.TraCuuGcn.Api/"]
 COPY ["Haihv.Elis.Tool.TraCuuGcn.Models/Haihv.Elis.Tool.TraCuuGcn.Models.csproj", "Haihv.Elis.Tool.TraCuuGcn.Models/"]
 RUN dotnet restore "./Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj"
 COPY . .

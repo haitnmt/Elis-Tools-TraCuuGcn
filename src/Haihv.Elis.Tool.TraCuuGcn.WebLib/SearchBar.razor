@@ -51,8 +51,8 @@ else
 
 @code {
     [Parameter] public bool AutoStopCamera { get; set; }
-    [Parameter] public string Result { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string> ResultChanged { get; set; }
+    [Parameter] public string? Result { get; set; }
+    [Parameter] public EventCallback<string?> ResultChanged { get; set; }
     [Parameter] public EventCallback<bool> IsCameraActiveChanged { get; set; }
     
     private ElementReference _videoElement;

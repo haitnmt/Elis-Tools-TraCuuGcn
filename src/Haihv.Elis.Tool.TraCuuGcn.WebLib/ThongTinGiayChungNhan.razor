@@ -182,6 +182,7 @@ else
         _error = null;
         _dataLoaded = false;
         StateHasChanged();
+        await DonViChanged.InvokeAsync(string.Empty);
         _giayChungNhanInfo = null;
         var url = $"{Url}?query={_query}";
         try
