@@ -34,7 +34,7 @@ $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Bắt đầu build Api" -ForegroundColor Blue
 
 # Đọc version từ file .csproj latest
-$csprojContent = Get-Content -Path ".\Haihv.Elis.Tool.TraCuuGcn.Web-Api\Haihv.Elis.Tool.TraCuuGcn.Web-Api.csproj" -Raw
+$csprojContent = Get-Content -Path ".\Haihv.Elis.Tool.TraCuuGcn.Api\Haihv.Elis.Tool.TraCuuGcn.Api.csproj" -Raw
 $version = [regex]::Match($csprojContent, '<AssemblyVersion>(.*?)</AssemblyVersion>').Groups[1].Value
 
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
