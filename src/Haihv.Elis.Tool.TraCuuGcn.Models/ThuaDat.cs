@@ -4,6 +4,7 @@ public record ThuaDat(
     int MaDvhc,
     string ThuaDatSo,
     string ToBanDo,
+    int TyLeBanDo,
     string DiaChi,
     string DienTich,
     string LoaiDat,

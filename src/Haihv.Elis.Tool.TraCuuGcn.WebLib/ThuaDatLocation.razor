@@ -1,12 +1,36 @@
+
 <MudCard>
+    <MudText Typo="Typo.h6">Vị trí thửa đất trên bản đồ vệ tinh</MudText>
     <MudCardContent>
-        <MudText Typo="Typo.h6">Vị trí thửa đất trên Bản đồ trực tuyến</MudText>
-        <MudDivider/>
-        <MudAlert Severity="Severity.Warning">
-            Đang thực hiện
-        </MudAlert>
+        <AuthorizeView>
+            <Authorized>
+                @if (_isLoading)
+                {
+                    <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+                }
+                else if (_position == null)
+                {
+                    <MudAlert Severity="Severity.Error">
+                        Không tìm thấy vị trí thửa đất
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                        <div id="map" style="height: calc(100vh - 142px); margin-top: 10px;"></div>
+                    </MudPaper>
+                }
+            </Authorized>
+            <NotAuthorized>
+                <MudAlert Severity="Severity.Error">
+                    Bạn không có quyền truy cập
+                </MudAlert>
+            </NotAuthorized>
+        </AuthorizeView>
     </MudCardContent>
 </MudCard>
-@code {
-    
+@code 
+{
+    private bool _isLoading;
+    private Position? _position;
 }

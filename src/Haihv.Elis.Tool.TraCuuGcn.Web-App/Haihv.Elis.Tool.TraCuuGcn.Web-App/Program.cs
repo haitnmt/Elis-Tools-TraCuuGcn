@@ -12,6 +12,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 builder.Services.AddScoped<ZxingService>();
+builder.Services.AddScoped<LeafletMapService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddMudServices();

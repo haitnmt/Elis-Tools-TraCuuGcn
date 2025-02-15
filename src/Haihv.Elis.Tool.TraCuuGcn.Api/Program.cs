@@ -95,7 +95,6 @@ app.UseCors();
 // Use Middleware
 app.MapGiayChungNhanEndpoints();
 app.MapChuSuDungEndpoints();
-app.MapGcnQrEndpoints();
 app.MapAuthenticationEndpoints();
 app.MapSearchEndpoints();
 app.MapAppSettingsEndpoints();

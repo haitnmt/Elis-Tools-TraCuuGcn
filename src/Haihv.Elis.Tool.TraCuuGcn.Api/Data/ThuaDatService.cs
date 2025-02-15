@@ -14,7 +14,7 @@ public class ThuaDatService(
     ILogger logger,
     IFusionCache fusionCache) : IThuaDatService
 {
-    private record ThuaDatToBanDo(int MaDvhc, string SoTo, string SoThua, string DiaChi, string GhiChu);
+    private record ThuaDatToBanDo(int MaDvhc, string SoTo, int TyLe, string SoThua, string DiaChi, string GhiChu);
 
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
@@ -45,7 +45,7 @@ public class ThuaDatService(
     /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    private async Task<ThuaDat?> GetThuaDatInDatabaseAsync(long maGcn = 0,
+    public async Task<ThuaDat?> GetThuaDatInDatabaseAsync(long maGcn = 0,
         CancellationToken cancellationToken = default)
     {
         if (maGcn <= 0) return null;
@@ -67,10 +67,10 @@ public class ThuaDatService(
     {
         if (giayChungNhan.MaDangKy == 0 || giayChungNhan.MaGcn == 0 ) return null;
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(
-            CacheSettings.ConnectionName(giayChungNhan.MaGcn),
+            CacheSettings.ElisConnectionName(giayChungNhan.MaGcn),
             token: cancellationToken);
         if (string.IsNullOrWhiteSpace(connectionName)) return null;
-        var connectionString = connectionElisData.GetConnectionString(connectionName);
+        var connectionString = connectionElisData.GetElisConnectionString(connectionName);
         try
         {
             var mucDichService = new MucDichAndHinhThucService(connectionString, logger);
@@ -85,6 +85,7 @@ public class ThuaDatService(
                 thuaDatToBanDo.MaDvhc,
                 thuaDatToBanDo.SoThua,
                 thuaDatToBanDo.SoTo,
+                thuaDatToBanDo.TyLe,
                 thuaDatToBanDo.DiaChi,
                 $"{giayChungNhan.DienTichRieng + giayChungNhan.DienTichChung} m²",
                 loaiDat,
@@ -111,6 +112,7 @@ public class ThuaDatService(
             var query = dbConnection.SqlBuilder(
                 $"""
                  SELECT TBD.SoTo AS SoTo, 
+                        TBD.TyLe AS TyLe,
                         TD.ThuaDatSo AS SoThua, 
                         TBD.MaDVHC AS maDvhc,
                         TD.DiaChi AS DiaChi,
@@ -130,10 +132,12 @@ public class ThuaDatService(
                 $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";
             string soThua = thuaDatToBanDo.SoThua.ToString();
             string toBanDo = thuaDatToBanDo.SoTo.ToString();
+            int.TryParse(thuaDatToBanDo.TyLe.ToString(), out int tyLe);
             string ghiChu = thuaDatToBanDo.GhiChu?.ToString() ?? string.Empty;
             return new ThuaDatToBanDo(
                 maDvhc,
                 toBanDo.Trim(),
+                tyLe,
                 soThua.Trim(),
                 diaChi.Trim().VietHoaDauChuoi(),
                 ghiChu.Trim().VietHoaDauChuoi()

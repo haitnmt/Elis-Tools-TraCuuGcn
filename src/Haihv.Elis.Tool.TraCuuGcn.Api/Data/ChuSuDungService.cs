@@ -82,10 +82,10 @@ public sealed class ChuSuDungService(
             return null;
         try
         {
-            var connectionElis = await connectionElisData.GetConnectionElis(giayChungNhan.MaGcn);
+            var connectionElis = await connectionElisData.GetConnection(giayChungNhan.MaGcn);
             foreach (var connection in connectionElis)
             {
-                await using var dbConnection = connection.ConnectionString.GetConnection();
+                await using var dbConnection = connection.ElisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
                      SELECT TOP(1) SoDinhDanh, HoVaTen
@@ -168,10 +168,10 @@ public sealed class ChuSuDungService(
             return null;
         try
         {
-            var connectionElis = await connectionElisData.GetConnectionElis(giayChungNhan.MaGcn);
+            var connectionElis = await connectionElisData.GetConnection(giayChungNhan.MaGcn);
             foreach (var connection in connectionElis)
             {
-                await using var dbConnection = connection.ConnectionString.GetConnection();
+                await using var dbConnection = connection.ElisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
                      SELECT DISTINCT CSD.MaDoiTuong AS MaDoiTuong,

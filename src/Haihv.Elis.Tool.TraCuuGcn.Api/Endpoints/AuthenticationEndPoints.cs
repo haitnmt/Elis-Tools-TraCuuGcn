@@ -1,6 +1,7 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
+using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
@@ -25,12 +26,22 @@ public static class AuthenticationEndPoints
     /// <returns>Kết quả xác thực dưới dạng <see cref="IResult"/>.</returns>
     private static async Task<IResult> PostAuthChuSuDungAsync(
         [FromBody] AuthChuSuDung authChuSuDung,
-        ILogger<Program> logger,
+        ILogger logger,
         IAuthenticationService authenticationService)
     {
         var result = await authenticationService.AuthChuSuDungAsync(authChuSuDung);
         return await Task.FromResult(result.Match(
-            Results.Ok,
-            ex => Results.BadRequest(ex.Message)));
+            token => 
+            {
+                logger.Information("Xác thực chủ sử dụng thành công: {SoDinhDanh}", 
+                    authChuSuDung.SoDinhDanh);
+                return Results.Ok(token);
+            },
+            ex =>
+            {
+                logger.Error(ex, "Lỗi khi xác thực chủ sử dụng: {SoDinhDanh}", 
+                    authChuSuDung.SoDinhDanh);
+                return Results.BadRequest(ex.Message);
+            }));
     }
 }

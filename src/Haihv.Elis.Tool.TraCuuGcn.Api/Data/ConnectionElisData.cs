@@ -14,31 +14,33 @@ public interface IConnectionElisData
     /// <summary>
     /// Danh sách các kết nối ELIS.
     /// </summary>
-    List<ConnectionElis> ConnectionElis { get; }
+    List<ConnectionSql> ConnectionElis { get; }
 
-    /// <summary>
-    /// Danh sách các chuỗi kết nối.
-    /// </summary>
-    List<string> ConnectionStrings { get; }
-    
+    // /// <summary>
+    // /// Danh sách các chuỗi kết nối.
+    // /// </summary>
+    // List<string> ConnectionStrings { get; }
+
     /// <summary>
     /// Lấy chuỗi kết nối từ tên kết nối.
     /// </summary>
     /// <param name="name">Tên kết nối.</param>
     /// <returns>Chuỗi kết nối.</returns>
-    string GetConnectionString(string name);
+    string GetElisConnectionString(string name);
+
     /// <summary>
-    /// Lấy chuỗi kết nối từ tên kết nối.
+    /// Lấy chuỗi kết nối SDE từ tên kết nối.
     /// </summary>
-    /// <param name="maGcn">Mã GCN.</param>
+    /// <param name="name">Tên kết nối.</param>
     /// <returns>Chuỗi kết nối.</returns>
-    ValueTask<string?> GetConnectionString(long maGcn);
+    string GetSdeConnectionString(string name);
+
     /// <summary>
     /// Lấy danh sách chuỗi kết nối dựa trên mã GCN.
     /// </summary>
     /// <param name="maGcn"></param>
     /// <returns>Danh sách chuỗi kết nối.</returns>
-    ValueTask<List<ConnectionElis>> GetConnectionElis(long maGcn);
+    ValueTask<List<ConnectionSql>> GetConnection(long maGcn);
 }
 
 /// <summary>
@@ -53,49 +55,54 @@ public sealed class ConnectionElisData(
     IMemoryCache memoryCache,
     IFusionCache fusionCache) : IConnectionElisData
 {
-    
     private const string SectionName = "ElisSql";
     private const string SectionData = "Databases";
     private const string KeyName = "Name";
     private const string KeyMaDvhc = "MaDvhc";
-    private const string KeyConnectionString = "ConnectionString";
+    private const string KeyElisConnectionString = "ElisConnectionString";
+    private const string KeySdeConnectionString = "SdeConnectionString";
 
     /// <summary>
     /// Danh sách các kết nối ELIS.
     /// </summary>
-    public List<ConnectionElis> ConnectionElis =>
+    public List<ConnectionSql> ConnectionElis =>
         memoryCache.GetOrCreate(CacheSettings.ElisConnections, entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
             return GetConnection();
         }) ?? [];
 
+    // /// <summary>
+    // /// Danh sách các chuỗi kết nối.
+    // /// </summary>
+    // public List<string> ConnectionStrings => ConnectionElis.Select(x => x.ElisConnectionString).ToList();
     /// <summary>
     /// Danh sách các chuỗi kết nối.
     /// </summary>
-    public List<string> ConnectionStrings => ConnectionElis.Select(x => x.ConnectionString).ToList();
-    
+    public List<string> SdeConnectionStrings => ConnectionElis.Select(x => x.SdeConnectionString).ToList();
+
     /// <summary>
     /// Lấy danh sách các kết nối từ cấu hình.
     /// </summary>
     /// <returns>Danh sách các kết nối ELIS.</returns>
-    private List<ConnectionElis> GetConnection()
+    private List<ConnectionSql> GetConnection()
     {
         var section = configuration.GetSection(SectionName);
         var data = section.GetSection(SectionData).GetChildren().ToList();
-        List<ConnectionElis> result = [];
+        List<ConnectionSql> result = [];
         foreach (var configurationSection in data)
         {
             var name = configurationSection[KeyName] ?? string.Empty;
             var maDvhc = configurationSection[KeyMaDvhc] ?? string.Empty;
-            var connectionString = configurationSection[KeyConnectionString] ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(connectionString)) continue;
-            using var connection = new SqlConnection(connectionString);
+            var elisConnectionString = configurationSection[KeyElisConnectionString] ?? string.Empty;
+            var sdeConnectionString = configurationSection[KeySdeConnectionString] ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(elisConnectionString)) continue;
+            using var connection = new SqlConnection(elisConnectionString);
             try
             {
                 connection.Open();
-                result.Add(new ConnectionElis(name, int.TryParse(maDvhc, out var maDvhcInt) ? maDvhcInt : 0,
-                    connectionString));
+                result.Add(new ConnectionSql(name, int.TryParse(maDvhc, out var maDvhcInt) ? maDvhcInt : 0,
+                    elisConnectionString, sdeConnectionString));
                 connection.Close();
             }
             catch (Exception e)
@@ -112,23 +119,21 @@ public sealed class ConnectionElisData(
         return result;
     }
 
-    public async ValueTask<string?> GetConnectionString(long maGcn)
-    {
-        if (maGcn <= 0) return null;
-        var connectionName = await fusionCache.GetOrDefaultAsync<string>(
-            CacheSettings.ConnectionName(maGcn));
-        return string.IsNullOrWhiteSpace(connectionName) ? null : GetConnectionString(connectionName);
-    }
-
-    public async ValueTask<List<ConnectionElis>> GetConnectionElis(long maGcn)
+    public async ValueTask<List<ConnectionSql>> GetConnection(long maGcn)
     {
         if (maGcn <= 0) return ConnectionElis;
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(
-            CacheSettings.ConnectionName(maGcn));
-        return string.IsNullOrWhiteSpace(connectionName) ? ConnectionElis : ConnectionElis.Where(x => x.Name == connectionName).ToList();
+            CacheSettings.ElisConnectionName(maGcn));
+        return string.IsNullOrWhiteSpace(connectionName)
+            ? ConnectionElis
+            : ConnectionElis.Where(x => x.Name == connectionName).ToList();
     }
-    public string GetConnectionString(string name) 
-        => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ConnectionString ?? string.Empty;
+
+    public string GetElisConnectionString(string name)
+        => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ElisConnectionString ?? string.Empty;
+
+    public string GetSdeConnectionString(string name)
+        => ConnectionElis.FirstOrDefault(x => x.Name == name)?.SdeConnectionString ?? string.Empty;
 }
 
 /// <summary>
@@ -136,5 +141,6 @@ public sealed class ConnectionElisData(
 /// </summary>
 /// <param name="Name">Tên kết nối.</param>
 /// <param name="MaDvhc">Mã đơn vị hành chính.</param>
-/// <param name="ConnectionString">Chuỗi kết nối.</param>
-public record ConnectionElis(string Name, int MaDvhc, string ConnectionString);
+/// <param name="ElisConnectionString">Chuỗi kết nối CSDL.</param>
+/// <param name="SdeConnectionString">Chuỗi kết nối SDE.</param>
+public record ConnectionSql(string Name, int MaDvhc, string ElisConnectionString, string SdeConnectionString);

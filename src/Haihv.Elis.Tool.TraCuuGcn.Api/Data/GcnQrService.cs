@@ -36,7 +36,7 @@ public interface IGcnQrService
 
 public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger logger, IFusionCache fusionCache) : IGcnQrService
 {
-    private readonly List<ConnectionElis> _connectionElis = connectionElisData.ConnectionElis;
+    private readonly List<ConnectionSql> _connectionElis = connectionElisData.ConnectionElis;
 
     /// <summary>
     /// Lấy thông tin Mã QR không đồng bộ.
@@ -78,10 +78,10 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
         {
             var maQrInfo = await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(maGcn), token: cancellationToken);
             if (maQrInfo is not null) return maQrInfo;
-            var connectionElis = await connectionElisData.GetConnectionElis(maGcn);
+            var connectionElis = await connectionElisData.GetConnection(maGcn);
             foreach (var connection in connectionElis)
             {
-                await using var dbConnection = connection.ConnectionString.GetConnection();
+                await using var dbConnection = connection.ElisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
                      SELECT GuidID AS Id,
@@ -105,7 +105,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
                 maQrInfo.HieuLuc = qrInData.HieuLuc > 0;
                 _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo, TimeSpan.FromDays(60), token: cancellationToken).AsTask();
-                _ = fusionCache.SetAsync(CacheSettings.ConnectionName(maQrInfo.MaGcnElis), connection.Name,
+                _ = fusionCache.SetAsync(CacheSettings.ElisConnectionName(maQrInfo.MaGcnElis), connection.Name,
                     TimeSpan.FromDays(60),
                     token: cancellationToken).AsTask();
                 return maQrInfo;
@@ -131,7 +131,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
         if (string.IsNullOrWhiteSpace(maDonVi)) return null;
         try
         {
-            foreach (var connectionString in _connectionElis.Select(x => x.ConnectionString))
+            foreach (var connectionString in _connectionElis.Select(x => x.ElisConnectionString))
             {
                 await using var dbConnection = connectionString.GetConnection();
                 var query = dbConnection.SqlBuilder($"SELECT Ten FROM DonViInGCN WHERE MaDinhDanh = {maDonVi}");

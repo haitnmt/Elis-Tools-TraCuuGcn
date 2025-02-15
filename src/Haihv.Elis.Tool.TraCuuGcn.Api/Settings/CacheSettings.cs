@@ -5,7 +5,9 @@ public static class CacheSettings
     private static string ChuanHoa(this string input) => input.Trim().ToUpper();
     
     public const string ElisConnections = "ElisConnections";
-    public static string ConnectionName(long maGcn) => $"ConnectionName:{maGcn}";
+    public const string SdeConnections = "SdeConnections";
+    public static string ElisConnectionName(long maGcn) => $"ElisConnectionName:{maGcn}";
+    public static string SdeConnectionName(long maGcn) => $"SdeConnectionName:{maGcn}";
     public static string KeyGiayChungNhan(long maGcn) => $"GiayChungNhan:{maGcn}";
     public static string KeyMaQr(long maGcn) => $"MaQr:{maGcn}";
     public static string KeyDonViInGcn(string maDonVi) => $"DonVi:{maDonVi.ChuanHoa()}";

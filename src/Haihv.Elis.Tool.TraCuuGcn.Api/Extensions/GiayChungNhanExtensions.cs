@@ -9,7 +9,7 @@ public static class GiayChungNhanExtensions
         long maGcn, string connectionName, 
         CancellationToken cancellationToken = default)
     {
-        var cacheKey = CacheSettings.ConnectionName(maGcn);
+        var cacheKey = CacheSettings.ElisConnectionName(maGcn);
         return fusionCache.SetAsync(cacheKey, 
             connectionName, 
             TimeSpan.FromDays(60),

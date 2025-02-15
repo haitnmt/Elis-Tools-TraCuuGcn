@@ -2,6 +2,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Data;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
+using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
@@ -29,14 +30,25 @@ public static class ChuSuDungEndpoints
     private static async Task<IResult> GetChuSuDung(
         [FromQuery] long maGcnElis,
         HttpContext httpContext,
-        ILogger<Program> logger,
+        ILogger logger,
         IChuSuDungService chuSuDungService)
     {
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
-        var result = await chuSuDungService.GetResultAsync(maGcnElis, user.GetSoDinhDanh());
+        var soDinhDanh = user.GetSoDinhDanh();
+        var result = await chuSuDungService.GetResultAsync(maGcnElis, soDinhDanh);
         return await Task.FromResult(result.Match(
-            chuSuDung => Results.Ok(new Response<ChuSuDungInfo>(chuSuDung)),
-            ex => Results.BadRequest(new Response<ChuSuDungInfo>(ex.Message))));
+            chuSuDung =>
+            {
+                logger.Information("Lấy thông tin chủ sử dụng thành công: {MaGcnElis} {SoDinhDanh}", 
+                    maGcnElis, soDinhDanh);
+                return Results.Ok(new Response<ChuSuDungInfo>(chuSuDung));
+            },
+            ex =>
+            {
+                logger.Error(ex, "Lỗi khi lấy thông tin chủ sử dụng: {MaGcnElis} {SoDinhDanh}", 
+                    maGcnElis, soDinhDanh);
+                return Results.BadRequest(new Response<ChuSuDungInfo>(ex.Message));
+            }));
     }
 }

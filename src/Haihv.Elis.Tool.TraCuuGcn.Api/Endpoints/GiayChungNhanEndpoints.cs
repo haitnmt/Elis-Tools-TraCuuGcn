@@ -3,6 +3,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Data;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
+using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
@@ -32,13 +33,21 @@ public static class GiayChungNhanEndpoints
     /// <param name="logger">Logger để ghi log.</param>
     /// <param name="giayChungNhanService">Dịch vụ Giấy Chứng Nhận.</param>
     /// <returns>Kết quả truy vấn Giấy Chứng Nhận.</returns>
-    private static async Task<IResult> GetGiayChungNhanAsync([FromQuery] string serial, ILogger<Program> logger,
+    private static async Task<IResult> GetGiayChungNhanAsync([FromQuery] string serial, ILogger logger,
         IGiayChungNhanService giayChungNhanService)
     {
         var result = await giayChungNhanService.GetResultAsync(serial);
         return await Task.FromResult(result.Match(
-            Results.Ok,
-            ex => Results.BadRequest(ex.Message)));
+            giayChungNhan =>
+            {
+                logger.Information("Lấy thông tin Giấy Chứng Nhận thành công: {Serial}", serial);
+                return Results.Ok(new Response<GiayChungNhan>(giayChungNhan));
+            },
+            ex =>
+            {
+                logger.Error(ex, "Lỗi khi lấy thông tin Giấy Chứng Nhận: {Serial}", serial);
+                return Results.BadRequest(ex.Message);
+            }));
     }
 
     /// <summary>
@@ -52,7 +61,7 @@ public static class GiayChungNhanEndpoints
     /// <returns>Kết quả truy vấn Thửa Đất.</returns>
     private static async Task<IResult> GetThuaDatAsync([FromQuery] long maGcnElis,
         HttpContext httpContext,
-        ILogger<Program> logger,
+        ILogger logger,
         IAuthenticationService authenticationService,
         IThuaDatService thuaDatService)
     {
@@ -60,13 +69,24 @@ public static class GiayChungNhanEndpoints
         var user = httpContext.User;
         if (!await authenticationService.CheckAuthenticationAsync(maGcnElis, user))
         {
+            logger.Warning("Người dùng không được phép truy cập thông tin Thửa Đất.");
             return Results.Unauthorized();
         }
-
+        var soDinhDanh = user.Claims.FirstOrDefault(c => c.Type == "SoDinhDanh")?.Value ?? string.Empty;
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
-            rs => Results.Ok(new Response<ThuaDat>(rs)),
-            ex => Results.BadRequest(new Response<ThuaDat>(ex.Message))));
+            rs =>
+            {
+                logger.Information("Lấy thông tin Thửa Đất thành công: {maGcnElis} {SoDinhDanh}", 
+                    maGcnElis, soDinhDanh);
+                return Results.Ok(new Response<ThuaDat>(rs));
+            },
+            ex =>
+            {
+                logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {maGcnElis} {SoDinhDanh}", 
+                    maGcnElis, soDinhDanh);
+                return Results.BadRequest(new Response<ThuaDat>(ex.Message));
+            }));
     }
 
     /// <summary>
@@ -77,12 +97,20 @@ public static class GiayChungNhanEndpoints
     /// <param name="thuaDatService">Dịch vụ Giấy Chứng Nhận.</param>
     /// <returns>Kết quả truy vấn Thửa Đất công khai.</returns>
     private static async Task<IResult> GetThuaDatPublicAsync([FromQuery] long maGcnElis,
-        ILogger<Program> logger,
+        ILogger logger,
         IThuaDatService thuaDatService)
     {
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
-            thuaDat => Results.Ok(new Response<ThuaDatPublic>(thuaDat.ConvertToThuaDatPublic())),
-            ex => Results.BadRequest(new Response<ThuaDatPublic>(ex.Message))));
+            thuaDat =>
+            {
+                logger.Information("Lấy thông tin Thửa Đất công khai thành công: {maGcnElis}", maGcnElis);
+                return Results.Ok(new Response<ThuaDatPublic>(thuaDat.ConvertToThuaDatPublic()));
+            },
+            ex =>
+            {
+                logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất công khai: {maGcnElis}", maGcnElis);
+                return Results.BadRequest(new Response<ThuaDatPublic>(ex.Message));
+            }));
     }
 }
