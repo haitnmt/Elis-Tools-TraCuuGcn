@@ -65,6 +65,11 @@
             if (response.IsSuccessStatusCode)
             {
                 var result = await response.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(result))
+                {
+                    _error = "Không tìm thấy vị trí thửa đất";
+                    return;
+                }
                 _geoJson = JsonSerializer.Serialize(
                     JsonSerializer.Deserialize<object>(result));
                 await LeafletMapService.UpdateMapAsync(_geoJson);

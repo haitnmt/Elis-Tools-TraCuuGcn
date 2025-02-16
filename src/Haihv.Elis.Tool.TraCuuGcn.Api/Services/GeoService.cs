@@ -32,12 +32,10 @@ public class GeoService(
                 await GetPointInDatabaseAsync(maGcnElis, cancellationToken), 
                 TimeSpan.FromDays(1), 
                 token: cancellationToken);
-            if (geometry is null)
-            {
-                logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {MaGcnElis}", maGcnElis);
-                return new Result<FeatureCollectionModel>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
-            };
-            return new Result<FeatureCollectionModel>(new FeatureCollectionModel([geometry]));
+            if (geometry is not null) return new Result<FeatureCollectionModel>(new FeatureCollectionModel([geometry]));
+            logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {MaGcnElis}", maGcnElis);
+            return new Result<FeatureCollectionModel>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
+
         }
         catch (Exception e)
         {
@@ -55,35 +53,44 @@ public class GeoService(
         var thuaDatSo = thuaDat.ThuaDatSo.Trim().ToLower();
         var tyLe = thuaDat.TyLeBanDo;
         var maDvhc = thuaDat.MaDvhc;
-        foreach (var connectionString in connectionSqls.Select(x => x.SdeConnectionString))
+        foreach (var connectionSql in connectionSqls)
         {
-            await using var dbConnection = connectionString.GetConnection();
-            var query = dbConnection.SqlBuilder(
-                $"""
-                 SELECT eminx,
-                        eminy,
-                        emaxx,
-                        emaxy
-                 FROM f18 
-                    INNER JOIN THUADAT ON f18.fid = THUADAT.shape
-                 WHERE TRIM(LOWER(THUADAT.SOTO)) = {toBanDo} AND 
-                       TRIM(LOWER(THUADAT.SOTHUA)) = {thuaDatSo} AND 
-                       THUADAT.TYLE = {tyLe} AND
-                       THUADAT.KVHC_ID = {maDvhc}
-                 """);
-            var shapes = (await query.QueryAsync(cancellationToken: cancellationToken)).ToList();
-            if (shapes.Count == 0) continue;
-            var shape = shapes.First();
-            double eminy = 0;
-            double emaxx = 0;
-            double emaxy = 0;
-            if (!double.TryParse(shape.eminx.ToString(), out double eminx) ||
-                !double.TryParse(shape.eminy.ToString(), out eminy) ||
-                !double.TryParse(shape.emaxx.ToString(), out emaxx) ||
-                !double.TryParse(shape.emaxy.ToString(), out emaxy)) continue;
-            var geometry = new Geometry(wkbGeometryType.wkbPoint);
-            geometry.AddPoint((eminx + emaxx) / 2,  (emaxy + eminy) / 2, 0);
-            return geometry;
+            try
+            {
+                var connectionString = connectionSql.SdeConnectionString;
+                await using var dbConnection = connectionString.GetConnection();
+                var query = dbConnection.SqlBuilder(
+                    $"""
+                     SELECT eminx,
+                            eminy,
+                            emaxx,
+                            emaxy
+                     FROM f18 
+                        INNER JOIN THUADAT ON f18.fid = THUADAT.shape
+                     WHERE LOWER(THUADAT.SOTO) = {toBanDo} AND 
+                           LOWER(THUADAT.SOTHUA) = {thuaDatSo} AND 
+                           THUADAT.TYLE = {tyLe} AND
+                           THUADAT.KVHC_ID = {maDvhc}
+                     """);
+                var shape = await query.QueryFirstOrDefaultAsync(cancellationToken: cancellationToken);
+                if (shape == null) continue;
+                double eminy = 0;
+                double emaxx = 0;
+                double emaxy = 0;
+                if (!double.TryParse(shape.eminx.ToString(), out double eminx) ||
+                    !double.TryParse(shape.eminy.ToString(), out eminy) ||
+                    !double.TryParse(shape.emaxx.ToString(), out emaxx) ||
+                    !double.TryParse(shape.emaxy.ToString(), out emaxy)) continue;
+                var geometry = new Geometry(wkbGeometryType.wkbPoint);
+                geometry.AddPoint((eminx + emaxx) / 2,  (emaxy + eminy) / 2, 0);
+                return geometry;
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {MaGcnElis}, {SdeName}",
+                    maGcnElis, connectionSql.Name);
+                throw;
+            }
         }
         return null;
     }
