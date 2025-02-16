@@ -18,25 +18,25 @@ public static class GeoEndPoints
             .RequireAuthorization();
     }
 
-    private static async Task GetToaDoThua([FromQuery] long maGcnElis,
+    private static async Task<IResult> GetToaDoThua([FromQuery] long maGcnElis,
         HttpContext httpContext, ILogger logger, IGeoService geoService)
     {
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var soDinhDanh = user.GetSoDinhDanh();
         var result = await geoService.GetResultAsync(maGcnElis);
-        await Task.FromResult(result.Match(
-            toaDoThua =>
+        return result.Match(
+            geoJson =>
             {
                 logger.Information("Lấy thông tin toạ độ thửa thành công: {MaGcnElis} {SoDinhDanh}",
                     maGcnElis, soDinhDanh);
-                return Results.Ok(toaDoThua);
+                return Results.Ok(geoJson);
             },
             ex =>
             {
                 logger.Error(ex, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis} {SoDinhDanh}",
                     maGcnElis, soDinhDanh);
                 return Results.BadRequest(ex.Message);
-            }));
+            });
     }
 }

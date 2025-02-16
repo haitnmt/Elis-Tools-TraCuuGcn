@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Models;
+﻿using System.Text.Json;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Models;
 using InterpolatedSql.Dapper;
 using LanguageExt.Common;
 using OSGeo.OGR;
@@ -15,7 +16,7 @@ public interface IGeoService
     /// <param name="maGcnElis">Mã GCN của Giấy chứng nhận. </param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<Result<FeatureCollectionModel>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    Task<Result<string>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
 }
 
 public class GeoService(
@@ -24,26 +25,26 @@ public class GeoService(
     ILogger logger,
     IFusionCache fusionCache) : IGeoService
 {
-    public async Task<Result<FeatureCollectionModel>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<Result<string>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         try
         {
-            var geometry = await fusionCache.GetOrSetAsync($"GetPointInDatabaseAsync_{maGcnElis}", 
+            var geoJson = await fusionCache.GetOrSetAsync($"ToaDoThua:{maGcnElis}", 
                 await GetPointInDatabaseAsync(maGcnElis, cancellationToken), 
                 TimeSpan.FromDays(1), 
                 token: cancellationToken);
-            if (geometry is not null) return new Result<FeatureCollectionModel>(new FeatureCollectionModel([geometry]));
+            if (!string.IsNullOrWhiteSpace(geoJson)) return geoJson;
             logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {MaGcnElis}", maGcnElis);
-            return new Result<FeatureCollectionModel>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
+            return new Result<string>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
 
         }
         catch (Exception e)
         {
             logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
-            return new Result<FeatureCollectionModel>(e);
+            return new Result<string>(e);
         }
     }
-    private async Task<Geometry?> GetPointInDatabaseAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    private async Task<string?> GetPointInDatabaseAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         var connectionSqls = await connectionElisData.GetConnection(maGcnElis);
         if (connectionSqls.Count == 0) return null;
@@ -83,7 +84,10 @@ public class GeoService(
                     !double.TryParse(shape.emaxy.ToString(), out emaxy)) continue;
                 var geometry = new Geometry(wkbGeometryType.wkbPoint);
                 geometry.AddPoint((eminx + emaxx) / 2,  (emaxy + eminy) / 2, 0);
-                return geometry;
+                return JsonSerializer.Serialize(new
+                {
+                    tamThuaDats = new FeatureCollectionModel([geometry])
+                });
             }
             catch (Exception e)
             {

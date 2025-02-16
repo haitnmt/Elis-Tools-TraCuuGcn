@@ -6,8 +6,11 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Models;
 
 public class FeatureCollectionModel
 {
+    [JsonPropertyName("type")]
     public string Type { get; } = "FeatureCollection";
+    [JsonPropertyName("features")]
     public List<FeatureModel> Features { get; set; }
+    [JsonPropertyName("properties")]
     public Dictionary<string, object> Properties { get; set; }
 
     public FeatureCollectionModel()

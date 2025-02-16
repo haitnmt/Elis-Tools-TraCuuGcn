@@ -7,7 +7,8 @@ public class LeafletMapService(IJSRuntime jsRuntime) : IAsyncDisposable
     private bool _isInitialized;
     private const string UrlLibraryLeaflet = "https://unpkg.com/leaflet@1.7.1/dist/leaflet.js";
     private readonly string _urlLeafletMapJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/leafletMap.js" + "?v=" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-    public async Task InitializeAsync()
+
+    private async Task InitializeAsync()
     {
         if (_isInitialized) return;
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", UrlLibraryLeaflet);
