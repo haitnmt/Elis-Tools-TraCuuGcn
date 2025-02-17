@@ -26,4 +26,24 @@ public interface IChuSuDungService
         long maGcn = 0,
         string? soDinhDanh = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lưu thông tin chủ sử dụng vào cache.
+    /// </summary>
+    /// <param name="maGcnElis">
+    /// Mã của Giấy chứng nhận trong hệ thống ELIS.
+    /// </param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    Task SetCacheAsync(long maGcnElis, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lưu thông tin chủ sử dụng vào cache.
+    /// </summary>
+    /// <param name="maGcnElis">
+    /// Mã của Giấy chứng nhận trong hệ thống ELIS.
+    /// </param>
+    /// <param name="cancellationToken">Token hủy bỏ.</param>
+    /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
+    Task SetCacheAuthChuSuDungAsync(long maGcnElis, CancellationToken cancellationToken = default);
 }

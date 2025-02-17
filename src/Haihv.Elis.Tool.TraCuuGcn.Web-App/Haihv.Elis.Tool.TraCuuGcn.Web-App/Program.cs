@@ -20,7 +20,9 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthorizationCore();
+
 builder.AddAppSettingsServices();
+
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
 {

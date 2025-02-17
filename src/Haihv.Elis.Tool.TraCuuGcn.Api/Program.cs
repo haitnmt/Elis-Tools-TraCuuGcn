@@ -57,13 +57,15 @@ builder.Services.AddSingleton<IGiayChungNhanService, GiayChungNhanService>();
 builder.Services.AddSingleton<IChuSuDungService, ChuSuDungService>();
 // Add ThuaDatService
 builder.Services.AddSingleton<IThuaDatService, ThuaDatService>();
-// Add SearchService
-builder.Services.AddSingleton<ISearchService, SearchService>();
 // Add GeoService
 builder.Services.AddSingleton<IGeoService, GeoService>();
 
+// Add SearchService
+builder.Services.AddSingleton<ISearchService, SearchService>();
+
 // Add AuthenticationService
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+
 
 // Configure CORS
 var frontendUrls = builder.Configuration.GetSection("FrontendUrl").Get<string[]>();
@@ -98,9 +100,9 @@ app.UseCors();
 app.MapGiayChungNhanEndpoints();
 app.MapChuSuDungEndpoints();
 app.MapAuthenticationEndpoints();
-app.MapSearchEndpoints();
 app.MapAppSettingsEndpoints();
 app.MapGeoEndPoints();
+app.MapSearchEndpoints();
 
 // Authentication and Authorization
 app.UseAuthentication();

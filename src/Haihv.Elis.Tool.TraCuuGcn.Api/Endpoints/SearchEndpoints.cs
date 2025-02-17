@@ -14,13 +14,21 @@ public static class SearchEndpoints
     }
 
     private static async Task<IResult> GetSearchResultAsync([FromQuery] string? query,
-        ISearchService searchService, ILogger logger)
+        ISearchService searchService,
+        IChuSuDungService chuSuDungService,
+        IGeoService geoService,
+        ILogger logger)
     {
         var result = await searchService.GetResultAsync(query);
         return await Task.FromResult(result.Match(
             info=>
             {
                 logger.Information("Lấy thông tin Giấy chứng nhận thành công: {Serial}", info.Serial);
+                // Lưu thông tin chủ sử dụng để lưu vào cache
+                _ = chuSuDungService.SetCacheAuthChuSuDungAsync(info.MaGcnElis);
+                _ = chuSuDungService.SetCacheAsync(info.MaGcnElis);
+                // Lưu thông tin toạ độ thửa đất để lưu vào cache
+                _ = geoService.GetAsync(info.MaGcnElis);
                 return Results.Ok(new Response<GiayChungNhanInfo>(info));
             },
             ex =>

@@ -5,5 +5,5 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 public interface ISearchService
 {
-    Task<Result<GiayChungNhanInfo>> GetResultAsync(string? query);
+    Task<Result<GiayChungNhanInfo>> GetResultAsync(string? query, CancellationToken cancellationToken = default);
 }

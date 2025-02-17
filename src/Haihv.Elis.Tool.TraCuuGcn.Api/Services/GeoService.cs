@@ -15,8 +15,19 @@ public interface IGeoService
     /// </summary>
     /// <param name="maGcnElis">Mã GCN của Giấy chứng nhận. </param>
     /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    Task<Result<string>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    /// <returns>
+    /// Kết quả chứa thông tin toạ độ thửa đất hoặc lỗi nếu không tìm thấy.
+    /// </returns>
+    Task<Result<Coordinates>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Lấy thông tin toạ độ thửa đất từ cơ sở dữ liệu.
+    /// </summary>
+    /// <param name="maGcnElis">Mã GCN của Giấy chứng nhận. </param>
+    /// <param name="cancellationToken"></param>
+    /// <returns>
+    /// Kết quả chứa thông tin toạ độ thửa đất
+    /// </returns>
+    Task<Coordinates?> GetAsync(long maGcnElis, CancellationToken cancellationToken = default);
 }
 
 public class GeoService(
@@ -25,26 +36,43 @@ public class GeoService(
     ILogger logger,
     IFusionCache fusionCache) : IGeoService
 {
-    public async Task<Result<string>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<Result<Coordinates>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         try
         {
-            var geoJson = await fusionCache.GetOrSetAsync($"ToaDoThua:{maGcnElis}", 
+            var coordinates = await fusionCache.GetOrSetAsync($"ToaDoThua:{maGcnElis}", 
                 await GetPointInDatabaseAsync(maGcnElis, cancellationToken), 
                 TimeSpan.FromDays(1), 
                 token: cancellationToken);
-            if (!string.IsNullOrWhiteSpace(geoJson)) return geoJson;
+            if (coordinates is not null) return coordinates;
             logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {MaGcnElis}", maGcnElis);
-            return new Result<string>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
+            return new Result<Coordinates>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
 
         }
         catch (Exception e)
         {
             logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
-            return new Result<string>(e);
+            return new Result<Coordinates>(e);
         }
     }
-    private async Task<string?> GetPointInDatabaseAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<Coordinates?> GetAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var coordinates = await fusionCache.GetOrSetAsync($"ToaDoThua:{maGcnElis}", 
+                await GetPointInDatabaseAsync(maGcnElis, cancellationToken), 
+                TimeSpan.FromDays(1), 
+                token: cancellationToken);
+            if (coordinates is not null) return coordinates;
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
+        }
+        return null;
+    }
+    
+    private async Task<Coordinates?> GetPointInDatabaseAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         var connectionSqls = await connectionElisData.GetConnection(maGcnElis);
         if (connectionSqls.Count == 0) return null;
@@ -54,11 +82,10 @@ public class GeoService(
         var thuaDatSo = thuaDat.ThuaDatSo.Trim().ToLower();
         var tyLe = thuaDat.TyLeBanDo;
         var maDvhc = thuaDat.MaDvhc;
-        foreach (var connectionSql in connectionSqls)
+        foreach (var (name, _, _, connectionString) in connectionSqls)
         {
             try
             {
-                var connectionString = connectionSql.SdeConnectionString;
                 await using var dbConnection = connectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
@@ -82,20 +109,17 @@ public class GeoService(
                     !double.TryParse(shape.eminy.ToString(), out eminy) ||
                     !double.TryParse(shape.emaxx.ToString(), out emaxx) ||
                     !double.TryParse(shape.emaxy.ToString(), out emaxy)) continue;
-                var geometry = new Geometry(wkbGeometryType.wkbPoint);
-                geometry.AddPoint((eminx + emaxx) / 2,  (emaxy + eminy) / 2, 0);
-                return JsonSerializer.Serialize(new
-                {
-                    tamThuaDats = new FeatureCollectionModel([geometry])
-                });
+                return new Coordinates((eminx + emaxx) / 2, (emaxy + eminy) / 2);
             }
             catch (Exception e)
             {
                 logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {MaGcnElis}, {SdeName}",
-                    maGcnElis, connectionSql.Name);
+                    maGcnElis, name);
                 throw;
             }
         }
         return null;
     }
 }
+
+public record Coordinates(double X, double Y);

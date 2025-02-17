@@ -1,6 +1,8 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Models;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using OSGeo.OGR;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
@@ -26,11 +28,19 @@ public static class GeoEndPoints
         var soDinhDanh = user.GetSoDinhDanh();
         var result = await geoService.GetResultAsync(maGcnElis);
         return result.Match(
-            geoJson =>
+            coordinates =>
             {
                 logger.Information("Lấy thông tin toạ độ thửa thành công: {MaGcnElis} {SoDinhDanh}",
                     maGcnElis, soDinhDanh);
-                return Results.Ok(geoJson);
+                var geometry = new Geometry(wkbGeometryType.wkbPoint);
+                geometry.AddPoint(coordinates.X,  coordinates.Y, 0);
+                return Results.Ok(new
+                {
+                    thuaDats = new FeatureCollectionModel(),
+                    netNhas = new FeatureCollectionModel(),
+                    longDuongs = new FeatureCollectionModel(),
+                    tamThuaDats = new FeatureCollectionModel([geometry])
+                });
             },
             ex =>
             {

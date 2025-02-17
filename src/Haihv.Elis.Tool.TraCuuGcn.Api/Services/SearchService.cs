@@ -7,16 +7,17 @@ using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
-public class SearchService(IGcnQrService gcnQrService, IGiayChungNhanService giayChungNhanService,
+public class SearchService(IGcnQrService gcnQrService, 
+    IGiayChungNhanService giayChungNhanService,
     ILogger logger, IFusionCache fusionCache) : ISearchService
 {
-    public async Task<Result<GiayChungNhanInfo>> GetResultAsync(string? query)
+    public async Task<Result<GiayChungNhanInfo>> GetResultAsync(string? query, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
             return new Result<GiayChungNhanInfo>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
         }
-        var giayChungNhanInfo = await GetInDatabaseAsync(query);
+        var giayChungNhanInfo = await GetInDatabaseAsync(query, cancellationToken);
         if (giayChungNhanInfo is null)
         {
             return new Result<GiayChungNhanInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
@@ -24,7 +25,7 @@ public class SearchService(IGcnQrService gcnQrService, IGiayChungNhanService gia
         var maGcn = giayChungNhanInfo.MaGcnElis;
         if (maGcn <= 0) return giayChungNhanInfo;
         var cacheKey = CacheSettings.KeySearch(query);
-        await fusionCache.SetAsync(cacheKey, maGcn);
+        await fusionCache.SetAsync(cacheKey, maGcn, token: cancellationToken);
         return giayChungNhanInfo;
 
     }

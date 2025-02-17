@@ -6,17 +6,17 @@ public static class CacheSettings
     
     public const string ElisConnections = "ElisConnections";
     public const string SdeConnections = "SdeConnections";
-    public static string ElisConnectionName(long maGcn) => $"ElisConnectionName:{maGcn}";
-    public static string SdeConnectionName(long maGcn) => $"SdeConnectionName:{maGcn}";
-    public static string KeyGiayChungNhan(long maGcn) => $"GiayChungNhan:{maGcn}";
-    public static string KeyMaQr(long maGcn) => $"MaQr:{maGcn}";
+    public static string ElisConnectionName(long maGcnElis) => $"ElisConnectionName:{maGcnElis}";
+    public static string SdeConnectionName(long maGcnElis) => $"SdeConnectionName:{maGcnElis}";
+    public static string KeyGiayChungNhan(long maGcnElis) => $"GiayChungNhan:{maGcnElis}";
+    public static string KeyMaQr(long maGcnElis) => $"MaQr:{maGcnElis}";
     public static string KeyDonViInGcn(string maDonVi) => $"DonVi:{maDonVi.ChuanHoa()}";
-    public static string KeyThuaDat(long maGcn) => $"ThuaDat:{maGcn}";
+    public static string KeyThuaDat(long maGcnElis) => $"ThuaDat:{maGcnElis}";
     public static string KeyDiaChiByMaDvhc(int maDvhc) => $"DVHC:{maDvhc}";
-    public static string KeyChuSuDung(string soDinhDanh, long maGcn)
-        => $"ChuSuDung:{soDinhDanh.ChuanHoa()}:{maGcn}";
-    public static string KeyAuthentication(string soDinhDanh, long maGcn)
-        => $"Authentication:{soDinhDanh.ChuanHoa()}:{maGcn}";
+    public static string KeyChuSuDung(string soDinhDanh, long maGcnElis)
+        => $"ChuSuDung:{soDinhDanh.ChuanHoa()}:{maGcnElis}";
+    public static string KeyAuthentication(string soDinhDanh, long maGcnElis)
+        => $"Authentication:{soDinhDanh.ChuanHoa()}:{maGcnElis}";
     public static string KeyQuocTich(int maQuocTich) => $"QuocTich:{maQuocTich}";
     public static string KeySearch(string query) => $"Search-Query:{query.ChuanHoa()}";
 }

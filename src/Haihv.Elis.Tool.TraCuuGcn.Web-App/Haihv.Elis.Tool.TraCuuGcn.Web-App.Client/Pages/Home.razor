@@ -22,7 +22,7 @@
                             <Authorized>
                                 @if (_isAuthSuccess)
                                 {
-                                    <ThongTinChuSuDung MaGcnElis="_maGcnElis"/>
+                                    <ThuaDatLocation MaGcnElis="_maGcnElis"/>
                                 }
                             </Authorized>
                             <NotAuthorized>
@@ -55,35 +55,32 @@
                     {
                         <MudItem xs="12" md="6" lg="4">
                             <MudStack>
+                                <ThongTinChuSuDung MaGcnElis="_maGcnElis"/>
                                 <ThongTinThuaDat MaGcnElis="_maGcnElis"/>
                                 <ThongTinTaiSan/>
                             </MudStack>
                         </MudItem>
                         <MudItem xs="12" md="6" lg="4">
-                            <ThuaDatLocation MaGcnElis="_maGcnElis"/>
+                            @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
+                            {
+                                <MudAlert Class="mt-4" Severity="Severity.Warning" ShowCloseIcon="true">
+                                    <MudText Typo="Typo.body2">
+                                        Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác.
+                                    </MudText>
+                                    <MudStack Class="pt-1" Spacing="0">
+                                        <MudText Typo="Typo.caption">
+                                            Vui lòng xác minh thông tin tại:
+                                        </MudText>
+                                        <MudText Typo="Typo.caption">
+                                            @_donVi
+                                        </MudText>
+                                    </MudStack>
+                                </MudAlert>
+                            }
                         </MudItem>
                     }
                 </Authorized>
             </AuthorizeView>
-        }
-        @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
-        {
-            <MudFlexBreak />
-            <MudItem xs="12" md="6" lg="4">
-                <MudAlert Severity="Severity.Warning" ShowCloseIcon="true">
-                    <MudText Typo="Typo.body2">
-                        Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác.
-                    </MudText>
-                    <MudStack Class="pt-1" Spacing="0">
-                        <MudText Typo="Typo.caption">
-                            Vui lòng xác minh thông tin tại:
-                        </MudText>
-                        <MudText Typo="Typo.caption">
-                            @_donVi
-                        </MudText>
-                    </MudStack>
-                </MudAlert>
-            </MudItem>
         }
     </MudGrid>
 </MudStack>

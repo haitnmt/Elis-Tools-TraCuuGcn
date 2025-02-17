@@ -1,26 +1,34 @@
 @using System.Text.Json
 
 <MudCard>
-    <MudText Typo="Typo.h6">Vị trí thửa đất trên bản đồ vệ tinh</MudText>
     <MudCardContent>
+        <MudStack Row="true" Justify="Justify.SpaceBetween">
+            <MudText Typo="Typo.h6">Vị trí thửa đất</MudText>
+            <MudSpacer/>
+            <MudTooltip Text="Mở trên Google Map">
+                <MudIconButton Icon="@Icons.Material.Filled.Map" OnClick="LeafletMapService.ShareToGoogleMaps"/>
+            </MudTooltip>
+        </MudStack>
         <AuthorizeView>
             <Authorized>
-                @if (_isLoading)
+                @if (!_isMapInitialized || _isLoading)
                 {
                     <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
-                }
-                else if (string.IsNullOrWhiteSpace(_geoJson))
-                {
-                    <MudAlert Severity="Severity.Error">
-                        Không tìm thấy vị trí thửa đất
-                    </MudAlert>
+
                 }
                 else
                 {
-                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
-                        <div id="map" style="height: calc(100vh - 142px); margin-top: 10px;"></div>
-                    </MudPaper>
+                    @if (_geoJsonData is null || !string.IsNullOrWhiteSpace(_error))
+                    {
+                        <MudAlert Severity="Severity.Error">
+                            @(_error ?? "Không tìm thấy vị trí thửa đất")
+                        </MudAlert>
+                    }
                 }
+
+                <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                    <div id="@MapContainerId" style="width: 100%; aspect-ratio: 1; margin-top: 10px;"></div>
+                </MudPaper>
             </Authorized>
             <NotAuthorized>
                 <MudAlert Severity="Severity.Error">
@@ -37,16 +45,24 @@
 @code 
 {
     [Parameter] public long? MaGcnElis { get; set; }
+    private const string MapContainerId = "map";
     private HttpClient? _httpClient;
-    private string? _geoJson;
+    private string? _geoJsonData;
     private string? _error = string.Empty;
     private long? _maGcnElis;
     private bool _isLoading;
     private const string GetToaDoThuaDatUrl = "/geo/toaDoThua";
+    private bool _isMapInitialized;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LeafletMapService.InitializeAsync(MapContainerId);
+        _isMapInitialized = true;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && !string.IsNullOrWhiteSpace(_geoJson)) return;
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _geoJsonData is not null) return;
         _maGcnElis = MaGcnElis;
         await LoadDataAsync();
     }
@@ -56,8 +72,8 @@
         _error = null;
         _isLoading = true;
         StateHasChanged();
-        _geoJson = null;
         _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        _geoJsonData = null;
         var url = $"{GetToaDoThuaDatUrl}?maGcnElis={_maGcnElis}";
         try
         {
@@ -70,9 +86,8 @@
                     _error = "Không tìm thấy vị trí thửa đất";
                     return;
                 }
-                _geoJson = JsonSerializer.Serialize(
-                    JsonSerializer.Deserialize<object>(result));
-                await LeafletMapService.UpdateMapAsync(_geoJson);
+                _geoJsonData = JsonSerializer.Serialize(JsonSerializer.Deserialize<object>(result));
+                await LeafletMapService.UpdateMapAsync(_geoJsonData);
             }
             else
             {

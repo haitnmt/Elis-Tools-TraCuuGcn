@@ -25,16 +25,24 @@ else
                     <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
                     <MudPaper Class="pa-4" Outlined="true" Elevation="1">
                         <MudGrid>
-                            <MudItem xs="12" lg="6">
+                            <MudItem xs="12" md="6" xl="4">
                                 <MudField Label="Số phát hành (Serial)" Variant="Variant.Text">
                                     @_giayChungNhanInfo.Serial
                                 </MudField>
                             </MudItem>
-                            <MudItem xs="12" lg="6">
+                            <MudItem xs="12" md="6" xl="4">
                                 <MudField Label="Mã Giấy chứng nhận" Variant="Variant.Text">
                                     @_giayChungNhanInfo.MaGiayChungNhan
                                 </MudField>
                             </MudItem>
+                            @if(!string.IsNullOrWhiteSpace(_giayChungNhanInfo.MaHoSo))
+                            {
+                                <MudItem xs="12" md="6" xl="4">
+                                    <MudField Label="Mã hồ sơ thủ tục hành chính" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.MaHoSo
+                                    </MudField>
+                                </MudItem>
+                            }
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.DonVi))
                             {
                                 <MudItem xs="12">
@@ -45,31 +53,23 @@ else
                             }
                             @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
                             {
-                                <MudItem xs="12" lg="6">
+                                <MudItem xs="12" md="6" xl="4">
                                     <MudField Label="Ngày ký" Variant="Variant.Text">
                                         @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
                                     </MudField>
                                 </MudItem>
                             }
-                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
+                            @*@if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
                             {
-                                <MudItem xs="12" lg="6">
+                                <MudItem xs="12" md="6" xl="4">
                                     <MudField Label="Người ký" Variant="Variant.Text">
                                         @_giayChungNhanInfo.NguoiKy
                                     </MudField>
                                 </MudItem>
-                            }
-                            @if(!string.IsNullOrWhiteSpace(_giayChungNhanInfo.MaHoSo))
-                            {
-                                <MudItem xs="12" lg="6">
-                                    <MudField Label="Mã hồ sơ thủ tục hành chính" Variant="Variant.Text">
-                                        @_giayChungNhanInfo.MaHoSo
-                                    </MudField>
-                                </MudItem>
-                            }
+                            }*@
                             @if(!string.IsNullOrWhiteSpace(_giayChungNhanInfo.SoVaoSo))
                             {
-                                <MudItem xs="12" lg="6">
+                                <MudItem xs="12" md="6" xl="4">
                                     <MudField Label="Số vào sổ" Variant="Variant.Text">
                                         @_giayChungNhanInfo.SoVaoSo
                                     </MudField>

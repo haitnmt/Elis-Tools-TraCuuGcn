@@ -45,9 +45,13 @@ public sealed class AuthenticationService(
         if (claimsPrincipal is null || maGcn <= 0) return false;
         var soDinhDanh = claimsPrincipal.GetSoDinhDanh();
         if (string.IsNullOrWhiteSpace(soDinhDanh)) return false;
-        var chuSuDung = await fusionCache.GetOrDefaultAsync<AuthChuSuDung>(CacheSettings.KeyAuthentication(soDinhDanh, maGcn),
+        var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(soDinhDanh, maGcn),
             token: cancellationToken);
-        if (chuSuDung is not null) return true;
+        if (!string.IsNullOrWhiteSpace(tenChuSuDung) && CompareVietnameseStrings(tenChuSuDung, claimsPrincipal.GetHoVaTen()))
+        {
+            logger.Information("Xác thực thành công! SoDinhDanh: {SoDinhDanh}", soDinhDanh);
+            return true;
+        }
         var chuSuDungResult =
             await chuSuDungService.GetResultAuthChuSuDungAsync(maGcn, soDinhDanh, cancellationToken);
         return chuSuDungResult.Match(
