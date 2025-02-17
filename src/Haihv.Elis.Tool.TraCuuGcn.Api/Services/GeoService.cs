@@ -3,7 +3,6 @@ using LanguageExt.Common;
 using ZiggyCreatures.Caching.Fusion;
 #pragma warning disable CS0618
 using System.Data.SqlClient;
-#pragma warning disable CS0618
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -86,7 +85,12 @@ public class GeoService(
         {
             try
             {
-                await using var dbConnection = new SqlConnection(connectionString);
+                var connectionStringBuilder = new SqlConnectionStringBuilder(connectionString)
+                {
+                    TrustServerCertificate = true,
+                    Encrypt = false
+                };
+                await using var dbConnection = new SqlConnection(connectionStringBuilder.ConnectionString);
                 await dbConnection.OpenAsync(cancellationToken);
                 var query = dbConnection.SqlBuilder(
                     $"""
