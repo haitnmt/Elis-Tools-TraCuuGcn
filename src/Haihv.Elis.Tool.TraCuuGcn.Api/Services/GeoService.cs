@@ -1,9 +1,9 @@
-﻿using System.Text.Json;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Models;
-using InterpolatedSql.Dapper;
+﻿using InterpolatedSql.Dapper;
 using LanguageExt.Common;
-using OSGeo.OGR;
 using ZiggyCreatures.Caching.Fusion;
+#pragma warning disable CS0618
+using System.Data.SqlClient;
+#pragma warning disable CS0618
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -86,7 +86,8 @@ public class GeoService(
         {
             try
             {
-                await using var dbConnection = connectionString.GetConnection();
+                await using var dbConnection = new SqlConnection(connectionString);
+                await dbConnection.OpenAsync(cancellationToken);
                 var query = dbConnection.SqlBuilder(
                     $"""
                      SELECT eminx,
