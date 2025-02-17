@@ -11,5 +11,6 @@
     <inspection_tool class="JsonStandardCompliance" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="myWarnAboutComments" value="false" />
     </inspection_tool>
+    <inspection_tool class="SqlDialectInspection" enabled="true" level="INFORMATION" enabled_by_default="true" />
   </profile>
 </component>

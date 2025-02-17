@@ -31,7 +31,10 @@ public static class HybridCachingExtensions
                     }
                 ));
         }
-
+        
         fusionOptions.AsHybridCache();
+        // Clear the cache after registration
+        var cache = services.BuildServiceProvider().GetRequiredService<IFusionCache>();
+        cache.Clear(); // This will clear all cache entries
     }
 }
