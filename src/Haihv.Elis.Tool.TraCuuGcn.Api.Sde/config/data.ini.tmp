@@ -1,0 +1,10 @@
+[database]
+server = your_server
+port = 1433
+user = your_readonly_user
+password = your_password
+;Mật khẩu không nên có ký tự đặc biệt
+
+[databases]
+; Danh sách các database được phép truy cập
+allowed = database1,database2,database3

@@ -1,0 +1,33 @@
+# Build stage
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /app
+
+# Copy go.mod và go.sum từ thư mục chứa mã nguồn chính
+COPY Haihv.Elis.Tool.TraCuuGcn.Api.Sde/go.mod Haihv.Elis.Tool.TraCuuGcn.Api.Sde/go.sum ./
+
+# Tải dependency
+RUN go mod download
+
+# Copy mã nguồn từ thư mục dự án
+COPY Haihv.Elis.Tool.TraCuuGcn.Api.Sde/ .
+
+# Biên dịch ứng dụng
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
+
+# Final stage
+FROM alpine:3.21.3
+
+WORKDIR /app
+
+# Copy file nhị phân đã build từ builder
+COPY --from=builder /app/main .
+
+# Copy file cấu hình từ thư mục config của dự án
+RUN mkdir -p config
+COPY Haihv.Elis.Tool.TraCuuGcn.Api.Sde/config/data.ini.tmp config/data.ini
+
+# Mở cổng 8151
+EXPOSE 8151
+# Chạy ứng dụng
+CMD ["./main"]
