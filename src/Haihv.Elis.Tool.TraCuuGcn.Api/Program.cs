@@ -83,6 +83,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+#pragma warning disable SYSLIB0014
+System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls;
+#pragma warning restore SYSLIB0014
 
 var app = builder.Build();
 

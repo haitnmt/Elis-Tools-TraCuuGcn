@@ -21,4 +21,5 @@ RUN dotnet publish "./Haihv.Elis.Tool.TraCuuGcn.Api.csproj" -c $BUILD_CONFIGURAT
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
 ENTRYPOINT ["dotnet", "Haihv.Elis.Tool.TraCuuGcn.Api.dll"]

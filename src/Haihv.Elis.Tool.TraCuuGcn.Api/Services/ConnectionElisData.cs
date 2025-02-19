@@ -12,6 +12,12 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 public interface IConnectionElisData
 {
     /// <summary>
+    /// Lấy đường dẫn API SDE.
+    /// </summary>
+    /// <value>Đường dẫn API SDE.</value>
+    string ApiSdeUrl();
+    
+    /// <summary>
     /// Danh sách các kết nối ELIS.
     /// </summary>
     List<ConnectionSql> ConnectionElis { get; }
@@ -60,8 +66,16 @@ public sealed class ConnectionElisData(
     private const string KeyName = "Name";
     private const string KeyMaDvhc = "MaDvhc";
     private const string KeyElisConnectionString = "ElisConnectionString";
-    private const string KeySdeConnectionString = "SdeConnectionString";
+    private const string KeySdeDatabase = "SdeDatabase";
+    private const string KeyApiSde = "ApiSde";
 
+    
+    /// <summary>
+    /// Lấy đường dẫn API SDE.
+    /// </summary>
+    /// <value>Đường dẫn API SDE.</value>
+    public string ApiSdeUrl() => configuration[$"{SectionName}:{KeyApiSde}"] ?? string.Empty;
+    
     /// <summary>
     /// Danh sách các kết nối ELIS.
     /// </summary>
@@ -79,7 +93,7 @@ public sealed class ConnectionElisData(
     /// <summary>
     /// Danh sách các chuỗi kết nối.
     /// </summary>
-    public List<string> SdeConnectionStrings => ConnectionElis.Select(x => x.SdeConnectionString).ToList();
+    public List<string> SdeConnectionStrings => ConnectionElis.Select(x => x.SdeDatabase).ToList();
 
     /// <summary>
     /// Lấy danh sách các kết nối từ cấu hình.
@@ -95,7 +109,7 @@ public sealed class ConnectionElisData(
             var name = configurationSection[KeyName] ?? string.Empty;
             var maDvhc = configurationSection[KeyMaDvhc] ?? string.Empty;
             var elisConnectionString = configurationSection[KeyElisConnectionString] ?? string.Empty;
-            var sdeConnectionString = configurationSection[KeySdeConnectionString] ?? string.Empty;
+            var sdeConnectionString = configurationSection[KeySdeDatabase] ?? string.Empty;
             if (string.IsNullOrWhiteSpace(elisConnectionString)) continue;
             using var connection = new SqlConnection(elisConnectionString);
             try
@@ -133,7 +147,7 @@ public sealed class ConnectionElisData(
         => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ElisConnectionString ?? string.Empty;
 
     public string GetSdeConnectionString(string name)
-        => ConnectionElis.FirstOrDefault(x => x.Name == name)?.SdeConnectionString ?? string.Empty;
+        => ConnectionElis.FirstOrDefault(x => x.Name == name)?.SdeDatabase ?? string.Empty;
 }
 
 /// <summary>
@@ -142,5 +156,5 @@ public sealed class ConnectionElisData(
 /// <param name="Name">Tên kết nối.</param>
 /// <param name="MaDvhc">Mã đơn vị hành chính.</param>
 /// <param name="ElisConnectionString">Chuỗi kết nối CSDL.</param>
-/// <param name="SdeConnectionString">Chuỗi kết nối SDE.</param>
-public record ConnectionSql(string Name, int MaDvhc, string ElisConnectionString, string SdeConnectionString);
+/// <param name="SdeDatabase">Tên CSDL SDE.</param>
+public record ConnectionSql(string Name, int MaDvhc, string ElisConnectionString, string SdeDatabase);

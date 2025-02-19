@@ -80,3 +80,6 @@
 #Environment
 /src/**/.env
 **/.env
+
+#Config
+/src/**/config/data.ini

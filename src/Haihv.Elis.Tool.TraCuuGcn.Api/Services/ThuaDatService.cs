@@ -157,7 +157,7 @@ public class ThuaDatService(
         var cacheKey = CacheSettings.KeyDiaChiByMaDvhc(maDvhc);
         try
         {
-            var diaChi = await fusionCache.GetOrSet(cacheKey,
+            var diaChi = await fusionCache.GetOrSetAsync(cacheKey,
                 cancel => GetDiaChiByMaDvhcAsyncInDataAsync(maDvhc, connectionString, cancel),
                 token: cancellationToken);
             return diaChi;
