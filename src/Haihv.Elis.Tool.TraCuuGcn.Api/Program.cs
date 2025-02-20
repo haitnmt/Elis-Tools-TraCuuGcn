@@ -32,10 +32,19 @@ builder.Services.AddSingleton(
 
 // Add service Authentication and Authorization for Identity Server
 builder.Services.AddAuthorization();
+var otherJwtScheme = "OtherJwtScheme";
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultScheme = "DefaultScheme";
+    })
+    .AddPolicyScheme("DefaultScheme", "Authorization Bearer or JWT", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+            return authHeader?.StartsWith("Bearer ") == true ? 
+                JwtBearerDefaults.AuthenticationScheme : otherJwtScheme;
+        };
     })
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
@@ -49,10 +58,10 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.Zero,
         };
     })
-    .AddJwtBearer("Ldap", options =>
+    .AddJwtBearer(otherJwtScheme, options =>
     {
-        var ldapOptions = builder.Configuration.GetSection("JwtLdap");
-        if (!ldapOptions.GetChildren().Any())
+        var jwtApiIdVpdkSection = builder.Configuration.GetSection("JwtApiIdVpdk");
+        if (!jwtApiIdVpdkSection.GetChildren().Any())
         {
             // Bỏ qua nếu không có cấu hình
             return;
@@ -61,9 +70,9 @@ builder.Services.AddAuthentication(options =>
         options.TokenValidationParameters = new TokenValidationParameters
         {
             IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtLdap:SecretKey"]!)),
-            ValidIssuer = builder.Configuration["JwtLdap:Issuer"],
-            ValidAudience = builder.Configuration["JwtLdap:Audience"],
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtApiIdVpdkSection["SecretKey"]!)),
+            ValidIssuer = jwtApiIdVpdkSection["Issuer"],
+            ValidAudience = jwtApiIdVpdkSection["Audience"],
             ClockSkew = TimeSpan.Zero,
         };
     });

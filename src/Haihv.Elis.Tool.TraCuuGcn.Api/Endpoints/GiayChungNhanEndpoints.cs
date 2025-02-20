@@ -22,11 +22,7 @@ public static class GiayChungNhanEndpoints
 
         app.MapGet("/elis/thua-dat", GetThuaDatAsync)
             .WithName("GetThuaDatAsync")
-            .RequireAuthorization(new AuthorizeAttribute
-            {
-                AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme},Ldap"
-            });
-
+            .RequireAuthorization();
 
         app.MapGet("/elis/thua-dat-public", GetThuaDatPublicAsync)
             .WithName("GetThuaDatPublicAsync");
