@@ -35,62 +35,38 @@ builder.Services.AddSingleton(
 // Cấu hình Authentication với nhiều JwtScheme
 const string otherJwtScheme = "ApiIdVpdk";
 var jwtApiIdVpdkSection = builder.Configuration.GetSection("JwtApiIdVpdk");
+builder.Services.AddAuthorizationBuilder();
 builder.Services.AddAuthentication(options =>
     {
-        options.DefaultAuthenticateScheme = "DefaultScheme";
-        options.DefaultChallengeScheme = "DefaultScheme";
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddPolicyScheme("DefaultScheme", "Authorization Bearer or JWT", options =>
-    {
-        options.ForwardDefaultSelector = context =>
-        {
-            var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-            return authHeader?.StartsWith("Bearer ") == true ? JwtBearerDefaults.AuthenticationScheme : otherJwtScheme;
-        };
-    })
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+    .AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
+            IssuerSigningKeys = new List<SecurityKey>
+            {
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtApiIdVpdkSection["SecretKey"]!))
+            },
+            IssuerSigningKey =
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
             // Chấp nhận nhiều Issuer
             ValidIssuers =
             [
                 builder.Configuration["Jwt:Issuer"],
                 jwtApiIdVpdkSection["Issuer"]
             ],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            ClockSkew = TimeSpan.Zero,
-        };
-    })
-    .AddJwtBearer(otherJwtScheme, options =>
-    {
-        if (!jwtApiIdVpdkSection.Exists())
-        {
-            return; // Bỏ qua nếu không có cấu hình
-        }
-
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtApiIdVpdkSection["SecretKey"]!)),
-            ValidIssuers =
+            ValidAudiences =
             [
-                jwtApiIdVpdkSection["Issuer"],
-                builder.Configuration["Jwt:Issuer"]
+                builder.Configuration["Jwt:Audience"],
+                jwtApiIdVpdkSection["Audience"]
             ],
-            ValidAudience = jwtApiIdVpdkSection["Audience"],
             ClockSkew = TimeSpan.Zero,
         };
     });
-
-// 🔹 Cấu hình Default Authorization Policy để chấp nhận cả hai schemes
-builder.Services.AddAuthorizationBuilder().SetDefaultPolicy(new AuthorizationPolicyBuilder()
-        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme, otherJwtScheme)
-        .RequireAuthenticatedUser()
-        .Build());
-
 // Add ConnectionElisData
 builder.Services.AddSingleton<IConnectionElisData, ConnectionElisData>();
 
