@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.StackExchangeRedis;
+using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
@@ -8,12 +9,13 @@ public static class HybridCachingExtensions
 {
     public static void AddCache(this IServiceCollection services, string? redisConnectionString = null)
     {
+        const string instanceName = "TraCuuGcn";
         //Add MemoryCache
         services.AddMemoryCache();
         var fusionOptions = services.AddFusionCache()
             .WithDefaultEntryOptions(options =>
             {
-                options.DistributedCacheDuration = TimeSpan.FromDays(1);
+                options.DistributedCacheDuration = TimeSpan.FromMinutes(15);
                 options.Duration = TimeSpan.FromMinutes(5);
                 options.IsFailSafeEnabled = true;
                 options.FailSafeThrottleDuration = TimeSpan.FromSeconds(15);
@@ -27,14 +29,24 @@ public static class HybridCachingExtensions
                     new RedisCacheOptions
                     {
                         Configuration = redisConnectionString,
-                        InstanceName = "TraCuuGcn"
+                        InstanceName = instanceName
                     }
                 ));
         }
         
         fusionOptions.AsHybridCache();
-        // Clear the cache after registration
-        var cache = services.BuildServiceProvider().GetRequiredService<IFusionCache>();
-        cache.Clear(); // This will clear all cache entries
+        // Clear redis cache when application start
+        if (string.IsNullOrWhiteSpace(redisConnectionString)) return;
+        var redis = ConnectionMultiplexer.Connect(redisConnectionString);
+        // Clear all databases in Redis server with prefix instanceName
+        foreach (var endPoint in redis.GetEndPoints())
+        {
+            var server = redis.GetServer(endPoint);
+            foreach (var key in server.Keys(pattern: $"{instanceName}*"))
+            {
+                redis.GetDatabase().KeyDelete(key);
+            }
+        }
+        
     }
 }

@@ -43,7 +43,14 @@ public sealed class AuthenticationService(
         CancellationToken cancellationToken = default)
     {
         if (claimsPrincipal is null || maGcn <= 0) return false;
+        var typeIdentity = claimsPrincipal.GetIdentityType();
         var soDinhDanh = claimsPrincipal.GetSoDinhDanh();
+        if (typeIdentity?.ToLower() == "ldap")
+        {
+            logger.Information("Xác thực thành công! UserPrincipalName: {soDinhDanh}",
+                soDinhDanh);
+            return true;
+        }
         if (string.IsNullOrWhiteSpace(soDinhDanh)) return false;
         var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(soDinhDanh, maGcn),
             token: cancellationToken);

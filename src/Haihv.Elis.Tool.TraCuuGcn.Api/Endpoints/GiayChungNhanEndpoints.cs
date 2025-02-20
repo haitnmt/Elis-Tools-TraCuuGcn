@@ -2,6 +2,8 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
 
@@ -20,7 +22,11 @@ public static class GiayChungNhanEndpoints
 
         app.MapGet("/elis/thua-dat", GetThuaDatAsync)
             .WithName("GetThuaDatAsync")
-            .RequireAuthorization();
+            .RequireAuthorization(new AuthorizeAttribute
+            {
+                AuthenticationSchemes = $"{JwtBearerDefaults.AuthenticationScheme},Ldap"
+            });
+
 
         app.MapGet("/elis/thua-dat-public", GetThuaDatPublicAsync)
             .WithName("GetThuaDatPublicAsync");

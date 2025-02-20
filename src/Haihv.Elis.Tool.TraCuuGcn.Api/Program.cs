@@ -32,8 +32,12 @@ builder.Services.AddSingleton(
 
 // Add service Authentication and Authorization for Identity Server
 builder.Services.AddAuthorization();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
@@ -42,6 +46,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
+            ClockSkew = TimeSpan.Zero,
+        };
+    })
+    .AddJwtBearer("Ldap", options =>
+    {
+        var ldapOptions = builder.Configuration.GetSection("JwtLdap");
+        if (!ldapOptions.GetChildren().Any())
+        {
+            // Bỏ qua nếu không có cấu hình
+            return;
+        }
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            IssuerSigningKey =
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtLdap:SecretKey"]!)),
+            ValidIssuer = builder.Configuration["JwtLdap:Issuer"],
+            ValidAudience = builder.Configuration["JwtLdap:Audience"],
             ClockSkew = TimeSpan.Zero,
         };
     });
@@ -73,6 +95,7 @@ if (frontendUrls is null || frontendUrls.Length == 0)
 {
     frontendUrls = ["*"];
 }
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(corsPolicyBuilder =>
