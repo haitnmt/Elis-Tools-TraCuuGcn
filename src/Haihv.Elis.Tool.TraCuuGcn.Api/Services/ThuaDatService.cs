@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
 using LanguageExt;

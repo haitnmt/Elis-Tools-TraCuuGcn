@@ -30,6 +30,7 @@ internal static class AppSettingsExtension
 {
     private const string SettingsDemoKey = "IsDemo";
     private const string SettingsApiEndpointKey = "ApiEndpoint";
+    private const string SettingsAuthEndpointKey = "AuthEndpoint";
     internal static void AddAppSettingsServices(this WebApplicationBuilder builder)
     {
         var appSettings = builder.Configuration.GetAppSettingsAsync().Result;
@@ -46,48 +47,30 @@ internal static class AppSettingsExtension
     private static async Task<AppSettings> GetAppSettingsAsync(this IConfiguration configuration)
     {
         var apiEndpoint = configuration[SettingsApiEndpointKey];
-        if (string.IsNullOrWhiteSpace(apiEndpoint))
+        var appSettings = new AppSettings
         {
-            return new AppSettings
-            {
-                ApiEndpoint = apiEndpoint,
-                IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
-                AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
-            };
-        }
+            ApiEndpoint = apiEndpoint,
+            AuthEndpoint = configuration[SettingsAuthEndpointKey],
+            IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
+            AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
+        };
+        if (string.IsNullOrWhiteSpace(apiEndpoint)) return appSettings;
         // Lấy thông tin ApiVersion từ ApiEndpoint
         var httpClient = new HttpClient { BaseAddress = new Uri(apiEndpoint) };
         try
         {
             var response = await httpClient.GetAsync("/api/version");
-            if (!response.IsSuccessStatusCode)
-            {
-                return new AppSettings
-                {
-                    ApiEndpoint = apiEndpoint,
-                    IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
-                    AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
-                };
+            if (response.IsSuccessStatusCode)
+            {            
+                var apiVersion = await response.Content.ReadAsStringAsync();
+                apiVersion = apiVersion.Trim().Trim('"');
+                appSettings.AppVersion = apiVersion;
             }
-            var apiVersion = await response.Content.ReadAsStringAsync();
-            apiVersion = apiVersion.Trim().Trim('"');
-            return new AppSettings{
-                ApiEndpoint = apiEndpoint,
-                IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
-                ApiVersion = apiVersion,
-                AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
-            };
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return new AppSettings
-            {
-                ApiEndpoint = apiEndpoint,
-                IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
-                AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
-            };
         }
-
+        return appSettings;
     }
 }

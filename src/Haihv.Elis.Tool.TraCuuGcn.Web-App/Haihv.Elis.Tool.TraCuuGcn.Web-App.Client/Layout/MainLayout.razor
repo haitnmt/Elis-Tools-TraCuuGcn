@@ -8,15 +8,44 @@
 
 @* Needed for snackbars *@
 <MudSnackbarProvider />
-
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode"/>
 <MudLayout>
     <MudAppBar>
         <MudText Typo="Typo.h6">
             Tra cứu thông tin Giấy chứng nhận
         </MudText>
         <MudSpacer/>
+        @if(string.IsNullOrWhiteSpace(_displayName))
+        {
+            <MudButton
+                Color="Color.Inherit"
+                OnClick="OpenDangNhap">
+                <MudText Typo="Typo.body2">
+                    Đăng nhập
+                </MudText>
+            </MudButton>
+        }
+        else
+        {
+            <MudStack Row="true">
+                <MudText>
+                    Xin chào, @_displayName
+                </MudText>
+                <MudDivider Vertical="true"/>
+                <MudIconButton
+                    Icon="@Icons.Material.Filled.Logout"
+                    Size="Size.Small"
+                    Color="Color.Inherit"
+                    OnClick="Logout"/>
+            </MudStack>
+        }
+        <MudToggleIconButton @bind-Toggled="@_isDarkMode"
+                             Icon="@Icons.Material.Filled.DarkMode" Color="@Color.Error"
+                             title=@(_isDarkMode ? "On" : "Off")
+                             ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="@Color.Default"/>
         <MudIconButton 
             Icon="@Icons.Custom.Brands.GitHub" 
+            Size="Size.Small"
             Color="Color.Inherit"
             Href="@UrlGitHub"
             Target="_blank"/>
@@ -43,3 +72,4 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+

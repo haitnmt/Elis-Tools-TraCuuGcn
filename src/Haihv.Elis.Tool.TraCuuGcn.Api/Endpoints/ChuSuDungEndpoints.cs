@@ -62,8 +62,8 @@ public static class ChuSuDungEndpoints
                     return Results.Ok(new Response<List<ChuSuDungInfo>>(chuSuDung));
                 }
                 return Results.Ok(new Response<List<ChuSuDungInfo>>
-                    (chuSuDung.Where(x => x.ChuSuDung.GiayTo == maDinhDanh || 
-                                          x.ChuSuDungQuanHe?.GiayTo == maDinhDanh).ToList()));
+                    (chuSuDung.Where(x => (x.ChuSuDung.GiayTo?.EndsWith(maDinhDanh) ?? false) || 
+                                          (x.ChuSuDungQuanHe?.GiayTo?.EndsWith(maDinhDanh) ?? false)).ToList()));
             },
             ex =>
             {

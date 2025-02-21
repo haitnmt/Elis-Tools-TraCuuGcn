@@ -1,0 +1,85 @@
+﻿<MudDialog>
+    <TitleContent>
+            <MudStack Row="true" AlignItems="AlignItems.End">
+                <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Rounded="true">
+                    <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Medium"/>
+                </MudAvatar>
+                <MudText Typo="Typo.h6"
+                         Color="Color.Warning">
+                    Đăng nhập hệ thống
+                </MudText>
+            </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Tên đăng nhập" 
+                      Variant="Variant.Text" 
+                      HelperText="Tên đăng nhập trên hệ thống: ten_dang_nhap@vpdk.stnmt.bacninh.gov.vn"
+                      @bind-Value="@_username"/>
+        <MudTextField Label="Mật khẩu"
+                      Variant="Variant.Text"
+                      InputType="InputType.Password"
+                      HelperText="Mật khẩu đăng nhập"
+                      @bind-Value="@_password"/>
+        @if(_authResult is not null && !_authResult.Success)
+        {
+            <MudAlert Severity="Severity.Error">
+                <MudText Typo="Typo.body1">Xác thực không thành công</MudText>
+                <MudText Typo="Typo.body2">@_authResult.Error</MudText>
+            </MudAlert>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Secondary"
+                   Disabled="_processing"
+                   OnClick="Cancel">
+            Hủy bỏ
+        </MudButton>
+        <MudButton
+            Variant="Variant.Filled"
+            Color="Color.Primary"
+            Disabled="_processing"
+            OnClick="XacThuc">
+            @if (_processing)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                <MudText Class="ms-2">Đang xác thực</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.button">Xác thực</MudText>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+    private bool _processing;
+    private AuthResult? _authResult;
+    private async Task XacThuc()
+    {
+        if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
+        {
+            _authResult = new AuthResult(false, "Tên đăng nhập và mật khẩu không được để trống");
+            return;
+        }
+        _processing = true;
+        _authResult = await AuthService.LoginUser(new AuthUser(_username, _password));
+        if (_authResult.Success)
+        {
+            MudDialog.Close(DialogResult.Ok(_username));
+        }
+        _processing = false;
+    }
+
+    private void Cancel(MouseEventArgs obj)
+    {
+        MudDialog.Cancel();
+    }
+
+}

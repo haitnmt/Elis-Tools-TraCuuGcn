@@ -16,11 +16,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthorizationHandler>();
 
+// Tải cấu hình từ Blazor Server
 var baseUrl = builder.HostEnvironment.BaseAddress;
 var appSettings = await AppSettingsService.GetAppSettings(baseUrl);
 var apiEndpoint = appSettings.ApiEndpoint;
-// Tải cấu hình từ Blazor Server
+var authEndpoint = appSettings.AuthEndpoint;
 
+// Đăng ký httpClient để gọi API
 // Kiểm tra xem API URL hợp lệ hay không
 if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 { 
@@ -30,6 +32,14 @@ builder.Services.AddHttpClient(
         "Endpoint",
         opt => opt.BaseAddress = validUri)
         .AddHttpMessageHandler<JwtAuthorizationHandler>();
+// Đăng ký httpClient để gọi Auth API
+if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
+{
+        throw new InvalidOperationException($"Invalid Auth Base URL: {authEndpoint}");
+}
+builder.Services.AddHttpClient(
+        "AuthEndpoint",
+        opt => opt.BaseAddress = validAuthUri);
 // Đăng ký dịch vụ cấu hình ứng dụng
 builder.AddAppSettingsServices(appSettings);
 

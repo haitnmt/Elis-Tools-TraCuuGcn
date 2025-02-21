@@ -10,7 +10,7 @@
                 {
                     <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
                 }
-                else if (_chuSuDungInfo == null)
+                else if (_chuSuDungInfos.Count == 0)
                 {
                     <MudAlert Severity="Severity.Error">
                         Không tìm thấy thông tin chủ sử dụng
@@ -18,33 +18,42 @@
                 }
                 else
                 {
-                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
-                        <MudGrid Spacing="2">
-                            <MudItem xs="6">
-                                <MudText Typo="Typo.body1">
-                                    @_chuSuDungInfo.ChuSuDung.Ten;
-                                </MudText>
-                            </MudItem>
-                            <MudItem xs="6">
-                                <MudText Typo="Typo.body1">
-                                    @_chuSuDungInfo.ChuSuDung.GiayTo
-                                </MudText>
-                            </MudItem>
-                            @if (_chuSuDungInfo.ChuSuDungQuanHe != null)
-                            {
+                    if(_chuSuDungInfos.Count > 1)
+                    {
+                        <MudText Typo="Typo.caption">
+                            Các chủ sử dụng đất:
+                        </MudText>
+                    }
+                    @foreach (var chuSuDungInfo in _chuSuDungInfos)
+                    {
+                        <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                            <MudGrid Spacing="2">
                                 <MudItem xs="6">
                                     <MudText Typo="Typo.body1">
-                                        @_chuSuDungInfo.ChuSuDungQuanHe.Ten;
+                                        @chuSuDungInfo.ChuSuDung.Ten;
                                     </MudText>
                                 </MudItem>
                                 <MudItem xs="6">
                                     <MudText Typo="Typo.body1">
-                                        @_chuSuDungInfo.ChuSuDungQuanHe.GiayTo
+                                        @chuSuDungInfo.ChuSuDung.GiayTo
                                     </MudText>
                                 </MudItem>
-                            }
-                        </MudGrid>
-                    </MudPaper>
+                                @if (chuSuDungInfo.ChuSuDungQuanHe != null)
+                                {
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.body1">
+                                            @chuSuDungInfo.ChuSuDungQuanHe.Ten;
+                                        </MudText>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudText Typo="Typo.body1">
+                                            @chuSuDungInfo.ChuSuDungQuanHe.GiayTo
+                                        </MudText>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudPaper>
+                    }
                 }
             </MudCardContent>
         </MudCard>
@@ -69,13 +78,13 @@
     [Parameter] public long? MaGcnElis { get; set; }
     private HttpClient? _httpClient;
     private const string UrlGetThongTinChuSuDung = "/elis/chuSuDung";
-    private ChuSuDungInfo? _chuSuDungInfo;
+    private List<ChuSuDungInfo> _chuSuDungInfos = [];
     private string? _error = string.Empty;
     private long? _maGcnElis;
     private bool _isLoading;
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _chuSuDungInfo is not null) return;
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _chuSuDungInfos.Count > 0) return;
         _maGcnElis = MaGcnElis;
         await LoadDataAsync();
     }
@@ -85,18 +94,18 @@
         _error = null;
         _isLoading = true;
         StateHasChanged();
-        _chuSuDungInfo = null;
+        _chuSuDungInfos = [];
         _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
         var url = $"{UrlGetThongTinChuSuDung}?maGcnElis={_maGcnElis}";
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<Response<ChuSuDungInfo>>(url);
+            var response = await _httpClient.GetFromJsonAsync<Response<List<ChuSuDungInfo>>>(url);
             if (response?.Value == null)
             {
                 _error = response?.ErrorMsg ?? "Không có thông tin Chủ sử dụng";
                 return;
             }
-            _chuSuDungInfo = response.Value;
+            _chuSuDungInfos = response.Value;
         }
         catch (Exception e)
         {

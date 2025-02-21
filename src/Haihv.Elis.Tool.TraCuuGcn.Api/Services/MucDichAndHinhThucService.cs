@@ -1,4 +1,5 @@
-﻿using InterpolatedSql.Dapper;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using InterpolatedSql.Dapper;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;

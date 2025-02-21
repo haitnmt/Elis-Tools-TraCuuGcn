@@ -30,7 +30,9 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
 }
 builder.Services.AddHttpClient(
     "Endpoint", client => client.BaseAddress = new Uri(apiEndpoint));
-
+var authEndpoint = builder.Configuration["AuthEndpoint"];
+builder.Services.AddHttpClient(
+    "AuthEndpoint", client => client.BaseAddress = new Uri(authEndpoint));
 
 
 var app = builder.Build();

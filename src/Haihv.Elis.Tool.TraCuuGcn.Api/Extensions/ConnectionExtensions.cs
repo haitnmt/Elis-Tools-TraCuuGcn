@@ -1,6 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
 public static class ConnectionExtensions
 {
