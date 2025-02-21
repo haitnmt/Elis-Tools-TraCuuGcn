@@ -40,7 +40,8 @@ public partial class MainLayout
     private void AuthenticationStateChanged(Task<AuthenticationState> task)
     {
         _authen = task.Result;
-        _displayName = _authen.User.FindFirst(JwtRegisteredClaimNames.GivenName)?.Value ?? string.Empty;
+        _displayName = _authen.User.FindFirst(JwtRegisteredClaimNames.GivenName)?.Value ?? 
+                       _authen.User.FindFirst("HoVaTen")?.Value ?? string.Empty;
         StateHasChanged();
     }
 
@@ -50,7 +51,7 @@ public partial class MainLayout
         {
             CloseOnEscapeKey = true
         };
-        await DialogService.ShowAsync<AuthByUser>(null, options);
+        await DialogService.ShowAsync<XacThucNguoiDung>(null, options);
         StateHasChanged();
     }
 

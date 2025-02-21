@@ -12,6 +12,8 @@ public interface IAuthService
     Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung);
     Task<AuthResult> LoginUser(AuthUser authUser);
     Task<bool> CheckAuthorByMaGcnElis(long maGcnElis);
+    Task<long> GetMaGcnElis();
+    Task SetMaGcnElis(long maGcnElis);
     Task Logout();
 }
 
@@ -52,6 +54,8 @@ public class AuthService(
 
             var authResponse = await response.Content.ReadFromJsonAsync<Response<AccessToken>>();
 
+            if (authResponse?.Value is null)
+                return new AuthResult { Error = "Login failed" };
             await SetLocalStorageAsync(authResponse.Value);
 
             var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
@@ -92,11 +96,21 @@ public class AuthService(
         var maGcn = await localStorage.GetItemAsync<long>("maGcnElis");
         return maGcn == maGcnElis;
     }
+    
+    public async Task<long> GetMaGcnElis()
+    {
+        return await localStorage.GetItemAsync<long>("maGcnElis");
+    }
+    public async Task SetMaGcnElis(long maGcnElis)
+    {
+        await localStorage.SetItemAsync("maGcnElis", maGcnElis);
+    }
     public async Task Logout()
     {
         await localStorage.RemoveItemAsync("authToken");
         await localStorage.RemoveItemAsync("refreshToken");
         await localStorage.RemoveItemAsync("maGcnElis");
+        await localStorage.RemoveItemAsync("maDinhDanh");
         _jwtAuthStateProvider.NotifyUserChanged(JwtAuthStateProvider.AnonymousUser);
     }
 }

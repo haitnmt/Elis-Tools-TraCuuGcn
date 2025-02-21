@@ -213,6 +213,7 @@ else
                     if (!await AuthService.CheckAuthorByMaGcnElis(MaGcnElis))
                        await AuthService.Logout();
                     await MaGcnElisChanged.InvokeAsync(MaGcnElis);
+                    await AuthService.SetMaGcnElis(MaGcnElis);
                     await LoadThuaDatAsync();
                     await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
                 }

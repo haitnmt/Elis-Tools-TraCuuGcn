@@ -103,11 +103,7 @@
         {
             CloseOnEscapeKey = true
         };
-        var parameters = new DialogParameters<AuthByChuSuDung>
-        {
-            { x => x.MaGcnElis, _maGcnElis },
-        };
-        var authorByChuSuDung = await DialogService.ShowAsync<AuthByChuSuDung>(null,  parameters, options);
+        var authorByChuSuDung = await DialogService.ShowAsync<XacThucNguoiDung>(null, options);
         var result = await authorByChuSuDung.Result;
         
         _isAuthSuccess = result is not null && !result.Canceled;

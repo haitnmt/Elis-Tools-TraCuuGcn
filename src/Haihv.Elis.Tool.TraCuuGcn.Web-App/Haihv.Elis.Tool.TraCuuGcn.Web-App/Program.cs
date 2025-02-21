@@ -31,6 +31,10 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
 builder.Services.AddHttpClient(
     "Endpoint", client => client.BaseAddress = new Uri(apiEndpoint));
 var authEndpoint = builder.Configuration["AuthEndpoint"];
+if (string.IsNullOrWhiteSpace(authEndpoint))
+{
+    throw new InvalidOperationException("AuthEndpoint is not configured");
+}
 builder.Services.AddHttpClient(
     "AuthEndpoint", client => client.BaseAddress = new Uri(authEndpoint));
 
