@@ -2,8 +2,6 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
 
@@ -69,24 +67,25 @@ public static class GiayChungNhanEndpoints
     {
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
-        if (!await authenticationService.CheckAuthenticationAsync(maGcnElis, user))
+        var maDinhDanh = await authenticationService.CheckAuthenticationAsync(maGcnElis, user);
+        if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Warning("Người dùng không được phép truy cập thông tin Thửa Đất.");
+            logger.Warning("Người dùng không được phép truy cập thông tin Thửa Đất. {MaGcnElis} {User}",
+                maGcnElis, user.Claims);
             return Results.Unauthorized();
         }
-        var soDinhDanh = user.Claims.FirstOrDefault(c => c.Type == "SoDinhDanh")?.Value ?? string.Empty;
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
             rs =>
             {
-                logger.Information("Lấy thông tin Thửa Đất thành công: {maGcnElis} {SoDinhDanh}", 
-                    maGcnElis, soDinhDanh);
+                logger.Information("Lấy thông tin Thửa Đất thành công: {maGcnElis} {MaDinhDanh}", 
+                    maGcnElis, maDinhDanh);
                 return Results.Ok(new Response<ThuaDat>(rs));
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {maGcnElis} {SoDinhDanh}", 
-                    maGcnElis, soDinhDanh);
+                logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {maGcnElis} {MaDinhDanh}", 
+                    maGcnElis, maDinhDanh);
                 return Results.BadRequest(new Response<ThuaDat>(ex.Message));
             }));
     }

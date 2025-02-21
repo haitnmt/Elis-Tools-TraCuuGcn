@@ -22,7 +22,7 @@ function Get-EnvVariables {
 Get-EnvVariables
 
 $ImageName = "api-sde"
-$version = "0.6.9181.3"
+$version = "0.7.9183.2"
 #Lấy thời gian bắt đầu
 $startTime = Get-Date
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"

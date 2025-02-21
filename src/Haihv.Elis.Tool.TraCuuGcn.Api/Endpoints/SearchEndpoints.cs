@@ -26,7 +26,7 @@ public static class SearchEndpoints
                 logger.Information("Lấy thông tin Giấy chứng nhận thành công: {Serial}", info.Serial);
                 // Lưu thông tin chủ sử dụng để lưu vào cache
                 _ = chuSuDungService.SetCacheAuthChuSuDungAsync(info.MaGcnElis);
-                _ = chuSuDungService.SetCacheAsync(info.MaGcnElis);
+                _ = chuSuDungService.GetAsync(info.MaGcnElis);
                 // Lưu thông tin toạ độ thửa đất để lưu vào cache
                 _ = geoService.GetAsync(info.MaGcnElis);
                 return Results.Ok(new Response<GiayChungNhanInfo>(info));

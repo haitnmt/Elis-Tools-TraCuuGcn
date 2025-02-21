@@ -7,7 +7,6 @@ using Haihv.Elis.Tool.TraCuuGcn.Models;
 using LanguageExt;
 using LanguageExt.Common;
 using ZiggyCreatures.Caching.Fusion;
-using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 
@@ -19,16 +18,21 @@ public interface IAuthenticationService
     /// <param name="maGcn">Mã GCN.</param>
     /// <param name="claimsPrincipal">Thông tin xác thực của người dùng.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>Trả về true nếu xác thực thành công, ngược lại trả về false.</returns>
-    ValueTask<bool> CheckAuthenticationAsync(long maGcn = 0, ClaimsPrincipal? claimsPrincipal = null,
+    /// <returns>Trả về Số định danh nếu thành công hoặc null nếu không thành công.</returns>
+    ValueTask<string?> CheckAuthenticationAsync(long maGcn = 0, ClaimsPrincipal? claimsPrincipal = null,
         CancellationToken cancellationToken = default);
-
+    
+    /// <summary>
+    /// Xác thực chủ sử dụng.
+    /// </summary>
+    /// <param name="authChuSuDung">Thông tin xác thực chủ sử dụng.</param>
+    /// <returns>Trả về thông tin token nếu thành công hoặc lỗi nếu không thành công.</returns>
     ValueTask<Result<AccessToken>> AuthChuSuDungAsync(AuthChuSuDung? authChuSuDung);
+    
 }
 
 public sealed class AuthenticationService(
     IChuSuDungService chuSuDungService,
-    ILogger logger,
     IFusionCache fusionCache,
     TokenProvider tokenProvider) : IAuthenticationService
 {
@@ -38,48 +42,37 @@ public sealed class AuthenticationService(
     /// <param name="maGcn">Mã GCN.</param>
     /// <param name="claimsPrincipal">Thông tin xác thực của người dùng.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>Trả về true nếu xác thực thành công, ngược lại trả về false.</returns>
-    public async ValueTask<bool> CheckAuthenticationAsync(long maGcn = 0, ClaimsPrincipal? claimsPrincipal = null,
+    /// <returns>Trả về Số định danh nếu thành công hoặc null nếu không thành công.</returns>
+    public async ValueTask<string?> CheckAuthenticationAsync(long maGcn = 0, ClaimsPrincipal? claimsPrincipal = null,
         CancellationToken cancellationToken = default)
     {
-        if (claimsPrincipal is null || maGcn <= 0) return false;
+        if (claimsPrincipal is null || maGcn <= 0) return null;
         var typeIdentity = claimsPrincipal.GetIdentityType();
-        var soDinhDanh = claimsPrincipal.GetSoDinhDanh();
+        var maDinhDanh = claimsPrincipal.GetMaDinhDanh();
         if (typeIdentity?.ToLower() == "ldap")
         {
-            logger.Information("Xác thực thành công! UserPrincipalName: {soDinhDanh}",
-                soDinhDanh);
-            return true;
+            return maDinhDanh;
         }
-        if (string.IsNullOrWhiteSpace(soDinhDanh)) return false;
-        var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(soDinhDanh, maGcn),
+        if (string.IsNullOrWhiteSpace(maDinhDanh)) return null;
+        var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(maGcn, maDinhDanh),
             token: cancellationToken);
         if (!string.IsNullOrWhiteSpace(tenChuSuDung) && CompareVietnameseStrings(tenChuSuDung, claimsPrincipal.GetHoVaTen()))
         {
-            logger.Information("Xác thực thành công! SoDinhDanh: {SoDinhDanh}", soDinhDanh);
-            return true;
+            return maDinhDanh;
         }
         var chuSuDungResult =
-            await chuSuDungService.GetResultAuthChuSuDungAsync(maGcn, soDinhDanh, cancellationToken);
+            await chuSuDungService.GetResultAuthChuSuDungAsync(maGcn, maDinhDanh, cancellationToken);
         return chuSuDungResult.Match(
-            csd =>
-            {
-                if (!CompareVietnameseStrings(csd.HoVaTen, claimsPrincipal.GetHoVaTen()))
-                {
-                    logger.Warning("Xác thực thất bại! Số định danh: {SoDinhDanh}", soDinhDanh);
-                    return false;
-                }
-
-                logger.Information("Xác thực thành công! SoDinhDanh: {SoDinhDanh}", soDinhDanh);
-                return true;
-            },
-            _ =>
-            {
-                logger.Warning("Xác thực thất bại! Số định danh: {SoDinhDanh}", soDinhDanh);
-                return false;
-            });
+            csd => 
+                !CompareVietnameseStrings(csd.HoVaTen, claimsPrincipal.GetHoVaTen()) ? null : maDinhDanh,
+            _ => null);
     }
-
+    
+    /// <summary>
+    /// Xác thực chủ sử dụng.
+    /// </summary>
+    /// <param name="authChuSuDung">Thông tin xác thực chủ sử dụng.</param>
+    /// <returns>Trả về thông tin token nếu thành công hoặc lỗi nếu không thành công.</returns>
     public async ValueTask<Result<AccessToken>> AuthChuSuDungAsync(AuthChuSuDung? authChuSuDung)
     {
         if (authChuSuDung is null)
@@ -136,4 +129,17 @@ public sealed class AuthenticationService(
                         char.IsLetterOrDigit(c))
             .ToArray());
     }
+}
+
+public static class AuthenticationExtensions
+{
+    /// <summary>
+    /// Kiểm tra xác thực LDAP.
+    /// </summary>
+    /// <param name="claimsPrincipal"></param>
+    /// <returns>
+    /// Trả về true nếu xác thực LDAP, ngược lại trả về false.
+    /// </returns>
+    public static bool IsLdapAsync(this ClaimsPrincipal claimsPrincipal)
+        =>claimsPrincipal.GetIdentityType()?.ToLower() == "ldap";
 }

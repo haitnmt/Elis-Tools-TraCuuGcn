@@ -40,9 +40,13 @@ public sealed class TokenProvider(
 
 public static class TokenExtensions
 {
-    public static string? GetSoDinhDanh(this ClaimsPrincipal claimsPrincipal) =>
-        claimsPrincipal.FindFirst("SoDinhDanh")?.Value ?? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.UniqueName)?.Value;
-
+    public static string? GetMaDinhDanh(this ClaimsPrincipal claimsPrincipal)
+    {
+        var id = claimsPrincipal.FindFirst("SoDinhDanh")?.Value;
+        if (!string.IsNullOrWhiteSpace(id)) return id;
+        id = claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        return string.IsNullOrWhiteSpace(id) ? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Name)?.Value : id;
+    }
     public static string? GetHoVaTen(this ClaimsPrincipal claimsPrincipal) =>
         claimsPrincipal.FindFirst("HoVaTen")?.Value ?? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.GivenName)?.Value;
     

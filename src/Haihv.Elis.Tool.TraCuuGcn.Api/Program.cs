@@ -3,8 +3,8 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,10 +32,11 @@ builder.Services.AddSingleton(
         builder.Configuration.GetValue<int>("Jwt:ExpireMinutes")));
 
 // Add service Authentication and Authorization for Identity Server
-// Cấu hình Authentication với nhiều JwtScheme
-const string otherJwtScheme = "ApiIdVpdk";
-var jwtApiIdVpdkSection = builder.Configuration.GetSection("JwtApiIdVpdk");
 builder.Services.AddAuthorizationBuilder();
+
+// Cấu hình Authentication với nhiều JwtScheme
+var jwtTokenSettings = new JwtTokenSettings();
+builder.Configuration.GetSection("JwtTokenSettings").Bind(jwtTokenSettings);
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -46,24 +47,10 @@ builder.Services.AddAuthentication(options =>
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            IssuerSigningKeys = new List<SecurityKey>
-            {
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtApiIdVpdkSection["SecretKey"]!))
-            },
-            IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]!)),
-            // Chấp nhận nhiều Issuer
-            ValidIssuers =
-            [
-                builder.Configuration["Jwt:Issuer"],
-                jwtApiIdVpdkSection["Issuer"]
-            ],
-            ValidAudiences =
-            [
-                builder.Configuration["Jwt:Audience"],
-                jwtApiIdVpdkSection["Audience"]
-            ],
+            IssuerSigningKeys = jwtTokenSettings.SecretKeys.Select(key =>
+                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))).ToList(),
+            ValidIssuers = jwtTokenSettings.Issuers,
+            ValidAudiences = jwtTokenSettings.Audiences,
             ClockSkew = TimeSpan.Zero,
         };
     });

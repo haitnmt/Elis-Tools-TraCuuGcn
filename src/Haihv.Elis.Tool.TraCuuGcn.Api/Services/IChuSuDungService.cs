@@ -19,24 +19,21 @@ public interface IChuSuDungService
     /// Lấy thông tin chủ sử dụng và quan hệ chủ sử dụng.
     /// </summary>
     /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
-    /// <param name="soDinhDanh">Số định danh.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Kết quả chứa thông tin chủ sử dụng hoặc lỗi.</returns>
-    Task<Result<ChuSuDungInfo>> GetResultAsync(
+    Task<Result<List<ChuSuDungInfo>>> GetResultAsync(
         long maGcn = 0,
-        string? soDinhDanh = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Lưu thông tin chủ sử dụng vào cache.
+    /// Lấy thông tin chủ sử dụng theo Mã GCN.
     /// </summary>
-    /// <param name="maGcnElis">
-    /// Mã của Giấy chứng nhận trong hệ thống ELIS.
-    /// </param>
+    /// <param name="maGcnElis"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task SetCacheAsync(long maGcnElis, CancellationToken cancellationToken = default);
-
+    Task<List<ChuSuDungInfo>> GetAsync(
+        long maGcnElis = 0, CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Lưu thông tin chủ sử dụng vào cache.
     /// </summary>

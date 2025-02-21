@@ -68,11 +68,13 @@ func isAllowedDatabase(database string) bool {
 func handleDynamicQuery(w http.ResponseWriter, r *http.Request) {
 	var req QueryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Invalid request: %v", err)
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
 	if !isAllowedDatabase(req.Database) {
+		log.Printf("Database not allowed: %s", req.Database)
 		http.Error(w, "Database (KVHC_ID) not allowed", http.StatusForbidden)
 		return
 	}
@@ -81,6 +83,7 @@ func handleDynamicQuery(w http.ResponseWriter, r *http.Request) {
 		appConfig.Server, appConfig.User, appConfig.Password, appConfig.Port, req.Database)
 	db, err := sql.Open("mssql", connStr)
 	if err != nil {
+		log.Printf("Database connection error: %v", err)
 		http.Error(w, "Database connection error", http.StatusInternalServerError)
 		return
 	}
@@ -116,7 +119,6 @@ func handleDynamicQuery(w http.ResponseWriter, r *http.Request) {
 		Message: "Lấy tọa độ thửa đất thành công",
 		Data:    coords,
 	}
-	log.Printf("Query result: %v", coords)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
