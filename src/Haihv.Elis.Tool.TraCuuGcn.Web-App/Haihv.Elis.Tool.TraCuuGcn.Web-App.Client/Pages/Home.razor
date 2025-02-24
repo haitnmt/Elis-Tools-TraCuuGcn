@@ -86,6 +86,7 @@
 </MudStack>
 @inject IDialogService DialogService
 @inject AppSettingsService AppSettingService
+@inject IAuthService AuthService
 @code {
     private string? _searchQuery;
     private long _maGcnElis;
@@ -97,6 +98,16 @@
     {
         _appSettings = AppSettingService.AppSettings;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (string.IsNullOrWhiteSpace(_searchQuery)) 
+               await AuthService.SetMaGcnElis(0);
+        }
+    }
+
     private async Task OpenAuthDialog()
     {
         var options = new DialogOptions
