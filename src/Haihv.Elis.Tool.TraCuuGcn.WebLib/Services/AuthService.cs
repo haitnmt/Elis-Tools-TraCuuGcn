@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Blazored.LocalStorage;
@@ -32,20 +33,29 @@ public class AuthService(
     private const string RefreshTokenKey = "refreshToken";
     public async Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung)
     {
-        var response = await _httpClient.PostAsJsonAsync("/elis/auth", authChuSuDung);
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/elis/auth", authChuSuDung);
         
-        if (!response.IsSuccessStatusCode)
-            return new AuthResult { Error = "Login failed" };
+            if (!response.IsSuccessStatusCode)
+                return new AuthResult { Error = "Login failed" };
 
-        var authResponse = await response.Content.ReadFromJsonAsync<AccessToken>();
+            var authResponse = await response.Content.ReadFromJsonAsync<AccessToken>();
         
-        await SetLocalStorageAsync(authResponse, authChuSuDung.MaGcnElis, authChuSuDung.SoDinhDanh);
+            await SetLocalStorageAsync(authResponse, authChuSuDung.MaGcnElis, authChuSuDung.SoDinhDanh);
         
-        var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
+            var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
         
-        ((JwtAuthStateProvider)authStateProvider).NotifyUserChanged(authenticationState);
+            ((JwtAuthStateProvider)authStateProvider).NotifyUserChanged(authenticationState);
         
-        return new AuthResult { Success = true };
+            return new AuthResult { Success = true };
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new AuthResult { Error = e.Message };
+        }
+
     }
     public async Task<AuthResult> LoginUser(AuthUser authUser)
     {
@@ -56,7 +66,7 @@ public class AuthService(
             var authResponse = await response.Content.ReadFromJsonAsync<Response<AccessToken>>();
 
             if (authResponse?.Value is null)
-                return new AuthResult { Error = authResponse.ErrorMsg };
+                return new AuthResult { Error = authResponse?.ErrorMsg };
             await SetLocalStorageAsync(authResponse.Value);
 
             var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
@@ -68,8 +78,8 @@ public class AuthService(
         catch (Exception e)
         {
             Console.WriteLine(e);
+            return new AuthResult { Error = e.Message };
         }
-        return new AuthResult { Error = "Login failed" };
     }
     
     private async Task SetLocalStorageAsync(AccessToken? accessToken = null, long maGcnElis = 0, string maDinhDanh = "")

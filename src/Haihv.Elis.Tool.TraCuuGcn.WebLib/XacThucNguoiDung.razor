@@ -12,43 +12,58 @@
         </MudStack>
     </TitleContent>
     <DialogContent>
-        <MudPaper Class="mt-n2" Width="389px" MaxWidth="100%" Outlined="false" Elevation="0">
-            <MudSwitch Label="@(_isUserLocal ? "Tài khoản nội bộ" : "Theo thông tin Chủ sử dụng đất")"
-                       @bind-Value="@_isUserLocal"
-                       Color="Color.Primary"/>
+        <MudPaper Width="466px" MaxWidth="100%" Outlined="false" Elevation="0">
+            <MudSelect T="string"
+                       Label="Chọn kiểu xác thực"
+                       Value="_textXacThuc" 
+                       ValueChanged="ChonKieuXacThuc"
+                       Dense="true">
+                <MudSelectItem Value="@("Tài khoản nội bộ")">Tài khoản nội bộ</MudSelectItem>
+                <MudSelectItem Value="@("Theo thông tin Chủ sử dụng đất")">Theo thông tin Chủ sử dụng đất</MudSelectItem>
+            </MudSelect>
             @if (!_isUserLocal)
             {
-                
-                    @if (_maGcnElis <= 0)
-                    {
-                        <MudAlert Severity="Severity.Error">
-                            <MudText Typo="Typo.body1">Bạn cần tìm kiếm, quét mã để có thông tin Giấy chứng nhận trước khi đăng nhập</MudText>
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        <MudTextField Label="Số định danh"
-                                      Variant="Variant.Text"
-                                      HelperText="Số căn cước, CCCD, CMND, Mã số doanh nghiệp,... in trên Giấy chứng nhận"
-                                      FullWidth="false"
-                                      @bind-Value="@_username"/>
-                        <MudTextField Label="Tên chủ sử dụng"
-                                      Variant="Variant.Text"
-                                      HelperText="Họ và tên chủ sử dụng, tên doanh nghiệp, người đại diện,... in trên Giấy chứng nhận"
-                                      @bind-Value="@_password"/>
-                    }
+                @if (_maGcnElis <= 0)
+                {
+                    <MudAlert Severity="Severity.Error">
+                        <MudText Typo="Typo.body1">Bạn cần tìm kiếm, quét mã để có thông tin Giấy chứng nhận trước khi đăng nhập</MudText>
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTextField Label="Số định danh"
+                                  Variant="Variant.Text"
+                                  HelperTextOnFocus="true"
+                                  HelperText="Số căn cước, CCCD, CMND, Mã số doanh nghiệp,... in trên Giấy chứng nhận"
+                                  Required="true"
+                                  RequiredError="Số định danh không được để trống"
+                                  @bind-Value="@_username"/>
+                    <MudTextField Label="Tên chủ sử dụng"
+                                  Variant="Variant.Text"
+                                  HelperTextOnFocus="true"
+                                  HelperText="Họ và tên chủ sử dụng, tên doanh nghiệp, người đại diện,... in trên Giấy chứng nhận"
+                                  Required="true"
+                                  RequiredError="Tên chủ sử dụng không được để trống"
+                                  @bind-Value="@_password"/>
+                }
             }
             else
             {
-                    <MudTextField Label="Tên đăng nhập"
-                                  Variant="Variant.Text"
-                                  HelperText="Tên đăng nhập trên hệ thống"
-                                  @bind-Value="@_username"/>
-                    <MudTextField Label="Mật khẩu"
-                                  Variant="Variant.Text"
-                                  InputType="InputType.Password"
-                                  HelperText="Mật khẩu đăng nhập"
-                                  @bind-Value="@_password"/>
+                <MudTextField Label="Tên đăng nhập"
+                              Variant="Variant.Text"
+                              HelperTextOnFocus="true"
+                              HelperText="Tên đăng nhập trên hệ thống"
+                              Required="true"
+                              RequiredError="Tên đăng nhập không được để trống"
+                              @bind-Value="@_username"/>
+                <MudTextField Label="Mật khẩu"
+                              Variant="Variant.Text"
+                              InputType="InputType.Password"
+                              HelperTextOnFocus="true"
+                              HelperText="Mật khẩu đăng nhập"
+                              Required="true"
+                              RequiredError="Mật khẩu không được để trống"
+                              @bind-Value="@_password"/>
             }
         </MudPaper>
     </DialogContent>
@@ -62,7 +77,7 @@
         <MudButton
             Variant="Variant.Filled"
             Color="Color.Primary"
-            Disabled="_processing"
+            Disabled="@(_processing || string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))"
             OnClick="XacThuc">
             @if (_processing)
             {
@@ -81,6 +96,7 @@
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
+    private string _textXacThuc = "Theo thông tin Chủ sử dụng đất";
     private string _username = string.Empty;
     private string _password = string.Empty;
     private long _maGcnElis;
@@ -93,6 +109,7 @@
         {
             _maGcnElis = await AuthService.GetMaGcnElis();
             _isUserLocal = _maGcnElis <= 0;
+            _textXacThuc = _isUserLocal ? "Tài khoản nội bộ" : "Theo thông tin Chủ sử dụng đất";
             StateHasChanged();
         }
     }
@@ -102,12 +119,11 @@
         _processing = true;
         if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
         {
-            
             _authResult = new AuthResult(false, 
                 _isUserLocal ? 
                     "Tên đăng nhập và mật khẩu không được để trống" :
                     "Số định danh và tên chủ sử dụng không được để trống");
-            SnackbarService.Add(_authResult.Error, Severity.Warning);
+            SnackbarService.Add(_authResult.Error ?? string.Empty, Severity.Warning);
         }
         else
         {
@@ -122,10 +138,18 @@
             }
             else
             {
-                SnackbarService.Add(_authResult.Error, Severity.Error);
+                SnackbarService.Add(_authResult.Error ?? string.Empty, Severity.Error);
             }
         }
         _processing = false;
         StateHasChanged();
     }
+
+    private void ChonKieuXacThuc(string kieuXacThuc)
+    {
+        _isUserLocal = kieuXacThuc == "Tài khoản nội bộ";
+        _textXacThuc = kieuXacThuc;
+        StateHasChanged();
+    }
+
 }

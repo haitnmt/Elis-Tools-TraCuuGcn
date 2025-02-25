@@ -64,7 +64,7 @@ internal static class AppSettingsExtension
             {            
                 var apiVersion = await response.Content.ReadAsStringAsync();
                 apiVersion = apiVersion.Trim().Trim('"');
-                appSettings.AppVersion = apiVersion;
+                appSettings.ApiVersion = apiVersion;
             }
         }
         catch (Exception e)
