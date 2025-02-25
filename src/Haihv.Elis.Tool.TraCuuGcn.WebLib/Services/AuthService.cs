@@ -1,5 +1,4 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Blazored.LocalStorage;
@@ -36,13 +35,13 @@ public class AuthService(
         try
         {
             var response = await _httpClient.PostAsJsonAsync("/elis/auth", authChuSuDung);
-        
-            if (!response.IsSuccessStatusCode)
-                return new AuthResult { Error = "Login failed" };
+            
+            var authResponse = await response.Content.ReadFromJsonAsync<Response<AccessToken>>();
 
-            var authResponse = await response.Content.ReadFromJsonAsync<AccessToken>();
-        
-            await SetLocalStorageAsync(authResponse, authChuSuDung.MaGcnElis, authChuSuDung.SoDinhDanh);
+            if (authResponse?.Value is null)
+                return new AuthResult { Error = authResponse?.ErrorMsg };
+                
+            await SetLocalStorageAsync(authResponse.Value, authChuSuDung.MaGcnElis, authChuSuDung.SoDinhDanh);
         
             var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
         

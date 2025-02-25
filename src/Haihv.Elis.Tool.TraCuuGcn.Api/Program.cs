@@ -73,6 +73,7 @@ builder.Services.AddSingleton<ISearchService, SearchService>();
 
 // Add AuthenticationService
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton<ICheckIpService, CheckIpService>();
 
 
 // Configure CORS

@@ -1,4 +1,5 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
@@ -27,21 +28,38 @@ public static class AuthenticationEndPoints
     private static async Task<IResult> PostAuthChuSuDungAsync(
         [FromBody] AuthChuSuDung authChuSuDung,
         ILogger logger,
-        IAuthenticationService authenticationService)
+        IAuthenticationService authenticationService,
+        ICheckIpService checkIpService,
+        HttpContext httpContext)
     {
+        if (string.IsNullOrWhiteSpace(authChuSuDung.SoDinhDanh) || string.IsNullOrWhiteSpace(authChuSuDung.HoVaTen))
+        {
+            return Results.BadRequest(new Response<AccessToken>("Số định danh và mật khẩu không được để trống!"));
+        }
+        var ipAddr = httpContext.GetIpAddress();
+        var (count, exprSecond)  = await checkIpService.CheckLockAsync(ipAddr);
+        if (exprSecond > 0)
+        {
+            return Results.BadRequest(new Response<AccessToken>($"Bạn đã đăng nhập sai quá nhiều, thử lại sau {exprSecond} giây!"));
+        }
         var result = await authenticationService.AuthChuSuDungAsync(authChuSuDung);
         return await Task.FromResult(result.Match(
             token => 
             {
                 logger.Information("Xác thực chủ sử dụng thành công: {SoDinhDanh}", 
                     authChuSuDung.SoDinhDanh);
-                return Results.Ok(token);
+                return Results.Ok(new Response<AccessToken>(token));
             },
             ex =>
             {
+                checkIpService.SetLockAsync(ipAddr);
                 logger.Error(ex, "Lỗi khi xác thực chủ sử dụng: {SoDinhDanh}", 
                     authChuSuDung.SoDinhDanh);
-                return Results.BadRequest(ex.Message);
+                return Results.BadRequest(new Response<AccessToken>($"{ex.Message} {(count < 3 ? $"Bạn còn {3 - count} lần thử" : "")}"));
             }));
+    }
+    private static string GetIpAddress(this HttpContext httpContext)
+    {
+        return httpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
     }
 }
