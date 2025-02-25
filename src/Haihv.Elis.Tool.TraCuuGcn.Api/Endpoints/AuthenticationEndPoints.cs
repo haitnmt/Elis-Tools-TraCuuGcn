@@ -46,6 +46,7 @@ public static class AuthenticationEndPoints
         return await Task.FromResult(result.Match(
             token => 
             {
+                checkIpService.CheckLockAsync(ipAddr);
                 logger.Information("Xác thực chủ sử dụng thành công: {SoDinhDanh}", 
                     authChuSuDung.SoDinhDanh);
                 return Results.Ok(new Response<AccessToken>(token));
