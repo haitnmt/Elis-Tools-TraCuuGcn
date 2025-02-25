@@ -105,9 +105,9 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 }
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
                 maQrInfo.HieuLuc = qrInData.HieuLuc > 0;
-                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo, TimeSpan.FromDays(60), token: cancellationToken).AsTask();
+                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo, TimeSpan.FromDays(1), token: cancellationToken).AsTask();
                 _ = fusionCache.SetAsync(CacheSettings.ElisConnectionName(maQrInfo.MaGcnElis), connection.Name,
-                    TimeSpan.FromDays(60),
+                    TimeSpan.FromDays(1),
                     token: cancellationToken).AsTask();
                 return maQrInfo;
             }
