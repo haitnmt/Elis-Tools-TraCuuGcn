@@ -18,7 +18,7 @@ public static class ChuSuDungEndpoints
             .WithName("GetChuSuDung")
             .RequireAuthorization();
     }
-
+    
     /// <summary>
     /// Lấy thông tin chủ sử dụng theo số định danh.
     /// </summary>
@@ -35,25 +35,32 @@ public static class ChuSuDungEndpoints
         IAuthenticationService authenticationService,
         IChuSuDungService chuSuDungService)
     {
+        const string logName = "GetChuSuDung";
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(maGcnElis, user);
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Warning("Người dùng không được phép truy cập thông tin Chủ sử dụng. {MaGcnElis} {User}",
-                maGcnElis, user.Claims);
+            logger.Warning("{LogName} Người dùng không được phép truy cập thông tin Chủ sử dụng. {MaGcnElis} {User}",
+                logName,
+                maGcnElis, 
+                user.Claims);
             return Results.Unauthorized();
         }
         var result = await chuSuDungService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
             chuSuDung =>
             {
-                logger.Information("Lấy thông tin chủ sử dụng thành công: {MaGcnElis} {MaDinhDanh}", 
-                    maGcnElis, maDinhDanh);
+                logger.Information("{LogName} Lấy thông tin chủ sử dụng thành công: {MaGcnElis} {MaDinhDanh}", 
+                    logName,
+                    maGcnElis, 
+                    maDinhDanh);
                 if (chuSuDung.Count == 0)
                 {
-                    logger.Warning("Không tìm thấy thông tin chủ sử dụng: {MaGcnElis} {MaDinhDanh}", 
-                        maGcnElis, maDinhDanh);
+                    logger.Warning("{LogName} Không tìm thấy thông tin chủ sử dụng: {MaGcnElis} {MaDinhDanh}", 
+                        logName,
+                        maGcnElis, 
+                        maDinhDanh);
                     return Results.NotFound(new Response<List<ChuSuDungInfo>>("Không tìm thấy thông tin chủ sử dụng."));
                 }
 
@@ -67,8 +74,10 @@ public static class ChuSuDungEndpoints
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin chủ sử dụng: {MaGcnElis} {MaDinhDanh}", 
-                    maGcnElis, maDinhDanh);
+                logger.Error(ex, "{LogName}  Lỗi khi lấy thông tin chủ sử dụng: {MaGcnElis} {MaDinhDanh}", 
+                    logName,
+                    maGcnElis, 
+                    maDinhDanh);
                 return Results.BadRequest(new Response<ChuSuDungInfo>(ex.Message));
             }));
     }

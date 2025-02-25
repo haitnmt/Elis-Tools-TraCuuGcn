@@ -36,16 +36,21 @@ public static class GiayChungNhanEndpoints
     private static async Task<IResult> GetGiayChungNhanAsync([FromQuery] string serial, ILogger logger,
         IGiayChungNhanService giayChungNhanService)
     {
+        const string logName = "GetGiayChungNhan";
         var result = await giayChungNhanService.GetResultAsync(serial);
         return await Task.FromResult(result.Match(
             giayChungNhan =>
             {
-                logger.Information("Lấy thông tin Giấy Chứng Nhận thành công: {Serial}", serial);
+                logger.Information("{LogName}Lấy thông tin Giấy Chứng Nhận thành công: {Serial}",
+                    logName,
+                    serial);
                 return Results.Ok(new Response<GiayChungNhan>(giayChungNhan));
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin Giấy Chứng Nhận: {Serial}", serial);
+                logger.Error(ex, "{LogName} Lỗi khi lấy thông tin Giấy Chứng Nhận: {Serial}",
+                    logName,
+                    serial);
                 return Results.BadRequest(ex.Message);
             }));
     }
@@ -65,27 +70,30 @@ public static class GiayChungNhanEndpoints
         IAuthenticationService authenticationService,
         IThuaDatService thuaDatService)
     {
+        const string logName = "GetThuaDat";
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(maGcnElis, user);
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Warning("Người dùng không được phép truy cập thông tin Thửa Đất. {MaGcnElis} {User}",
-                maGcnElis, user.Claims);
+            logger.Warning("{LogName} Người dùng không được phép truy cập thông tin Thửa Đất. {MaGcnElis} {User}",
+                logName,
+                maGcnElis, 
+                user.Claims);
             return Results.Unauthorized();
         }
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
             rs =>
             {
-                logger.Information("Lấy thông tin Thửa Đất thành công: {maGcnElis} {MaDinhDanh}", 
-                    maGcnElis, maDinhDanh);
+                logger.Information("{LogName} Lấy thông tin Thửa Đất thành công: {maGcnElis} {MaDinhDanh}", 
+                    logName, maGcnElis, maDinhDanh);
                 return Results.Ok(new Response<ThuaDat>(rs));
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {maGcnElis} {MaDinhDanh}", 
-                    maGcnElis, maDinhDanh);
+                logger.Error(ex, "{LogName} Lỗi khi lấy thông tin Thửa Đất: {maGcnElis} {MaDinhDanh}", 
+                    logName, maGcnElis, maDinhDanh);
                 return Results.BadRequest(new Response<ThuaDat>(ex.Message));
             }));
     }
@@ -101,16 +109,17 @@ public static class GiayChungNhanEndpoints
         ILogger logger,
         IThuaDatService thuaDatService)
     {
+        const string logName = "GetThuaDatPublic";
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
             thuaDat =>
             {
-                logger.Information("Lấy thông tin Thửa Đất công khai thành công: {maGcnElis}", maGcnElis);
+                logger.Information("{LogName} Lấy thông tin Thửa Đất công khai thành công: {maGcnElis}", logName, maGcnElis);
                 return Results.Ok(new Response<ThuaDatPublic>(thuaDat.ConvertToThuaDatPublic()));
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất công khai: {maGcnElis}", maGcnElis);
+                logger.Error(ex, "{LogName} Lỗi khi lấy thông tin Thửa Đất công khai: {maGcnElis}", logName, maGcnElis);
                 return Results.BadRequest(new Response<ThuaDatPublic>(ex.Message));
             }));
     }

@@ -17,7 +17,7 @@ public static class AuthenticationEndPoints
         app.MapPost("/elis/auth", PostAuthChuSuDungAsync)
             .WithName("PostAuthChuSuDungAsync");
     }
-
+    
     /// <summary>
     /// Xử lý yêu cầu xác thực chủ sử dụng.
     /// </summary>
@@ -32,6 +32,7 @@ public static class AuthenticationEndPoints
         ICheckIpService checkIpService,
         HttpContext httpContext)
     {
+        const string logName = "AuthChuSuDung";
         if (string.IsNullOrWhiteSpace(authChuSuDung.SoDinhDanh) || string.IsNullOrWhiteSpace(authChuSuDung.HoVaTen))
         {
             return Results.BadRequest(new Response<AccessToken>("Số định danh và mật khẩu không được để trống!"));
@@ -47,14 +48,16 @@ public static class AuthenticationEndPoints
             token => 
             {
                 checkIpService.CheckLockAsync(ipAddr);
-                logger.Information("Xác thực chủ sử dụng thành công: {SoDinhDanh}", 
+                logger.Information("{LogName} Xác thực chủ sử dụng thành công {SoDinhDanh}", 
+                    logName,
                     authChuSuDung.SoDinhDanh);
                 return Results.Ok(new Response<AccessToken>(token));
             },
             ex =>
             {
                 checkIpService.SetLockAsync(ipAddr);
-                logger.Error(ex, "Lỗi khi xác thực chủ sử dụng: {SoDinhDanh}", 
+                logger.Error(ex, "{LogName} Lỗi khi xác thực chủ sử dụng {SoDinhDanh}",
+                    logName, 
                     authChuSuDung.SoDinhDanh);
                 return Results.BadRequest(new Response<AccessToken>($"{ex.Message} {(count < 3 ? $"Bạn còn {3 - count} lần thử" : "")}"));
             }));

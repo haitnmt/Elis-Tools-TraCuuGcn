@@ -12,18 +12,21 @@ public static class SearchEndpoints
         app.MapGet("/elis/search", GetSearchResultAsync)
             .WithName("GetGcnInfoAsync");
     }
-
+    
     private static async Task<IResult> GetSearchResultAsync([FromQuery] string? query,
         ISearchService searchService,
         IChuSuDungService chuSuDungService,
         IGeoService geoService,
         ILogger logger)
     {
+        const string logName = "SearchGcn";
         var result = await searchService.GetResultAsync(query);
         return await Task.FromResult(result.Match(
             info=>
             {
-                logger.Information("Lấy thông tin Giấy chứng nhận thành công: {Serial}", info.Serial);
+                logger.Information("{LogName} Lấy thông tin Giấy chứng nhận thành công: {Serial}", 
+                    logName, 
+                    info.Serial);
                 // Lưu thông tin chủ sử dụng để lưu vào cache
                 _ = chuSuDungService.SetCacheAuthChuSuDungAsync(info.MaGcnElis);
                 _ = chuSuDungService.GetAsync(info.MaGcnElis);
@@ -33,7 +36,9 @@ public static class SearchEndpoints
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin Giấy chứng nhận: {Query}", query);
+                logger.Error(ex, "{LogName} Lỗi khi lấy thông tin Giấy chứng nhận: {Query}", 
+                    logName, 
+                    query);
                 return Results.BadRequest(new Response<GiayChungNhanInfo>(ex.Message));
             }));
     }
