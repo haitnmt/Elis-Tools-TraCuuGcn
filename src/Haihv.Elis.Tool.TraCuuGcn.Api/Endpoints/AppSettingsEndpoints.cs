@@ -12,7 +12,6 @@ public static class AppSettingsEndpoints
             .WithName("GetVersionAsync");
         
     }
-    
     private static Task<IResult> GetVersionAsync()
     {
         var assemblyVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version!.ToString();

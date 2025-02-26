@@ -36,10 +36,17 @@ public static class ComputeHashExtensions
             return ComputeHash(stringInput);
         }
 
-        var jsonString = JsonSerializer.Serialize(input);
-        var inputBytes = Encoding.UTF8.GetBytes(jsonString);
-        var hashBytes = SHA256.HashData(inputBytes);
-        return Convert.ToHexStringLower(hashBytes);
+        try
+        {
+            var jsonString = JsonSerializer.Serialize(input);
+            var inputBytes = Encoding.UTF8.GetBytes(jsonString);
+            var hashBytes = SHA256.HashData(inputBytes);
+            return Convert.ToHexStringLower(hashBytes);
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     /// <summary>
@@ -59,9 +66,16 @@ public static class ComputeHashExtensions
         if (txts is { Length: > 0 })
             jsonString = txts.Where(string.IsNullOrWhiteSpace).Aggregate(jsonString, (current, t) => current + t);
 
-        // Nếu có đối tượng đầu vào thì nối chuỗi
-        if (obj != null)
-            jsonString += JsonSerializer.Serialize(obj);
+        try
+        {
+            // Nếu có đối tượng đầu vào thì nối chuỗi
+            if (obj != null)
+                jsonString += JsonSerializer.Serialize(obj);
+        }
+        catch
+        {
+            // ignored
+        }
 
         // Nếu chuỗi kết quả rỗng thì trả về null
         if (string.IsNullOrWhiteSpace(jsonString)) return null;

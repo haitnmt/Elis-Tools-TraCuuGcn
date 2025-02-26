@@ -1,4 +1,5 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -8,13 +9,14 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
 public static class ChuSuDungEndpoints
 {
+    private const string UrlGetChuSuDung = "/elis/chuSuDung";
     /// <summary>
     /// Định nghĩa endpoint để lấy thông tin chủ sử dụng.
     /// </summary>
     /// <param name="app">Ứng dụng web.</param>
     public static void MapChuSuDungEndpoints(this WebApplication app)
     {
-        app.MapGet("/elis/chuSuDung", GetChuSuDung)
+        app.MapGet(UrlGetChuSuDung, GetChuSuDung)
             .WithName("GetChuSuDung")
             .RequireAuthorization();
     }
@@ -35,32 +37,32 @@ public static class ChuSuDungEndpoints
         IAuthenticationService authenticationService,
         IChuSuDungService chuSuDungService)
     {
-        const string logName = "GetChuSuDung";
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(maGcnElis, user);
+        var ipAddr = httpContext.GetIpAddress();
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Warning("{LogName} Người dùng không được phép truy cập thông tin Chủ sử dụng. {MaGcnElis} {User}",
-                logName,
-                maGcnElis, 
-                user.Claims);
+            logger.Warning("Người dùng không được phép truy cập thông tin Chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}", 
+                UrlGetChuSuDung, 
+                ipAddr, 
+                maDinhDanh);
             return Results.Unauthorized();
         }
         var result = await chuSuDungService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
             chuSuDung =>
             {
-                logger.Information("{LogName} Lấy thông tin chủ sử dụng thành công: {MaGcnElis} {MaDinhDanh}", 
-                    logName,
-                    maGcnElis, 
-                    maDinhDanh);
+                logger.Information("Lấy thông tin chủ sử dụng thành công: {MaDinhDanh}{Url}{ClientIp}",
+                    maDinhDanh, 
+                    UrlGetChuSuDung, 
+                    ipAddr);
                 if (chuSuDung.Count == 0)
                 {
-                    logger.Warning("{LogName} Không tìm thấy thông tin chủ sử dụng: {MaGcnElis} {MaDinhDanh}", 
-                        logName,
-                        maGcnElis, 
-                        maDinhDanh);
+                    logger.Warning("Không tìm thấy thông tin chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}", 
+                        maDinhDanh, 
+                        UrlGetChuSuDung, 
+                        ipAddr);
                     return Results.NotFound(new Response<List<ChuSuDungInfo>>("Không tìm thấy thông tin chủ sử dụng."));
                 }
 
@@ -74,10 +76,10 @@ public static class ChuSuDungEndpoints
             },
             ex =>
             {
-                logger.Error(ex, "{LogName}  Lỗi khi lấy thông tin chủ sử dụng: {MaGcnElis} {MaDinhDanh}", 
-                    logName,
-                    maGcnElis, 
-                    maDinhDanh);
+                logger.Error(ex, "Lỗi khi lấy thông tin chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}", 
+                    maDinhDanh, 
+                    UrlGetChuSuDung, 
+                    ipAddr);
                 return Results.BadRequest(new Response<ChuSuDungInfo>(ex.Message));
             }));
     }

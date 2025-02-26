@@ -4,6 +4,11 @@ using Elastic.Serilog.Sinks;
 using Elastic.Transport;
 using Serilog;
 using System.Reflection;
+using System.Text.Json;
+using Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
+using Microsoft.Extensions.Primitives;
+using static System.String;
+using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
@@ -53,17 +58,17 @@ public static class Logger
         passwordKey ??= "Password";
         var configuration = builder.Configuration.GetSection(sectionName);
         var uris = (from stringUri in configuration.GetSection(uriKey).GetChildren()
-                    where !string.IsNullOrWhiteSpace(stringUri.Value)
+                    where !IsNullOrWhiteSpace(stringUri.Value)
                     select new Uri(stringUri.Value!)).ToList();
-        var token = configuration[tokenKey] ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(token))
+        var token = configuration[tokenKey] ?? Empty;
+        if (!IsNullOrWhiteSpace(token))
         {
             return builder.CreateLoggerConfiguration(uris, token);
         }
 
-        var username = configuration[usernameKey] ?? string.Empty;
-        var password = configuration[passwordKey] ?? string.Empty;
-        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+        var username = configuration[usernameKey] ?? Empty;
+        var password = configuration[passwordKey] ?? Empty;
+        if (!IsNullOrWhiteSpace(username) && !IsNullOrWhiteSpace(password))
         {
             return builder.CreateLoggerConfiguration(uris, username, password);
         }
@@ -126,4 +131,34 @@ public static class Logger
         ICollection<Uri> uris,
         string username, string password)
         => CreateLoggerConfiguration(builder, uris, new BasicAuthentication(username, password));
+    
+    public static string? GetIpAddress(this HttpContext httpContext)
+    {
+        return httpContext.Connection.RemoteIpAddress?.ToString();
+    }
+    public static string? GetUsername(this HttpContext httpContext)
+    {
+        return httpContext.User.Identity?.Name;
+    }
+    public static string? GetQueryString(this HttpContext httpContext)
+    {
+        return httpContext.Request.QueryString.Value;
+    }
+    public static string? GetHashBody(this HttpContext httpContext)
+    {
+        return httpContext.Request.Body.ComputeHash();
+    }
+    public static string? GetUrl(this HttpContext httpContext)
+    {
+        return httpContext.Request.Path.Value;
+    }
+}
+public class LogInfo   
+{
+    public string ClientIp { get; set; } = Empty;
+    public string? Username { get; set; }
+    public string UserAgent { get; set; } = Empty;
+    public string Url { get; set; } = Empty;
+    public string? HashBody { get; set; }
+    public string? QueryString { get; set; }
 }

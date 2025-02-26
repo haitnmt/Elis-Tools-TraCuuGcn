@@ -9,13 +9,14 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
 public static class GeoEndPoints
 {   
+    private const string UrlGetToaDoThua = "/geo/toaDoThua";
     /// <summary>
     /// Định nghĩa endpoint để lấy thông tin chủ sử dụng.
     /// </summary>
     /// <param name="app">Ứng dụng web.</param>
     public static void MapGeoEndPoints(this WebApplication app)
     {
-        app.MapGet("/geo/toaDoThua", GetToaDoThua)
+        app.MapGet(UrlGetToaDoThua, GetToaDoThua)
             .WithName("GetToaDoThua")
             .RequireAuthorization();
     }
@@ -26,22 +27,25 @@ public static class GeoEndPoints
         IAuthenticationService authenticationService,
         IGeoService geoService)
     {
-        const string logName = "GetToaDoThua";
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(maGcnElis, user);
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Error("{LogName} Người dùng không được phép truy cập thông tin Tọa độ thửa đất. {MaGcnElis} {User}", 
-                logName, maGcnElis, user);
+            logger.Error("Người dùng không được phép truy cập thông tin Tọa độ thửa đất: {MaGcnElis}{Url}{MaDinhDanh}", 
+                maGcnElis, 
+                UrlGetToaDoThua, 
+                maDinhDanh);
             return Results.Unauthorized();
         }
         var result = await geoService.GetResultAsync(maGcnElis);
         return result.Match(
             coordinates =>
             {
-                logger.Information("{LogName} Lấy thông tin toạ độ thửa thành công: {MaGcnElis} {maDinhDanh}",
-                    logName, maGcnElis, maDinhDanh);
+                logger.Information("Lấy thông tin toạ độ thửa thành công {MaGcnElis}{Url}{MaDinhDanh}",  
+                    maGcnElis, 
+                    UrlGetToaDoThua, 
+                    maDinhDanh);
                 var geometry = new Geometry(wkbGeometryType.wkbPoint);
                 geometry.AddPoint(coordinates.X,  coordinates.Y, 0);
                 return Results.Ok(new
@@ -54,8 +58,10 @@ public static class GeoEndPoints
             },
             ex =>
             {
-                logger.Error(ex, "{LogName} Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis} {maDinhDanh}",
-                    logName,maGcnElis, maDinhDanh);
+                logger.Error(ex, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}{Url}{MaDinhDanh}",  
+                    maGcnElis, 
+                    UrlGetToaDoThua, 
+                    maDinhDanh);
                 return Results.BadRequest(ex.Message);
             });
     }
