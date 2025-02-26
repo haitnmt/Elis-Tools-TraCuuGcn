@@ -4,11 +4,7 @@ using Elastic.Serilog.Sinks;
 using Elastic.Transport;
 using Serilog;
 using System.Reflection;
-using System.Text.Json;
-using Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
-using Microsoft.Extensions.Primitives;
 using static System.String;
-using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
@@ -134,23 +130,34 @@ public static class Logger
     
     public static string? GetIpAddress(this HttpContext httpContext)
     {
-        return httpContext.Connection.RemoteIpAddress?.ToString();
-    }
-    public static string? GetUsername(this HttpContext httpContext)
-    {
-        return httpContext.User.Identity?.Name;
-    }
-    public static string? GetQueryString(this HttpContext httpContext)
-    {
-        return httpContext.Request.QueryString.Value;
-    }
-    public static string? GetHashBody(this HttpContext httpContext)
-    {
-        return httpContext.Request.Body.ComputeHash();
-    }
-    public static string? GetUrl(this HttpContext httpContext)
-    {
-        return httpContext.Request.Path.Value;
+        string? ipAddress = null;
+    
+        // Order headers by proxy chain priority (last proxy to first)
+        var headerKeys = new[]
+        {
+            "CF-Connecting-IP",   // Highest priority - Cloudflare original client IP
+            "True-Client-IP",     // Alternative Cloudflare header
+            "X-Original-For",     // HAProxy
+            "X-Forwarded-For",    // General proxy header (will contain chain of IPs)
+            "X-Real-IP",          // Nginx
+            "REMOTE_ADDR"         // Fallback
+        };
+
+        foreach (var headerKey in headerKeys)
+        {
+            if (!httpContext.Request.Headers.TryGetValue(headerKey, out var headerValue)) continue;
+            ipAddress = headerValue.FirstOrDefault()?.Split(',')[0].Trim();
+            if (!IsNullOrWhiteSpace(ipAddress))
+                break;
+        }
+
+        // Fallback to RemoteIpAddress if no proxy headers found
+        if (IsNullOrWhiteSpace(ipAddress) && httpContext.Connection.RemoteIpAddress != null)
+        {
+            ipAddress = httpContext.Connection.RemoteIpAddress.ToString();
+        }
+
+        return ipAddress ?? "Unknown";
     }
 }
 public class LogInfo   

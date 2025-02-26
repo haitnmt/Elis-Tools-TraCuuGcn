@@ -16,12 +16,13 @@ function Get-EnvVariables {
         $REGISTRY_URL = cr.haihv.vn
         $USERNAME = haihv
         $PASSWORD = Abc@1234
+        $DOCKERHUB = haitnmt
     }
 }
 
 # Load environment variables at start
 Get-EnvVariables
-$ImageName = "app-tracuugcn"
+$ImageName = "tracuugcn-app"
 #Lấy thời gian bắt đầu
 $startTime = Get-Date
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -54,6 +55,12 @@ $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Bắt đầu đẩy image app [$TAG] lên [$REGISTRY_URL]" -ForegroundColor Yellow
 docker tag ${ImageName}:${version} ${REGISTRY_URL}/${ImageName}:${TAG}
 docker push ${REGISTRY_URL}/${ImageName}:${TAG}
+
+#Create Tag Image to $DOCKERHUB
+$currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+Write-Host "[$currentTime] Bắt đầu đổi image tag cho Docker Hub" -ForegroundColor Yellow
+docker tag ${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${version}
+docker tag ${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${TAG}
 
 $endTime = Get-Date
 $totalTime = $endTime - $startTime
