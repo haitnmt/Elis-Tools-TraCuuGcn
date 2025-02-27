@@ -54,19 +54,14 @@
     private string? _result = string.Empty;
     private string _errorMessage = string.Empty;
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender) return Task.CompletedTask;
-        _ = ZxingService.InitializeAsync();
-        _  = CheckCamera();
-
-        return Task.CompletedTask;
-    }
-    
-    private async Task CheckCamera()
-    {
-        _hasCamera = await ZxingService.HasCamera();
-        StateHasChanged();
+        if (firstRender)
+        {
+            await ZxingService.InitializeAsync();
+            _hasCamera = await ZxingService.HasCamera();
+            StateHasChanged();
+        }
     }
     
     private async Task ToggleCamera()

@@ -16,4 +16,5 @@ public static class CacheSettings
         => $"Authentication:{maGcnElis}:{soDinhDanh.ChuanHoa()}";
     public static string KeyQuocTich(int maQuocTich) => $"QuocTich:{maQuocTich}";
     public static string KeySearch(string query) => $"Search-Query:{query.ChuanHoa()}";
+    public static string KeyToaDoThua(long maGcnElis) => $"ToaDoThua:{maGcnElis}";
 }

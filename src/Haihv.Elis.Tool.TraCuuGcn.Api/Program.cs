@@ -75,6 +75,8 @@ builder.Services.AddSingleton<ISearchService, SearchService>();
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 builder.Services.AddSingleton<ICheckIpService, CheckIpService>();
 
+// Add BackgroundService
+builder.Services.AddHostedService<ClearCacheService>();
 
 // Configure CORS
 var frontendUrls = builder.Configuration.GetSection("FrontendUrl").Get<string[]>();

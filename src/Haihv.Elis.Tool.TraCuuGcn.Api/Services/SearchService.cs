@@ -25,7 +25,7 @@ public class SearchService(IGcnQrService gcnQrService,
         var maGcn = giayChungNhanInfo.MaGcnElis;
         if (maGcn <= 0) return giayChungNhanInfo;
         var cacheKey = CacheSettings.KeySearch(query);
-        await fusionCache.SetAsync(cacheKey, maGcn, token: cancellationToken);
+        await fusionCache.SetAsync(cacheKey, maGcn, tags: [maGcn.ToString()], token: cancellationToken);
         return giayChungNhanInfo;
 
     }
@@ -85,7 +85,7 @@ public class SearchService(IGcnQrService gcnQrService,
             }
         }
         
-        _ = fusionCache.SetAsync(cacheKey, cacheKey, token: cancellationToken).AsTask();
+        _ = fusionCache.SetAsync(cacheKey, cacheKey, tags: [maGcn.ToString()], token: cancellationToken).AsTask();
         return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
     }
 }

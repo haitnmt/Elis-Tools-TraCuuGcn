@@ -1,4 +1,5 @@
-﻿using LanguageExt.Common;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+using LanguageExt.Common;
 using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 
@@ -54,8 +55,9 @@ public class GeoService(
     {
         try
         {
-            var coordinates = await fusionCache.GetOrSetAsync($"ToaDoThua:{maGcnElis}", 
+            var coordinates = await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(maGcnElis), 
                 await GetPointFromApiSdeAsync(maGcnElis, cancellationToken),
+                tags: [maGcnElis.ToString()],
                 token: cancellationToken);
             if (coordinates is not null) return coordinates;
         }

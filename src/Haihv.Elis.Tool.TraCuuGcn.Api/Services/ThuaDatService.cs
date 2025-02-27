@@ -31,6 +31,7 @@ public class ThuaDatService(
         {
             var thuaDat = await fusionCache.GetOrSetAsync(cacheKey,
                 cancel => GetThuaDatInDatabaseAsync(maGcn, cancel),
+                tags: [maGcn.ToString()],
                 token: cancellationToken);
             return thuaDat ?? new Result<ThuaDat>(new ValueIsNullException("Không tìm thấy thông tin thửa đất!"));
         }

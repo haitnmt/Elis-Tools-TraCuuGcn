@@ -33,7 +33,9 @@ public sealed class GiayChungNhanService(
         {
             var cache = CacheSettings.KeyGiayChungNhan(maGcn);
             return await fusionCache.GetOrSetAsync(cache,
-                cancel => GetAsync(serial: serial, maGcn: maGcn, maVach: maVach, cancel), token: cancellationToken) ?? 
+                cancel => GetAsync(serial: serial, maGcn: maGcn, maVach: maVach, cancel),
+                tags: [maGcn.ToString()],
+                token: cancellationToken) ?? 
                    new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
         }
         catch (Exception e)
@@ -87,8 +89,12 @@ public sealed class GiayChungNhanService(
                 giayChungNhan =
                     await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
                 if (giayChungNhan is null) continue;
-                _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(giayChungNhan.MaGcn), giayChungNhan, token: cancellationToken).AsTask();
-                _ = fusionCache.SetCacheConnectionName(giayChungNhan.MaGcn, connectionName, cancellationToken);
+                _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(giayChungNhan.MaGcn), 
+                    giayChungNhan, 
+                    tags: [giayChungNhan.MaGcn.ToString()],
+                    token: cancellationToken).AsTask();
+                _ = fusionCache.SetCacheConnectionName(giayChungNhan.MaGcn, 
+                    connectionName, cancellationToken);
                 return giayChungNhan;
             }
         

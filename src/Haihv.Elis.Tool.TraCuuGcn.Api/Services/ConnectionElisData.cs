@@ -1,4 +1,7 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+﻿using Dapper;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+using InterpolatedSql.Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Caching.Memory;
 using ZiggyCreatures.Caching.Fusion;
@@ -16,7 +19,7 @@ public interface IConnectionElisData
     /// </summary>
     /// <value>Đường dẫn API SDE.</value>
     string ApiSdeUrl();
-    
+
     /// <summary>
     /// Danh sách các kết nối ELIS.
     /// </summary>
@@ -33,20 +36,27 @@ public interface IConnectionElisData
     /// <param name="name">Tên kết nối.</param>
     /// <returns>Chuỗi kết nối.</returns>
     string GetElisConnectionString(string name);
-
-    /// <summary>
-    /// Lấy chuỗi kết nối SDE từ tên kết nối.
-    /// </summary>
-    /// <param name="name">Tên kết nối.</param>
-    /// <returns>Chuỗi kết nối.</returns>
-    string GetSdeConnectionString(string name);
-
+    
     /// <summary>
     /// Lấy danh sách chuỗi kết nối dựa trên mã GCN.
     /// </summary>
     /// <param name="maGcn"></param>
     /// <returns>Danh sách chuỗi kết nối.</returns>
     ValueTask<List<ConnectionSql>> GetConnection(long maGcn);
+    /// <summary>
+    /// Xóa cache dữ liệu dựa trên thời gian.
+    /// </summary>
+    /// <param name="dateTime">Thời gian cần xóa cache.</param>
+    /// <param name="cancellationToken">Token hủy.</param>
+    /// <returns></returns>
+    Task CacheRemoveAsync(TimeSpan timeSpan, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lấy thời gian chênh lệch giữa máy chủ và máy khách.
+    /// </summary>
+    /// <param name="cancellationToken">Token hủy.</param>
+    /// <returns></returns>
+    Task<int> GetTimeDifferenceAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -69,13 +79,13 @@ public sealed class ConnectionElisData(
     private const string KeySdeDatabase = "SdeDatabase";
     private const string KeyApiSde = "ApiSde";
 
-    
+
     /// <summary>
     /// Lấy đường dẫn API SDE.
     /// </summary>
     /// <value>Đường dẫn API SDE.</value>
     public string ApiSdeUrl() => configuration[$"{SectionName}:{KeyApiSde}"] ?? string.Empty;
-    
+
     /// <summary>
     /// Danh sách các kết nối ELIS.
     /// </summary>
@@ -145,9 +155,64 @@ public sealed class ConnectionElisData(
 
     public string GetElisConnectionString(string name)
         => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ElisConnectionString ?? string.Empty;
-
-    public string GetSdeConnectionString(string name)
-        => ConnectionElis.FirstOrDefault(x => x.Name == name)?.SdeDatabase ?? string.Empty;
+    
+    /// <summary>
+    /// Lấy thời gian chênh lệch giữa máy chủ và máy khách.
+    /// </summary>
+    /// <param name="cancellationToken">Token hủy.</param>
+    /// <returns></returns>
+    public async Task<int> GetTimeDifferenceAsync(CancellationToken cancellationToken = default)
+    {
+        var maxTimeDifference = 0;
+        try
+        {
+            foreach (var elisConnectionString in ConnectionElis.Select(x => x.ElisConnectionString))
+            {
+                var connection = elisConnectionString.GetConnection();
+                var query = connection.SqlBuilder(
+                    $"SELECT GETUTCDATE();"
+                );
+                var now = DateTime.UtcNow;
+                var result = await query.QueryFirstAsync<DateTime>(cancellationToken: cancellationToken);
+                var timeDifference = (int) (now - result).TotalSeconds;
+                if (timeDifference > maxTimeDifference) maxTimeDifference = timeDifference;
+            }
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Lỗi khi lấy thời gian chênh lệch giữa máy chủ và máy khách.");
+            maxTimeDifference = 300;
+        }
+        return maxTimeDifference;
+    }
+    
+    /// <summary>
+    /// Xóa cache dữ liệu dựa trên thời gian.
+    /// </summary>
+    /// <param name="dateTime">Thời gian cần xóa cache.</param>
+    /// <param name="cancellationToken">Token hủy.</param>
+    /// <returns></returns>
+    public async Task CacheRemoveAsync(TimeSpan timeSpan, CancellationToken cancellationToken = default)
+    {
+        if (timeSpan == TimeSpan.Zero) return;
+        var dateTime = DateTime.UtcNow.Subtract(timeSpan);
+        foreach (var elisConnectionString in ConnectionElis.Select(x => x.ElisConnectionString))
+        {
+            var connection = elisConnectionString.GetConnection();
+            var query = connection.SqlBuilder(
+                $"""
+                 SELECT DISTINCT [Row_ID]
+                 FROM Audit
+                    WHERE [DateTime] >= {dateTime} AND [TableName] = 'GCNQSDD'
+                 """
+            );
+                var result = (await query.QueryAsync<long>(cancellationToken: cancellationToken)).ToList();
+            foreach (var maGcnElis in result)
+            {
+                await fusionCache.RemoveByTagAsync(maGcnElis.ToString(), token: cancellationToken);
+            }
+        }
+    }
 }
 
 /// <summary>

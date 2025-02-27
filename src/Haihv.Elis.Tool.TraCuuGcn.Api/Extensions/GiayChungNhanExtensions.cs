@@ -11,6 +11,8 @@ public static class GiayChungNhanExtensions
     {
         var cacheKey = CacheSettings.ElisConnectionName(maGcn);
         return fusionCache.SetAsync(cacheKey, 
-            connectionName, token: cancellationToken).AsTask();
+            connectionName, 
+            tags: [maGcn.ToString()],
+            token: cancellationToken).AsTask();
     }
 }

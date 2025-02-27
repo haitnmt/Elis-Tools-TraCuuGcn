@@ -35,6 +35,7 @@ public sealed class ChuSuDungService(
         {
             var tenChuSuDung = await fusionCache.GetOrSetAsync(cacheKey,
                 cancel => GetTenChuSuDungInDataAsync(maGcn, soDinhDanh, cancel),
+                tags:[maGcn.ToString()],
                 token: cancellationToken);
             return string.IsNullOrWhiteSpace(tenChuSuDung) ? 
                 new Result<AuthChuSuDung>(new ValueIsNullException("Không tìm thấy chủ sử dụng!")) : 
@@ -156,7 +157,7 @@ public sealed class ChuSuDungService(
                     string hoVaTen = chuSuDungData.HoVaTen.ToString();
                     if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(hoVaTen)) continue;
                     var cacheKey = CacheSettings.KeyAuthentication(maGcnElis, soDinhDanh);
-                    await fusionCache.SetAsync(cacheKey, hoVaTen, token: cancellationToken);
+                    await fusionCache.SetAsync(cacheKey, hoVaTen, tags: [maGcnElis.ToString()], token: cancellationToken);
                 }
             }
         }
@@ -184,6 +185,7 @@ public sealed class ChuSuDungService(
         var cacheKey = CacheSettings.KeyChuSuDung(maGcn);
         var chuSuDungs = await fusionCache.GetOrSetAsync(cacheKey,
             cancel => GetAsync(maGcn, cancel),
+            tags: [maGcn.ToString()],
             token: cancellationToken);
         return chuSuDungs.Count > 0 ? 
             chuSuDungs : 

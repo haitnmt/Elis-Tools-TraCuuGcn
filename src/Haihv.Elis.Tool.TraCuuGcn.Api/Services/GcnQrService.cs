@@ -77,7 +77,8 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
         if (string.IsNullOrWhiteSpace(maQr) && string.IsNullOrWhiteSpace(hashQr) && maGcn <= 0) return null;
         try
         {
-            var maQrInfo = await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(maGcn), token: cancellationToken);
+            var maQrInfo = await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(maGcn), 
+                token: cancellationToken);
             if (maQrInfo is not null) return maQrInfo;
             var connectionElis = await connectionElisData.GetConnection(maGcn);
             foreach (var connection in connectionElis)
@@ -101,13 +102,18 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 {
                     maQrInfo.TenDonVi = await fusionCache.GetOrSetAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
                         cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
+                        tags: [maGcn.ToString()],
                         token: cancellationToken);
                 }
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
                 maQrInfo.HieuLuc = qrInData.HieuLuc > 0;
-                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo, TimeSpan.FromDays(1), token: cancellationToken).AsTask();
+                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo,
+                    TimeSpan.FromDays(1), 
+                    tags: [maQrInfo.MaGcnElis.ToString()],
+                    token: cancellationToken).AsTask();
                 _ = fusionCache.SetAsync(CacheSettings.ElisConnectionName(maQrInfo.MaGcnElis), connection.Name,
                     TimeSpan.FromDays(1),
+                    tags: [maQrInfo.MaGcnElis.ToString()],
                     token: cancellationToken).AsTask();
                 return maQrInfo;
             }
