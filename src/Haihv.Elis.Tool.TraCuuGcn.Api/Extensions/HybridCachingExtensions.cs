@@ -15,8 +15,8 @@ public static class HybridCachingExtensions
         var fusionOptions = services.AddFusionCache()
             .WithDefaultEntryOptions(options =>
             {
-                options.DistributedCacheDuration = TimeSpan.FromMinutes(15);
-                options.Duration = TimeSpan.FromMinutes(5);
+                options.DistributedCacheDuration = TimeSpan.FromDays(1);
+                options.Duration = TimeSpan.FromMinutes(30);
                 options.IsFailSafeEnabled = true;
                 options.FailSafeThrottleDuration = TimeSpan.FromSeconds(15);
                 options.FailSafeThrottleDuration = TimeSpan.FromDays(1);
