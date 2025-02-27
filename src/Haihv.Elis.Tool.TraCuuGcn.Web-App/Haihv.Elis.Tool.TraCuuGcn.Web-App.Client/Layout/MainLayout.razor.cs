@@ -15,12 +15,15 @@ public partial class MainLayout
     [Inject]
     private IDialogService DialogService { get; set; } = null!;
     [Inject]
+    private AppSettingsService AppSettingsService { get; set; } = null!;
+    [Inject]
     private IAuthService AuthService { get; set; } = null!;
     private const string UrlGitHub = "https://github.com/haitnmt/";
     private string _displayName = string.Empty;
     private AuthenticationState? _authen;
     private bool _isDarkMode;
     private MudThemeProvider _mudThemeProvider = null!;
+    private bool _isInitialized;
     protected override async Task OnInitializedAsync()
     {
         AuthenticationStateProvider.AuthenticationStateChanged += AuthenticationStateChanged;
@@ -34,8 +37,11 @@ public partial class MainLayout
             var authen = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             AuthenticationStateChanged(Task.FromResult(authen));
             _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+            _isInitialized = true;
+            StateHasChanged();
         }
     }
+    
 
     private void AuthenticationStateChanged(Task<AuthenticationState> task)
     {

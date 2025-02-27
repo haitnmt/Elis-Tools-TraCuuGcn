@@ -1,112 +1,124 @@
 ﻿@inherits LayoutComponentBase
 @attribute [StreamRendering]
 @* Required *@
-<MudThemeProvider />
-<MudPopoverProvider />
+<MudThemeProvider/>
+<MudPopoverProvider/>
 @* Needed for dialogs *@
-<MudDialogProvider />
+<MudDialogProvider/>
 
 @* Needed for snackbars *@
-<MudSnackbarProvider />
+<MudSnackbarProvider/>
 <MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode"/>
-<MudLayout>
-    <MudAppBar>
-        <MudAvatar Class="mr-2">
-            <MudImage Src="./logo.png"></MudImage>
-        </MudAvatar>
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            <MudText Typo="Typo.h6">
-                Tra cứu thông tin Giấy chứng nhận
-            </MudText>
-        </MudHidden>
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <MudStack Spacing="0">
-                <MudText  Typo="Typo.subtitle2">
-                    Tra cứu thông tin
+@if (_isInitialized)
+{
+    <MudLayout>
+        <MudAppBar>
+            <MudAvatar Class="mr-2">
+                <MudImage Src="./logo.png"></MudImage>
+            </MudAvatar>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudText Typo="Typo.h6">
+                    Tra cứu thông tin Giấy chứng nhận
                 </MudText>
-                <MudText Typo="Typo.subtitle2">
-                    Giấy chứng nhận
-                </MudText>
-            </MudStack>
-        </MudHidden>
-        <MudSpacer/>
-        <MudHidden Breakpoint="Breakpoint.SmAndDown">
-            @if (string.IsNullOrWhiteSpace(_displayName))
-            {
-                <MudButton
-                    Color="Color.Inherit"
-                    OnClick="OpenDangNhap">
-                    <MudText Typo="Typo.body2">
-                        Đăng nhập
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">
+                        Tra cứu thông tin
                     </MudText>
-                </MudButton>
-            }
-            else
-            {
-                <MudStack Row="true">
-                    <MudText>
-                        Xin chào, @_displayName
+                    <MudText Typo="Typo.subtitle2">
+                        Giấy chứng nhận
                     </MudText>
                 </MudStack>
-                <MudTooltip Text="Đăng xuất">
-                    <MudIconButton
-                        Icon="@Icons.Material.Filled.Logout"
-                        Size="Size.Small"
-                        Color="Color.Inherit"
-                        OnClick="Logout"/>
-                </MudTooltip>
-            }
-        </MudHidden>
-        <MudHidden Breakpoint="Breakpoint.MdAndUp">
-            <MudTooltip Text="@(string.IsNullOrWhiteSpace(_displayName) ? "Đăng nhập" : $"Xin chào, {_displayName}! Click để đăng xuất")">
-                <ChildContent>
-                    <MudIconButton Icon="@Icons.Material.Filled.Person"
-                                   Size="Size.Small"
-                                   OnClick="@(string.IsNullOrWhiteSpace(_displayName) ? OpenDangNhap : Logout)"></MudIconButton>
-                </ChildContent>
-                <TooltipContent>
-                    @if (string.IsNullOrWhiteSpace(_displayName))
-                    {
-                        <MudText Typo="Typo.body2">Đăng nhập</MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.body2">Xin chào, @_displayName!</MudText>
-                        <MudText Typo="Typo.body2">Click để đăng xuất!</MudText>
-                    }
-                </TooltipContent>
-            </MudTooltip>
-        </MudHidden>
-        <MudToggleIconButton @bind-Toggled="@_isDarkMode"
-                             Icon="@Icons.Material.Filled.DarkMode" 
-                             Color="@Color.Error"
-                             Size="Size.Small"
-                             title=@(_isDarkMode ? "On" : "Off")
-                             ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="@Color.Default"/>
-        <MudIconButton
-            Icon="@Icons.Custom.Brands.GitHub"
-            Size="Size.Small"
-            Color="Color.Inherit"
-            Href="@UrlGitHub"
-            Target="_blank"/>
-    </MudAppBar>
-    <MudMainContent>
-        @Body
-    </MudMainContent>
-    <MudAppBar Bottom="true" Dense="true" Color="Color.Dark">
-        <MudText Typo="Typo.caption">
-            © @(DateTime.Today.Year) vpdkbacninh.vn | haihv.vn
-        </MudText>
-        <MudSpacer/>
-        <MudStack Row="true" AlignItems="AlignItems.Center">
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <Version/>
             </MudHidden>
-            <About/>
-        </MudStack>
-    </MudAppBar>
-</MudLayout>
-
+            <MudSpacer/>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                @if (string.IsNullOrWhiteSpace(_displayName))
+                {
+                    <MudButton
+                        Color="Color.Inherit"
+                        OnClick="OpenDangNhap">
+                        <MudText Typo="Typo.body2">
+                            Đăng nhập
+                        </MudText>
+                    </MudButton>
+                }
+                else
+                {
+                    <MudStack Row="true">
+                        <MudText>
+                            Xin chào, @_displayName
+                        </MudText>
+                    </MudStack>
+                    <MudTooltip Text="Đăng xuất">
+                        <MudIconButton
+                            Icon="@Icons.Material.Filled.Logout"
+                            Size="Size.Small"
+                            Color="Color.Inherit"
+                            OnClick="Logout"/>
+                    </MudTooltip>
+                }
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudTooltip
+                    Text="@(string.IsNullOrWhiteSpace(_displayName) ? "Đăng nhập" : $"Xin chào, {_displayName}! Click để đăng xuất")">
+                    <ChildContent>
+                        <MudIconButton Icon="@Icons.Material.Filled.Person"
+                                       Size="Size.Small"
+                                       OnClick="@(string.IsNullOrWhiteSpace(_displayName) ? OpenDangNhap : Logout)"></MudIconButton>
+                    </ChildContent>
+                    <TooltipContent>
+                        @if (string.IsNullOrWhiteSpace(_displayName))
+                        {
+                            <MudText Typo="Typo.body2">Đăng nhập</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">Xin chào, @_displayName!</MudText>
+                            <MudText Typo="Typo.body2">Click để đăng xuất!</MudText>
+                        }
+                    </TooltipContent>
+                </MudTooltip>
+            </MudHidden>
+            <MudToggleIconButton @bind-Toggled="@_isDarkMode"
+                                 Icon="@Icons.Material.Filled.DarkMode"
+                                 Color="@Color.Error"
+                                 Size="Size.Small"
+                                 title=@(_isDarkMode ? "On" : "Off")
+                                 ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="@Color.Default"/>
+            <MudIconButton
+                Icon="@Icons.Custom.Brands.GitHub"
+                Size="Size.Small"
+                Color="Color.Inherit"
+                Href="@UrlGitHub"
+                Target="_blank"/>
+        </MudAppBar>
+        <MudMainContent>
+            @Body
+        </MudMainContent>
+        <MudAppBar Bottom="true" Dense="true" Color="Color.Dark">
+            <MudText Typo="Typo.caption">
+                © @(DateTime.Today.Year) vpdkbacninh.vn | haihv.vn
+            </MudText>
+            <MudSpacer/>
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                    <Version/>
+                </MudHidden>
+                <About/>
+            </MudStack>
+        </MudAppBar>
+    </MudLayout>
+}
+else
+{
+    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100vh">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Medium" Indeterminate="true"/>
+        <MudAlert Severity="Severity.Info" Dense="true">
+            <MudText Typo="Typo.body2">Đang khởi tạo...</MudText>
+        </MudAlert>
+    </MudStack>
+}
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>

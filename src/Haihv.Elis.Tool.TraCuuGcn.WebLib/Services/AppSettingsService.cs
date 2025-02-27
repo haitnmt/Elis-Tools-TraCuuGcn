@@ -30,6 +30,5 @@ public sealed class AppSettings
     public string? AuthEndpoint { get; set; }
     public string? ApiVersion { get; set; }
     public string? AppVersion { get; set; }
-    public  bool IsDemoVersion { get; set; }
-    
+    public bool IsDemoVersion { get; set; }
 }

@@ -80,4 +80,6 @@ app.MapRazorComponents<App>()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
 app.MapAppSettingsEndpoints();
+// Thêm Endpoint kiểm tra ứng dụng hoạt động
+app.MapGet("/health", () => Results.Ok("OK")).WithName("GetHealth");
 app.Run();

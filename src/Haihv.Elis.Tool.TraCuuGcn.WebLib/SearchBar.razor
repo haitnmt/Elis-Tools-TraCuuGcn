@@ -1,53 +1,45 @@
 @inject IJSRuntime JsRuntime
 @inject ZxingService ZxingService
+@inject AppSettingsService AppSettingsService
 @implements IAsyncDisposable
 @attribute [StreamRendering]
-
-@if (!_isLoaded)
-{
-    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
-    <MudAlert Severity="Severity.Info" Dense="true">
-        <MudText Typo="Typo.body2">@_loadingMessage</MudText>
-    </MudAlert>
-}
-else
-{
-    <MudStack>
-        <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
-            <MudTextField @bind-Value="@_result" Label="Nhập thông tin tìm kiếm"
-                HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr" />
-            <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Search"
-                OnClick="OnClickSearch" />
-            <MudFileUpload T="IBrowserFile" 
-                           FilesChanged="HandleImageUpload!"
-                           Accept=".png, .jpg, .jpeg, .bmp, .gif">
-                <ActivatorContent>
-                    <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Image">
-                    </MudIconButton>
-                </ActivatorContent>
-            </MudFileUpload>
-            <MudIconButton Color="Color.Primary" Disabled="@(!_hasCamera || _isCameraActive)" Size="Size.Small"
-                Icon="@Icons.Material.Filled.QrCodeScanner" @onclick="ToggleCamera" />
-        </MudStack>
-        @if (_isCameraActive)
-        {
-            <MudStack AlignItems="AlignItems.Center">
-                <video playsinline @ref="_videoElement" id="camera-preview" style="width: 300px; height: 300px; object-fit: cover"
-                    autoplay muted>
-                </video>
-                <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Stop" @onclick="ToggleCamera">
-                    Dừng quét
-                </MudButton>
-            </MudStack>
-        }
-        @if (!string.IsNullOrWhiteSpace(_errorMessage))
-        {
-            <MudAlert Severity="Severity.Error" Dense="true">
-                <MudText Typo="Typo.body2">@_errorMessage</MudText>
-            </MudAlert>
-        }
+<MudStack>
+    <MudStack Row="true" Spacing="0" AlignItems="AlignItems.Center">
+        <MudTextField @bind-Value="@_result" Label="Nhập thông tin tìm kiếm"
+                      HelperText="Số phát hành (Serial), Mã Giấy chứng nhận, Mã vạch, Mã Qr"/>
+        <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Search"
+                       OnClick="OnClickSearch"/>
+        <MudFileUpload T="IBrowserFile"
+                       FilesChanged="HandleImageUpload!"
+                       Accept=".png, .jpg, .jpeg, .bmp, .gif">
+            <ActivatorContent>
+                <MudIconButton Color="Color.Primary" Size="Size.Small" Icon="@Icons.Material.Filled.Image">
+                </MudIconButton>
+            </ActivatorContent>
+        </MudFileUpload>
+        <MudIconButton Color="Color.Primary" Disabled="@(!_hasCamera || _isCameraActive)" Size="Size.Small"
+                       Icon="@Icons.Material.Filled.QrCodeScanner" @onclick="ToggleCamera"/>
     </MudStack>
-}
+    @if (_isCameraActive)
+    {
+        <MudStack AlignItems="AlignItems.Center">
+            <video playsinline @ref="_videoElement" id="camera-preview"
+                   style="width: 300px; height: 300px; object-fit: cover"
+                   autoplay muted>
+            </video>
+            <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Filled.Stop" @onclick="ToggleCamera">
+                Dừng quét
+            </MudButton>
+        </MudStack>
+    }
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">
+            <MudText Typo="Typo.body2">@_errorMessage</MudText>
+        </MudAlert>
+    }
+</MudStack>
+
 
 @code {
     [Parameter] public bool AutoStopCamera { get; set; }
@@ -61,20 +53,22 @@ else
     private IBrowserFile? _uploadedImage;
     private string? _result = string.Empty;
     private string _errorMessage = string.Empty;
-    private bool _isLoaded;
-    private string _loadingMessage = "Đang tải thư viện quét mã QR...";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await ZxingService.InitializeAsync();
-            _hasCamera = ZxingService.HasCamera();
-            _isLoaded = true;
-            StateHasChanged();
-        }
-    }
+        if (!firstRender) return Task.CompletedTask;
+        _ = ZxingService.InitializeAsync();
+        _  = CheckCamera();
 
+        return Task.CompletedTask;
+    }
+    
+    private async Task CheckCamera()
+    {
+        _hasCamera = await ZxingService.HasCamera();
+        StateHasChanged();
+    }
+    
     private async Task ToggleCamera()
     {
         _isCameraActive = !_isCameraActive;

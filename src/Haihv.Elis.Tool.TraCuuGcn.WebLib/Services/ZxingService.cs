@@ -9,6 +9,7 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     private IJSObjectReference? _zxingReader;
     private IJSObjectReference? _cameraStream;
     private bool _isInitialized;
+    private bool _isCheckedCamera;
     private bool _hasCamera;
     //private const string UrlZxingJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js";
     private const string UrlZxingJs = "https://unpkg.com/@zxing/library@latest/umd/index.min.js";
@@ -18,15 +19,17 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         if (_isInitialized) return;
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", UrlZxingJs);
         await jsRuntime.InvokeAsync<IJSObjectReference>("import", _urlBarcodeScannerJs);
-        _hasCamera = await CheckCameraAvailability();
         _isInitialized = true;
     }
 
-    public bool HasCamera() => _hasCamera;
+    public async Task<bool> HasCamera() => await CheckCameraAvailability();
     
     private async Task<bool> CheckCameraAvailability()
     {
-        return await jsRuntime.InvokeAsync<bool>("checkCameraAvailability");
+        if (_isCheckedCamera) return _hasCamera;
+        _hasCamera = await jsRuntime.InvokeAsync<bool>("checkCameraAvailability");
+        _isCheckedCamera = true;
+        return _hasCamera;
     }
     public async Task<string?> ScanFromImage(IBrowserFile uploadedImage)
     {
@@ -41,6 +44,10 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         await stream.CopyToAsync(ms);
         var imageBytes = ms.ToArray();
         var imageDataUrl = $"data:{uploadedImage.ContentType};base64,{Convert.ToBase64String(imageBytes)}";
+        if (!_isInitialized)
+        {
+            await InitializeAsync();
+        }
         return await jsRuntime.InvokeAsync<string?>("scanFromImage", imageDataUrl) ;
     }
     
