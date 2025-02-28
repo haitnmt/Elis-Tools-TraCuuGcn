@@ -44,8 +44,8 @@ public static class AuthenticationEndPoints
         {
             return Results.BadRequest(new Response<AccessToken>("Số định danh và mật khẩu không được để trống!"));
         }
-        var ipAddr = httpContext.GetIpAddress();
-        var (count, exprSecond)  = await checkIpService.CheckLockAsync(ipAddr);
+        var ipInfo = httpContext.GetIpInfo();
+        var (count, exprSecond)  = ipInfo.IsPrivate ? (0, 0) : await checkIpService.CheckLockAsync(ipInfo.IpAddress);
         if (exprSecond > 0)
         {
             return Results.BadRequest(new Response<AccessToken>($"Bạn đã đăng nhập sai quá nhiều, thử lại sau {exprSecond} giây!"));
@@ -54,21 +54,30 @@ public static class AuthenticationEndPoints
         return await Task.FromResult(result.Match(
             token => 
             {
-                checkIpService.CheckLockAsync(ipAddr);
+                if (!ipInfo.IsPrivate)
+                {
+                    checkIpService.ClearLockAsync(ipInfo.IpAddress);
+                }
+
                 logger.Information("Xác thực chủ sử dụng thành công: {MaDinhDanh}{Url}{ClientIp}", 
                     authChuSuDung.SoDinhDanh,
                     UrlPostAuthChuSuDung, 
-                    ipAddr);
+                    ipInfo.IpAddress);
                 return Results.Ok(new Response<AccessToken>(token));
             },
             ex =>
             {
-                checkIpService.SetLockAsync(ipAddr);
                 logger.Error(ex, "Lỗi khi xác thực chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}", 
                     authChuSuDung.SoDinhDanh,
                     UrlPostAuthChuSuDung, 
-                    ipAddr);
-                return Results.BadRequest(new Response<AccessToken>($"{ex.Message} {(count < 3 ? $"Bạn còn {3 - count} lần thử" : "")}"));
+                    ipInfo.IpAddress);
+                if (ipInfo.IsPrivate)
+                {
+                    return Results.BadRequest(new Response<AccessToken>(ex.Message));
+                }
+                checkIpService.SetLockAsync(ipInfo.IpAddress);
+                return Results.BadRequest(new Response<AccessToken>(
+                    $"{ex.Message} {(count < 3 ? $"Bạn còn {3 - count} lần thử" : "")}"));
             }));
     }
 }

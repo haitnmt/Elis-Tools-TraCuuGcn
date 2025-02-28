@@ -15,7 +15,7 @@ public interface IGeoService
     /// <returns>
     /// Kết quả chứa thông tin toạ độ thửa đất hoặc lỗi nếu không tìm thấy.
     /// </returns>
-    Task<Result<Coordinates>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    Task<Result<List<Coordinates>>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
     /// <summary>
     /// Lấy thông tin toạ độ thửa đất từ cơ sở dữ liệu.
     /// </summary>
@@ -24,7 +24,7 @@ public interface IGeoService
     /// <returns>
     /// Kết quả chứa thông tin toạ độ thửa đất
     /// </returns>
-    Task<Coordinates?> GetAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    Task<List<Coordinates>> GetAsync(long maGcnElis, CancellationToken cancellationToken = default);
 }
 
 public class GeoService(
@@ -35,78 +35,77 @@ public class GeoService(
 {
 
     private readonly string _apiSdeUrl = connectionElisData.ApiSdeUrl();
-    public async Task<Result<Coordinates>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<Result<List<Coordinates>>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         try
         {
             var coordinates = await GetAsync(maGcnElis, cancellationToken);
-            if (coordinates is not null) return coordinates;
+            if (coordinates.Count > 0) return coordinates;
             logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {MaGcnElis}", maGcnElis);
-            return new Result<Coordinates>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
+            return new Result<List<Coordinates>>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
 
         }
         catch (Exception e)
         {
             logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
-            return new Result<Coordinates>(e);
+            return new Result<List<Coordinates>>(e);
         }
     }
-    public async Task<Coordinates?> GetAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<List<Coordinates>> GetAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         try
         {
-            var coordinates = await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(maGcnElis), 
+            return await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(maGcnElis), 
                 await GetPointFromApiSdeAsync(maGcnElis, cancellationToken),
                 tags: [maGcnElis.ToString()],
                 token: cancellationToken);
-            if (coordinates is not null) return coordinates;
         }
         catch (Exception e)
         {
             logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
             throw;
         }
-        return null;
     }
     
     private sealed record BodyResponse(string Status, string Message, Coordinates Data);
-    private async Task<Coordinates?> GetPointFromApiSdeAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    private async Task<List<Coordinates>> GetPointFromApiSdeAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         var connectionSqls = await connectionElisData.GetConnection(maGcnElis);
         if (connectionSqls.Count == 0) return null;
-        var thuaDat  = await thuaDatService.GetThuaDatInDatabaseAsync(maGcnElis, cancellationToken);
-        if (thuaDat is null) return null;
-        var soTo = thuaDat.ToBanDo.Trim().ToLower();
-        var soThua = thuaDat.ThuaDatSo.Trim().ToLower();
-        var tyLe = thuaDat.TyLeBanDo;
-        var kvhcId = thuaDat.MaDvhc;
-        if (string.IsNullOrWhiteSpace(_apiSdeUrl))
+        var thuaDats  = await thuaDatService.GetThuaDatInDatabaseAsync(maGcnElis, cancellationToken);
+        List<Coordinates> result = [];
+        foreach (var (maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) in thuaDats)
         {
-            var ex = new NullReferenceException("Không tìm thấy đường dẫn API SDE");
-            logger.Error(ex, 
-                "Không tìm thấy đường dẫn API SDE");
-            throw ex;
-        }
-        var httpClient = new HttpClient { BaseAddress = new Uri(_apiSdeUrl) };
-        foreach (var (name, _, _, database) in connectionSqls)
-        {
-            try
+            var soTo = toBanDo.Trim().ToLower();
+            var soThua = thuaDatSo.Trim().ToLower();
+            if (string.IsNullOrWhiteSpace(_apiSdeUrl))
             {
-                var req = new {database, SoTo = soTo, SoThua = soThua, TyLe = tyLe, KvhcId = kvhcId};
-                var response = await httpClient.PostAsJsonAsync("/api/sde/toadothuadat", req, cancellationToken);
-                if (!response.IsSuccessStatusCode) continue;
-                var json = await response.Content.ReadFromJsonAsync<BodyResponse>(cancellationToken: cancellationToken);
-                if (json is null || json.Status != "success") continue;
-                return json.Data;
+                var ex = new NullReferenceException("Không tìm thấy đường dẫn API SDE");
+                logger.Error(ex, 
+                    "Không tìm thấy đường dẫn API SDE");
+                throw ex;
             }
-            catch (Exception e)
+            var httpClient = new HttpClient { BaseAddress = new Uri(_apiSdeUrl) };
+            foreach (var (name, _, _, database) in connectionSqls)
             {
-                logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {MaGcnElis}, {SdeName}",
-                    maGcnElis, name);
-                throw;
+                try
+                {
+                    var req = new {database, SoTo = soTo, SoThua = soThua, TyLe = tyLe, KvhcId = maDvhc};
+                    var response = await httpClient.PostAsJsonAsync("/api/sde/toadothuadat", req, cancellationToken);
+                    if (!response.IsSuccessStatusCode) continue;
+                    var json = await response.Content.ReadFromJsonAsync<BodyResponse>(cancellationToken: cancellationToken);
+                    if (json is null || json.Status != "success") continue;
+                    result.Add(json.Data);
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {MaGcnElis}, {SdeName}",
+                        maGcnElis, name);
+                    throw;
+                }
             }
         }
-        return null;
+        return result;
     }
 }
 

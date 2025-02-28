@@ -23,14 +23,14 @@ public static class SearchEndpoints
         HttpContext httpContext)
     {
         var result = await searchService.GetResultAsync(query);
-        var ipAddr = httpContext.GetIpAddress();
+        var ipAddress = httpContext.GetIpAddress();
         return await Task.FromResult(result.Match(
             info=>
             {
                 logger.Information("Tìm kiếm thông tin thành công: {Query}{Url}{ClientIp}", 
                     query, 
                     UrlGetSearchResult, 
-                    ipAddr);
+                    ipAddress);
                 // Lưu thông tin chủ sử dụng để lưu vào cache
                 _ = chuSuDungService.SetCacheAuthChuSuDungAsync(info.MaGcnElis);
                 _ = chuSuDungService.GetAsync(info.MaGcnElis);
@@ -43,7 +43,7 @@ public static class SearchEndpoints
                 logger.Error(ex, "Lỗi khi tìm kiếm thông tin: {Query}{Url}{ClientIp}", 
                     query, 
                     UrlGetSearchResult, 
-                    ipAddr);
+                    ipAddress);
                 return Results.BadRequest(new Response<GiayChungNhanInfo>(ex.Message));
             }));
     }

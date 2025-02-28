@@ -10,7 +10,7 @@
                 {
                     <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
                 }
-                else if (_thuaDat == null)
+                else if (_thuaDats.Count == 0)
                 {
                     <MudAlert Severity="Severity.Error">
                         Không tìm thấy thông tin Thửa đất
@@ -18,59 +18,62 @@
                 }
                 else
                 {
-                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                    foreach (var thuaDat in _thuaDats)
+                    {
+                        <MudPaper Class="pa-4" Outlined="true" Elevation="1">
                         <MudGrid Spacing="2">
                             <MudItem xs="6" lg="4">
                                 <MudField Label="Tờ bản đồ" Variant="Variant.Text">
-                                    @_thuaDat.ToBanDo
+                                    @thuaDat.ToBanDo
                                 </MudField>
                             </MudItem>
                             <MudItem xs="6" lg="4">
                                 <MudField Label="Thửa đất số" Variant="Variant.Text">
-                                    @_thuaDat.ThuaDatSo
+                                    @thuaDat.ThuaDatSo
                                 </MudField>
                             </MudItem>
                             <MudItem xs="6" lg="4">
                                 <MudField Label="Diện tích" Variant="Variant.Text">
-                                    @_thuaDat.DienTich
+                                    @thuaDat.DienTich
                                 </MudField>
                             </MudItem>
                             <MudFlexBreak/>
                             <MudItem xs="6" lg="6">
                                 <MudField Label="Loại đất" Variant="Variant.Text">
-                                    @_thuaDat.LoaiDat
+                                    @thuaDat.LoaiDat
                                 </MudField>
                             </MudItem>
                             <MudItem xs="6" lg="6">
                                 <MudField Label="Thời hạn" Variant="Variant.Text">
-                                    @_thuaDat.ThoiHan
+                                    @thuaDat.ThoiHan
                                 </MudField>
                             </MudItem>
                             <MudItem xs="12">
                                 <MudField Label="Hình thức sử dụng" Variant="Variant.Text">
-                                    @_thuaDat.HinhThuc
+                                    @thuaDat.HinhThuc
                                 </MudField>
                             </MudItem>
                             <MudItem xs="12">
                                 <MudField Label="Nguồn gốc sử dụng" Variant="Variant.Text">
-                                    @_thuaDat.NguonGoc
+                                    @thuaDat.NguonGoc
                                 </MudField>
                             </MudItem>
                             <MudItem xs="12">
                                 <MudField Label="Địa chỉ" Variant="Variant.Text">
-                                    @_thuaDat.DiaChi
+                                    @thuaDat.DiaChi
                                 </MudField>
                             </MudItem>
-                            @if (!string.IsNullOrWhiteSpace(_thuaDat.GhiChu))
+                            @if (!string.IsNullOrWhiteSpace(thuaDat.GhiChu))
                             {
                                 <MudItem xs="12">
                                     <MudField Label="Ghi chú" Variant="Variant.Text">
-                                        @_thuaDat.GhiChu
+                                        @thuaDat.GhiChu
                                     </MudField>
                                 </MudItem>
                             }
                         </MudGrid>
                     </MudPaper>
+                    }
                 }
             </Authorized>
             <NotAuthorized>
@@ -88,13 +91,13 @@
     [Parameter] public long? MaGcnElis { get; set; }
     private HttpClient? _httpClient;
     private const string UrlGetThongTinThuaDat = "/elis/thua-dat";
-    private ThuaDat? _thuaDat;
+    private List<ThuaDat> _thuaDats = [];
     private string? _error = string.Empty;
     private long? _maGcnElis;
     private bool _isLoading;
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _thuaDat is not null) return;
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _thuaDats.Count == 0) return;
         _maGcnElis = MaGcnElis;
         await LoadDataAsync();
     }
@@ -104,18 +107,18 @@
         _error = null;
         _isLoading = true;
         StateHasChanged();
-        _thuaDat = null;
+        _thuaDats = [];
         _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
         var url = $"{UrlGetThongTinThuaDat}?maGcnElis={_maGcnElis}";
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<Response<ThuaDat>>(url);
-            if (response?.Value == null)
+            var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDat>>>(url);
+            if (response?.Value == null || response.Value.Count == 0)
             {
                 _error = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
                 return;
             }
-            _thuaDat = response.Value;
+            _thuaDats = response.Value ?? [];
         }
         catch (Exception e)
         {

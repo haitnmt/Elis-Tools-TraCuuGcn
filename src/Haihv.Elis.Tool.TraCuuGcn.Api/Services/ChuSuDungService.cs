@@ -232,7 +232,7 @@ public sealed class ChuSuDungService(
                                            
                            FROM ChuSuDung CSD
                                 INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                           WHERE GCN.MaGCN = {giayChungNhan.MaGcn}
+                           WHERE GCN.MaGCN = {giayChungNhan.MaGcn} OR GCN.SoSerial = {giayChungNhan.Serial}
                      """);
                 var chuSuDungDatas = (await query.QueryAsync<ChuSuDungData>(cancellationToken: cancellationToken)).ToList();
                 if (chuSuDungDatas.Count == 0) continue;

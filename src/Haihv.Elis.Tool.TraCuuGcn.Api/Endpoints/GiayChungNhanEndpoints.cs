@@ -91,13 +91,13 @@ public static class GiayChungNhanEndpoints
         }
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         return await Task.FromResult(result.Match(
-            rs =>
+            thuaDats =>
             {
                 logger.Information("Lấy thông tin Thửa Đất thành công: {MaGcnElis}{Url}{MaDinhDanh}",
                     maGcnElis, 
                     UrlGetThuaDat, 
                     maDinhDanh);
-                return Results.Ok(new Response<ThuaDat>(rs));
+                return Results.Ok(new Response<List<ThuaDat>>(thuaDats));
             },
             ex =>
             {
@@ -105,7 +105,7 @@ public static class GiayChungNhanEndpoints
                     maGcnElis, 
                     UrlGetThuaDat, 
                     maDinhDanh);
-                return Results.BadRequest(new Response<ThuaDat>(ex.Message));
+                return Results.BadRequest(new Response<List<ThuaDat>>(ex.Message));
             }));
     }
 
@@ -127,13 +127,14 @@ public static class GiayChungNhanEndpoints
         var result = await thuaDatService.GetResultAsync(maGcnElis);
         var ipAddr = httpContext.GetIpAddress();
         return await Task.FromResult(result.Match(
-            thuaDat =>
+            thuaDats =>
             {
                 logger.Information("Lấy thông tin Thửa Đất công khai thành công: {MaGcnElis}{Url}{ClientIp}", 
                     maGcnElis, 
                     UrlGetThuaDatPublic, 
                     ipAddr);
-                return Results.Ok(new Response<ThuaDatPublic>(thuaDat.ConvertToThuaDatPublic()));
+                var thuaDatPublic = thuaDats.Select(x => x.ConvertToThuaDatPublic());
+                return Results.Ok(new Response<IEnumerable<ThuaDatPublic>>(thuaDatPublic));
             },
             ex =>
             {
@@ -141,7 +142,7 @@ public static class GiayChungNhanEndpoints
                     maGcnElis,
                     UrlGetThuaDatPublic, 
                     ipAddr);
-                return Results.BadRequest(new Response<ThuaDatPublic>(ex.Message));
+                return Results.BadRequest(new Response<IEnumerable<ThuaDatPublic>>(ex.Message));
             }));
     }
 }

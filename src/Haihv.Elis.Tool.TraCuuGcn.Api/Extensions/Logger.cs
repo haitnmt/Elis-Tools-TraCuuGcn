@@ -1,10 +1,10 @@
-﻿using Elastic.Ingest.Elasticsearch;
+﻿using System.Net.Sockets;
+using Elastic.Ingest.Elasticsearch;
 using Elastic.Ingest.Elasticsearch.DataStreams;
 using Elastic.Serilog.Sinks;
 using Elastic.Transport;
 using Serilog;
 using System.Reflection;
-using static System.String;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
@@ -54,17 +54,17 @@ public static class Logger
         passwordKey ??= "Password";
         var configuration = builder.Configuration.GetSection(sectionName);
         var uris = (from stringUri in configuration.GetSection(uriKey).GetChildren()
-                    where !IsNullOrWhiteSpace(stringUri.Value)
+                    where !string.IsNullOrWhiteSpace(stringUri.Value)
                     select new Uri(stringUri.Value!)).ToList();
-        var token = configuration[tokenKey] ?? Empty;
-        if (!IsNullOrWhiteSpace(token))
+        var token = configuration[tokenKey] ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(token))
         {
             return builder.CreateLoggerConfiguration(uris, token);
         }
 
-        var username = configuration[usernameKey] ?? Empty;
-        var password = configuration[passwordKey] ?? Empty;
-        if (!IsNullOrWhiteSpace(username) && !IsNullOrWhiteSpace(password))
+        var username = configuration[usernameKey] ?? string.Empty;
+        var password = configuration[passwordKey] ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
         {
             return builder.CreateLoggerConfiguration(uris, username, password);
         }
@@ -128,44 +128,13 @@ public static class Logger
         string username, string password)
         => CreateLoggerConfiguration(builder, uris, new BasicAuthentication(username, password));
     
-    public static string? GetIpAddress(this HttpContext httpContext)
-    {
-        string? ipAddress = null;
-    
-        // Order headers by proxy chain priority (last proxy to first)
-        var headerKeys = new[]
-        {
-            "CF-Connecting-IP",   // Highest priority - Cloudflare original client IP
-            "True-Client-IP",     // Alternative Cloudflare header
-            "X-Original-For",     // HAProxy
-            "X-Forwarded-For",    // General proxy header (will contain chain of IPs)
-            "X-Real-IP",          // Nginx
-            "REMOTE_ADDR"         // Fallback
-        };
-
-        foreach (var headerKey in headerKeys)
-        {
-            if (!httpContext.Request.Headers.TryGetValue(headerKey, out var headerValue)) continue;
-            ipAddress = headerValue.FirstOrDefault()?.Split(',')[0].Trim();
-            if (!IsNullOrWhiteSpace(ipAddress))
-                break;
-        }
-
-        // Fallback to RemoteIpAddress if no proxy headers found
-        if (IsNullOrWhiteSpace(ipAddress) && httpContext.Connection.RemoteIpAddress != null)
-        {
-            ipAddress = httpContext.Connection.RemoteIpAddress.ToString();
-        }
-
-        return ipAddress ?? "Unknown";
-    }
 }
-public class LogInfo   
+public class LogInfo
 {
-    public string ClientIp { get; set; } = Empty;
+    public string ClientIp { get; set; } = string.Empty;
     public string? Username { get; set; }
-    public string UserAgent { get; set; } = Empty;
-    public string Url { get; set; } = Empty;
+    public string UserAgent { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
     public string? HashBody { get; set; }
     public string? QueryString { get; set; }
 }

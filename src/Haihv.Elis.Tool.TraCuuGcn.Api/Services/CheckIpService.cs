@@ -7,18 +7,18 @@ public interface ICheckIpService
     /// <summary>
     /// Kiểm tra xem IP có bị khóa không.
     /// </summary>
-    /// <param name="ip">Địa chỉ IP cần kiểm tra.</param>
+    /// <param name="ipAddress">Địa chỉ IP cần kiểm tra.</param>
     /// <returns>
     /// Thời gian còn lại của khóa theo giây.
     /// </returns>
-    Task<(int Count, long ExprSecond)> CheckLockAsync(string? ip);
+    Task<(int Count, long ExprSecond)> CheckLockAsync(string  ipAddress);
     /// <summary>
     /// Đặt khóa cho IP.
     /// </summary>
     /// <param name="ip">
     /// Địa chỉ IP cần đặt khóa.
     /// </param>
-    Task SetLockAsync(string? ip);
+    Task SetLockAsync(string ipAddress);
 
     /// <summary>
     /// Xóa khóa của IP.
@@ -26,7 +26,7 @@ public interface ICheckIpService
     /// <param name="ip">
     /// Địa chỉ IP cần xóa khóa.
     /// </param>
-    Task ClearLockAsync(string? ip);
+    Task ClearLockAsync(string  pAddress);
 }
 
 public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
@@ -39,14 +39,14 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     /// <summary>
     /// Kiểm tra xem IP có bị khóa không.
     /// </summary>
-    /// <param name="ip">Địa chỉ IP cần kiểm tra.</param>
+    /// <param name="ipAddress">Địa chỉ IP cần kiểm tra.</param>
     /// <returns>
     /// Thời gian còn lại của khóa theo giây.
     /// </returns>
-    public async Task<(int Count, long ExprSecond)> CheckLockAsync(string? ip)
+    public async Task<(int Count, long ExprSecond)> CheckLockAsync(string ipAddress)
     {
-        if (string.IsNullOrWhiteSpace(ip)) return (0, 0);
-        var lockInfo = await fusionCache.GetOrDefaultAsync(LockKey(ip), new LockInfo());
+        if (string.IsNullOrWhiteSpace(ipAddress)) return (0, 0);
+        var lockInfo = await fusionCache.GetOrDefaultAsync(LockKey(ipAddress), new LockInfo());
         return lockInfo is null ? (0,0L) :
             // Tính thời gian lock còn lại theo giây (làm tròn kiểu long)
             (lockInfo.Count, (long) Math.Ceiling((lockInfo.ExprTime - DateTime.Now).TotalSeconds));
@@ -58,10 +58,10 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     /// <param name="ip">
     /// Địa chỉ IP cần đặt khóa.
     /// </param>
-    public async Task SetLockAsync(string? ip)
+    public async Task SetLockAsync(string ipAddress)
     {
-        if (string.IsNullOrWhiteSpace(ip)) return;
-        var lockInfo = await fusionCache.GetOrDefaultAsync<LockInfo>(LockKey(ip));
+        if (string.IsNullOrWhiteSpace(ipAddress)) return;
+        var lockInfo = await fusionCache.GetOrDefaultAsync<LockInfo>(LockKey(ipAddress));
         double expSecond = 0;
         const int totalSecond1Day = 86400;
         if (lockInfo is null)
@@ -86,7 +86,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
             }
         }
         lockInfo.ExprTime = DateTime.Now.AddSeconds(expSecond);
-        await fusionCache.SetAsync(LockKey(ip), lockInfo);
+        await fusionCache.SetAsync(LockKey(ipAddress), lockInfo);
     }
     
     /// <summary>
@@ -95,10 +95,10 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     /// <param name="ip">
     /// Địa chỉ IP cần xóa khóa.
     /// </param>
-    public async Task ClearLockAsync(string? ip)
+    public async Task ClearLockAsync(string ipAddress)
     {
-        if (string.IsNullOrWhiteSpace(ip)) return;
-        await fusionCache.RemoveAsync(LockKey(ip));
+        if (string.IsNullOrWhiteSpace(ipAddress)) return;
+        await fusionCache.RemoveAsync(LockKey(ipAddress));
     }
     
     private sealed class LockInfo(int count, DateTime exprTime)

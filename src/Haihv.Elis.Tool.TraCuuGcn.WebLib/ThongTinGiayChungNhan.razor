@@ -85,7 +85,7 @@ else
                             }
                             else
                             {
-                                if (_thuaDatPublic == null || !string.IsNullOrWhiteSpace(_errorLoadThuaDat))
+                                if (_thuaDatPublics.Count == 0 || !string.IsNullOrWhiteSpace(_errorLoadThuaDat))
                                 {
                                     <MudAlert Severity="Severity.Error">
                                         @(string.IsNullOrWhiteSpace(_errorLoadThuaDat) ? "Không có thông tin" : _errorLoadThuaDat)
@@ -97,38 +97,41 @@ else
                                 }
                                 else
                                 {
-                                    <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
+                                    foreach (var thuaDatPublic in _thuaDatPublics)
+                                    {
+                                        <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
                                         <MudGrid>
                                             <MudItem xs="6" lg="4">
                                                 <MudField Label="Tờ bản đồ" Variant="Variant.Text">
-                                                    @_thuaDatPublic.ToBanDo
+                                                    @thuaDatPublic.ToBanDo
                                                 </MudField>
                                             </MudItem>
                                             <MudItem xs="6" lg="4">
                                                 <MudField Label="Thửa đất số" Variant="Variant.Text">
-                                                    @_thuaDatPublic.ThuaDatSo
+                                                    @thuaDatPublic.ThuaDatSo
                                                 </MudField>
                                             </MudItem>
                                             <MudItem xs="6" lg="4">
                                                 <MudField Label="Diện tích" Variant="Variant.Text">
-                                                    @_thuaDatPublic.DienTich
+                                                    @thuaDatPublic.DienTich
                                                 </MudField>
                                             </MudItem>
                                             <MudItem xs="12">
                                                 <MudField Label="Địa chỉ" Variant="Variant.Text">
-                                                    @_thuaDatPublic.DiaChi
+                                                    @thuaDatPublic.DiaChi
                                                 </MudField>
                                             </MudItem>
-                                            @if(!string.IsNullOrWhiteSpace(_thuaDatPublic.GhiChu))
+                                            @if(!string.IsNullOrWhiteSpace(thuaDatPublic.GhiChu))
                                             {
                                                 <MudItem xs="12">
                                                     <MudField Label="Ghi chú" Variant="Variant.Text">
-                                                        @_thuaDatPublic.GhiChu
+                                                        @thuaDatPublic.GhiChu
                                                     </MudField>
                                                 </MudItem>
                                             }
                                         </MudGrid>
                                     </MudPaper>
+                                    }
                                 }
                             }
                         </NotAuthorized>
@@ -156,7 +159,7 @@ else
     private const string UrlThuaDat = "/elis/thua-dat-public";
     private string? _query;
     private GiayChungNhanInfo? _giayChungNhanInfo;
-    private ThuaDatPublic? _thuaDatPublic;
+    private List<ThuaDatPublic> _thuaDatPublics = [];
     private string? _error;
     private bool _dataLoaded;
     private bool _thuaDatLoaded;
@@ -236,18 +239,18 @@ else
         _errorLoadThuaDat = null;
         _thuaDatLoaded = false;
         StateHasChanged();
-        _thuaDatPublic = null;
+        _thuaDatPublics = [];
         var url = $"{UrlThuaDat}?maGcnElis={_giayChungNhanInfo.MaGcnElis}";
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<Response<ThuaDatPublic>>(url);
-            if (response?.Value == null)
+            var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
+            if (response?.Value == null || response.Value.Count == 0)
             {
                 _errorLoadThuaDat = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
                 return;
             }
 
-            _thuaDatPublic = response.Value;
+            _thuaDatPublics = response.Value ?? []; 
         }
         catch (Exception e)
         {

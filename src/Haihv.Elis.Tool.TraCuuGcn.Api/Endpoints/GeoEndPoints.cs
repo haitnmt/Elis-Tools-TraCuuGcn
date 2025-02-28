@@ -47,7 +47,10 @@ public static class GeoEndPoints
                     UrlGetToaDoThua, 
                     maDinhDanh);
                 var geometry = new Geometry(wkbGeometryType.wkbPoint);
-                geometry.AddPoint(coordinates.X,  coordinates.Y, 0);
+                foreach (var coordinate in coordinates)
+                {
+                    geometry.AddPoint(coordinate.X, coordinate.Y, 0);
+                }
                 return Results.Ok(new
                 {
                     thuaDats = new FeatureCollectionModel(),

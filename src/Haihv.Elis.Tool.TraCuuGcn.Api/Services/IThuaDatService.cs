@@ -11,7 +11,7 @@ public interface IThuaDatService
     /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    Task<Result<ThuaDat>> GetResultAsync(long maGcn,
+    Task<Result<List<ThuaDat>>> GetResultAsync(long maGcn,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -20,6 +20,6 @@ public interface IThuaDatService
     /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    Task<ThuaDat?> GetThuaDatInDatabaseAsync(long maGcn = 0,
+    Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(long maGcn = 0,
         CancellationToken cancellationToken = default);
 }
