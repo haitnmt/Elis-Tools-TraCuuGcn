@@ -5,8 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>0.7.9191.2</AssemblyVersion>
-        <FileVersion>0.7.9191.2</FileVersion>
+        <AssemblyVersion>0.7.9191.3</AssemblyVersion>
+        <FileVersion>0.7.9191.3</FileVersion>
     </PropertyGroup>
 
 

@@ -9,5 +9,7 @@ public record GiayChungNhan(
     string Serial,
     DateTime NgayKy,
     string NguoiKy,
-    string SoVaoSo
+    string SoVaoSo,
+    string MaHoSoDVC,
+    string MaDonViInGCN
 );

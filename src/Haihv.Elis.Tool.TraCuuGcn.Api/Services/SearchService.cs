@@ -80,8 +80,24 @@ public class SearchService(IGcnQrService gcnQrService,
                 maQrInfo = await gcnQrService.GetAsync(maGcnInDataBase: maGcn, cancellationToken: cancellationToken);
             }
         }
+        if (maQrInfo is null && giayChungNhan is null)
+        {
+            logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
+            return null;
+        }
+        
         if (giayChungNhan is not null && giayChungNhan.MaGcn > 0)
             _ = fusionCache.SetAsync(cacheKey, giayChungNhan.MaGcn, tags: [maGcn.ToString()], token: cancellationToken).AsTask();
+        
+        if (maQrInfo is not null) return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
+        
+        var tenDonVi = await gcnQrService.GetTenDonViInDataBaseAsync(giayChungNhan?.MaDonViInGCN, cancellationToken: cancellationToken);
+        maQrInfo = new MaQrInfo
+        {
+            MaHoSoTthc = giayChungNhan?.MaHoSoDVC,
+            MaDonVi = giayChungNhan?.MaDonViInGCN,
+            TenDonVi = tenDonVi
+        };
         return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
     }
 }

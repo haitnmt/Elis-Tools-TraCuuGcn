@@ -33,6 +33,15 @@ public interface IGcnQrService
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
     ValueTask<MaQrInfo?> GetAsync(string? maQr = null, string? hashQr = null, long maGcnInDataBase = 0,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lấy thông tin tên đơn vị dựa trên mã đơn vị từ cơ sở dữ liệu.
+    /// </summary>
+    /// <param name="maDonVi">Mã định danh của đơn vị.</param>
+    /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
+    /// <returns>Tên đơn vị nếu tìm thấy, ngược lại trả về null.</returns>
+    /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
+    Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default);
 }
 
 public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger logger, IFusionCache fusionCache) : IGcnQrService
@@ -116,7 +125,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                     token: cancellationToken).AsTask();
                 return maQrInfo;
             }
-
+            if (string.IsNullOrWhiteSpace(maQr)) return null;
             maQrInfo = maQr.ToMaQr();
             maQrInfo.MaGcnElis = 0;
             if (!string.IsNullOrWhiteSpace(maQrInfo.MaDonVi))
@@ -130,9 +139,8 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
         catch (Exception exception)
         {
             logger.Error(exception, "Lỗi khi lấy thông tin Mã QR: {MaQr}", maQr);
-            throw;
+            return null;
         }
-        return null;
     }
     
     /// <summary>
@@ -142,7 +150,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Tên đơn vị nếu tìm thấy, ngược lại trả về null.</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
-    private async Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default)
+    public async Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(maDonVi)) return null;
         try
@@ -157,9 +165,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
         catch (Exception exception)
         {
             logger.Error(exception, "Lỗi khi lấy thông tin Tên đơn vị: {MaDonVi}", maDonVi);
-            throw;
         }
-
         return null;
     }
 }

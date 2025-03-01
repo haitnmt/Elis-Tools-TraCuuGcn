@@ -81,7 +81,9 @@ public sealed class GiayChungNhanService(
                                 ELSE NgayKy 
                             END AS NgayKy, 
                             NguoiKy, 
-                            SoVaoSo
+                            SoVaoSo,
+                            MaHoSoDVC,
+                            MaDonViInGCN
                      FROM GCNQSDD
                      WHERE MaGcn > 0 AND 
                            (LOWER(SoSerial) = LOWER({serial}) OR MaGCN = {maGcn} OR MaVach = {maVachString})
