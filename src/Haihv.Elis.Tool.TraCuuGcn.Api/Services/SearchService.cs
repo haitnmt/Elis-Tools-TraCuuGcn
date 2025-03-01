@@ -36,6 +36,7 @@ public class SearchService(IGcnQrService gcnQrService,
         var maGcn = await fusionCache.GetOrDefaultAsync<long>(cacheKey, token: cancellationToken);
         GiayChungNhan? giayChungNhan = null;
         MaQrInfo? maQrInfo = null;
+        var hieuLuc = true;
         if (maGcn > 0)
         {
             giayChungNhan = await giayChungNhanService.GetAsync(maGcn: maGcn, cancellationToken: cancellationToken);
@@ -52,12 +53,13 @@ public class SearchService(IGcnQrService gcnQrService,
                 maQrInfo = await gcnQrService.GetAsync(query, query, cancellationToken: cancellationToken);
                 if (maQrInfo is null)
                 {
+                    
                     logger.Warning("Không tìm thấy thông tin Mã QR: {Query}", query);
-                    return null;
                 }
-
-                maGcn = maQrInfo.MaGcnElis;
-                giayChungNhan = await giayChungNhanService.GetAsync(maGcn: maGcn, cancellationToken: cancellationToken);
+                giayChungNhan = await giayChungNhanService.GetAsync(
+                    maGcn: maQrInfo?.MaGcnElis ?? 0L, 
+                    serial: maQrInfo?.SerialNumber, 
+                    cancellationToken: cancellationToken);
             }
             else
             {

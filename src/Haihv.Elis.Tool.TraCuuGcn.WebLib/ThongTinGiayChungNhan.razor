@@ -24,6 +24,17 @@ else
             <MudCard>
                 <MudCardContent>
                     <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
+                    @if (!_giayChungNhanInfo.HieuLucMaQr)
+                    {
+                        <MudAlert Class="mb-2" Severity="Severity.Warning">
+                            <MudText Typo="Typo.body2">
+                                Mã QR không hợp lệ!
+                            </MudText>
+                            <MudText Typo="Typo.body1">
+                                Thông tin tìm thấy theo Số phát hành (Serial) có trong mã QR.
+                            </MudText>
+                        </MudAlert>
+                    }
                     <MudPaper Class="pa-4" Outlined="true" Elevation="1">
                         <MudGrid>
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.DonVi))
@@ -42,7 +53,7 @@ else
                                     </MudField>
                                 </MudItem>
                             }
-                            @if(_giayChungNhanInfo.KhoiTaoQr.Value > new DateTime(1900, 1, 1))
+                            @if (_giayChungNhanInfo.KhoiTaoQr.HasValue && _giayChungNhanInfo.KhoiTaoQr.Value > new DateTime(1900, 1, 1))
                             {
                                 <MudItem xs="12" md="6">
                                     @if (_giayChungNhanInfo.KhoiTaoQr.Value > new DateTime(2025, 1, 1))
@@ -51,7 +62,7 @@ else
                                             @_giayChungNhanInfo.KhoiTaoQr.Value.ToString("dd/MM/yyyy HH:mm:ss")
                                         </MudField>
                                     }
-                                    else    
+                                    else
                                     {
                                         <MudField Label="Thời điểm tạo mã QR" Variant="Variant.Text" Error="true" ErrorText="Thời gian không hợp lệ">
                                             @_giayChungNhanInfo.KhoiTaoQr.Value.ToString("dd/MM/yyyy HH:mm:ss")

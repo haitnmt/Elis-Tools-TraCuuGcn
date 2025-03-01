@@ -65,6 +65,7 @@ public sealed class GiayChungNhanService(
                 token: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
             var connectionElis = await connectionElisData.GetConnection(maGcn);
+            serial = serial?.ToLower() ?? string.Empty;
             foreach (var (connectionName, _, elisConnectionString, _) in connectionElis)
             {
                 await using var dbConnection = elisConnectionString.GetConnection();
@@ -85,8 +86,10 @@ public sealed class GiayChungNhanService(
                             MaHoSoDVC,
                             MaDonViInGCN
                      FROM GCNQSDD
-                     WHERE MaGcn > 0 AND 
-                           (LOWER(SoSerial) = LOWER({serial}) OR MaGCN = {maGcn} OR MaVach = {maVachString})
+                     WHERE MaGcn > 0
+                       AND ((SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(SoSerial) = {serial})) 
+                                OR MaGCN = {maGcn} 
+                                OR MaVach = {maVachString})
                      """);
                 giayChungNhan =
                     await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);

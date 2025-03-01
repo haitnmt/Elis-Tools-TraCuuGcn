@@ -11,7 +11,7 @@ public static class GiayChungNhanExtension
             !string.IsNullOrWhiteSpace(giayChungNhan?.Serial) ? giayChungNhan.Serial : maQrInfo?.SerialNumber,
             maQrInfo?.MaGiayChungNhan ?? string.Empty,
             donVi,
-            maQrInfo?.MaHoSoTthc ?? giayChungNhan.MaHoSoDVC,
+            maQrInfo?.MaHoSoTthc ?? giayChungNhan?.MaHoSoDVC,
             giayChungNhan?.NgayKy ?? DateTime.MinValue,
             giayChungNhan?.NguoiKy ?? string.Empty,
             giayChungNhan?.SoVaoSo ?? string.Empty,
