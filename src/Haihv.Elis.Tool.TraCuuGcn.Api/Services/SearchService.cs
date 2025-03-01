@@ -79,13 +79,9 @@ public class SearchService(IGcnQrService gcnQrService,
                 maGcn = giayChungNhan.MaGcn;
                 maQrInfo = await gcnQrService.GetAsync(maGcnInDataBase: maGcn, cancellationToken: cancellationToken);
             }
-            if (maGcn <= 0)
-            {
-                return null;
-            }
         }
-        
-        _ = fusionCache.SetAsync(cacheKey, cacheKey, tags: [maGcn.ToString()], token: cancellationToken).AsTask();
+        if (giayChungNhan is not null && giayChungNhan.MaGcn > 0)
+            _ = fusionCache.SetAsync(cacheKey, giayChungNhan.MaGcn, tags: [maGcn.ToString()], token: cancellationToken).AsTask();
         return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
     }
 }

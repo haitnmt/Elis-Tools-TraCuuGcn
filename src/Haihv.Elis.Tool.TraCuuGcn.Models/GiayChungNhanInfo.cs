@@ -9,5 +9,7 @@ public record GiayChungNhanInfo(
     DateTime? NgayKy,
     string? NguoiKy,
     string? SoVaoSo,
-    bool HieuLucMaQr);
+    bool HieuLucMaQr,
+    DateTime? KhoiTaoQr,
+    string? PhanMemInGcn);
     

@@ -102,7 +102,6 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 {
                     maQrInfo.TenDonVi = await fusionCache.GetOrSetAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
                         cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
-                        tags: [maGcn.ToString()],
                         token: cancellationToken);
                 }
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
@@ -117,6 +116,16 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                     token: cancellationToken).AsTask();
                 return maQrInfo;
             }
+
+            maQrInfo = maQr.ToMaQr();
+            maQrInfo.MaGcnElis = 0;
+            if (!string.IsNullOrWhiteSpace(maQrInfo.MaDonVi))
+            {
+                maQrInfo.TenDonVi = await fusionCache.GetOrSetAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
+                    cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
+                    token: cancellationToken);
+            }
+            return maQrInfo;
         }
         catch (Exception exception)
         {

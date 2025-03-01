@@ -38,10 +38,10 @@ public static class MaQrExtension
 
         return new MaQrInfo
         {
-            ThoiGianKhoiTao = thoiGianKhoiTao,
-            ThoiGianChinhSua = thoiGianChinhSua,
+            KhoiTao = thoiGianKhoiTao,
+            ChinhSua = thoiGianChinhSua,
             MaDonVi = maDonVi,
-            TenPhanMem = tenPhanMem,
+            PhanMemInGcn = tenPhanMem,
             MaHoSoTthc = maHoSoTthc,
             SerialNumber = serialNumber,
             MaGiayChungNhan = maGcn,

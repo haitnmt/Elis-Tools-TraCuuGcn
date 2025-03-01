@@ -15,7 +15,9 @@ public static class GiayChungNhanExtension
             giayChungNhan?.NgayKy ?? DateTime.MinValue,
             giayChungNhan?.NguoiKy ?? string.Empty,
             giayChungNhan?.SoVaoSo ?? string.Empty,
-            maQrInfo?.HieuLuc ?? false
+            maQrInfo?.HieuLuc ?? false,
+            maQrInfo.KhoiTao,
+            maQrInfo.PhanMemInGcn
         );
     }
 }

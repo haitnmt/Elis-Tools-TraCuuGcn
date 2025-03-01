@@ -97,7 +97,7 @@
     private bool _isLoading;
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _thuaDats.Count == 0) return;
+        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _thuaDats.Count > 0) return;
         _maGcnElis = MaGcnElis;
         await LoadDataAsync();
     }
