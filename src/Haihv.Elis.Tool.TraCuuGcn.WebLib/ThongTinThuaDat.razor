@@ -3,7 +3,7 @@
 
 <MudCard>
     <MudCardContent>
-        <MudText Typo="Typo.h6">Thông tin chi tiết thửa đất</MudText>
+        <MudText Typo="Typo.h6">Thông tin thửa đất</MudText>
         <AuthorizeView>
             <Authorized>
                 @if (_isLoading)
@@ -113,22 +113,21 @@
         try
         {
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDat>>>(url);
-            if (response?.Value == null || response.Value.Count == 0)
+            if (response?.Value is null || response.Value.Count == 0)
             {
                 _error = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
-                return;
             }
-            _thuaDats = response.Value ?? [];
+            else
+            {
+                _thuaDats = response.Value;
+            }
         }
         catch (Exception e)
         {
             _error = "Lỗi khi tải thông tin Thửa đất";
             Console.WriteLine(e);
         }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+        _isLoading = false;
+        StateHasChanged();
     }
 }

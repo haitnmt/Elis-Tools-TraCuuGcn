@@ -100,22 +100,21 @@
         try
         {
             var response = await _httpClient.GetFromJsonAsync<Response<List<ChuSuDungInfo>>>(url);
-            if (response?.Value == null)
+            if (response?.Value is null)
             {
                 _error = response?.ErrorMsg ?? "Không có thông tin Chủ sử dụng";
-                return;
             }
-            _chuSuDungInfos = response.Value;
+            else
+            {
+                _chuSuDungInfos = response.Value;
+            }
         }
         catch (Exception e)
         {
             _error = "Lỗi khi tải thông tin Chủ sử dụng";
             Console.WriteLine(e);
         }
-        finally
-        {
-            _isLoading = false;
-            StateHasChanged();
-        }
+        _isLoading = false;
+        StateHasChanged();
     }
 }
