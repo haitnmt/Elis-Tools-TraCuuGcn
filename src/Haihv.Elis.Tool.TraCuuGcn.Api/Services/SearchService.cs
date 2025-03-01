@@ -17,85 +17,80 @@ public class SearchService(IGcnQrService gcnQrService,
         {
             return new Result<GiayChungNhanInfo>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
         }
-        var giayChungNhanInfo = await GetInDatabaseAsync(query, cancellationToken);
+        var cacheKey = CacheSettings.KeySearch(query);
+        var giayChungNhanInfo = await fusionCache.GetOrDefaultAsync<GiayChungNhanInfo>(cacheKey, 
+            token: cancellationToken);
+        if (giayChungNhanInfo is not null)
+        {
+            return giayChungNhanInfo;
+        }
+        giayChungNhanInfo = await GetInDatabaseAsync(query, cancellationToken);
         if (giayChungNhanInfo is null)
         {
             return new Result<GiayChungNhanInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
         }
-        var maGcn = giayChungNhanInfo.MaGcnElis;
-        if (maGcn <= 0) return giayChungNhanInfo;
-        var cacheKey = CacheSettings.KeySearch(query);
-        await fusionCache.SetAsync(cacheKey, maGcn, tags: [maGcn.ToString()], token: cancellationToken);
+        await fusionCache.SetAsync(cacheKey, 
+            giayChungNhanInfo, 
+            tags: [giayChungNhanInfo.MaGcnElis.ToString()], 
+            token: cancellationToken);
         return giayChungNhanInfo;
-
     }
 
     private async Task<GiayChungNhanInfo?> GetInDatabaseAsync(string query, CancellationToken cancellationToken = default)
     {
-        var cacheKey = CacheSettings.KeySearch(query);
-        var maGcn = await fusionCache.GetOrDefaultAsync<long>(cacheKey, token: cancellationToken);
-        GiayChungNhan? giayChungNhan = null;
-        MaQrInfo? maQrInfo = null;
-        var hieuLuc = true;
-        if (maGcn > 0)
+        MaQrInfo? maQrInfo;
+        GiayChungNhan? giayChungNhan;
+        if (query.Length > 15)
         {
-            giayChungNhan = await giayChungNhanService.GetAsync(maGcn: maGcn, cancellationToken: cancellationToken);
-            if (giayChungNhan is not null)
+            // Tim kiếm theo mã QR
+            maQrInfo = await gcnQrService.GetAsync(query, query, cancellationToken: cancellationToken);
+            if (maQrInfo is null)
             {
-                maQrInfo = await gcnQrService.GetAsync(maGcnInDataBase: maGcn, cancellationToken: cancellationToken);
+                logger.Warning("Không tìm thấy thông tin Mã QR: {Query}", query);
+                return null;
             }
+            
+            giayChungNhan = await giayChungNhanService.GetAsync(serial: maQrInfo.SerialNumber, 
+                cancellationToken: cancellationToken);
+            maQrInfo.Verified = giayChungNhan?.MaGcn == maQrInfo.MaGcnElis;
         }
-        if (giayChungNhan is null && maQrInfo is null)
+        else
         {
-            if (query.Length > 15)
+            if (long.TryParse(query, out var maVach))
             {
-                // Tim kiếm theo mã QR
-                maQrInfo = await gcnQrService.GetAsync(query, query, cancellationToken: cancellationToken);
-                if (maQrInfo is null)
-                {
-                    
-                    logger.Warning("Không tìm thấy thông tin Mã QR: {Query}", query);
-                }
-                giayChungNhan = await giayChungNhanService.GetAsync(
-                    maGcn: maQrInfo?.MaGcnElis ?? 0L, 
-                    serial: maQrInfo?.SerialNumber, 
-                    cancellationToken: cancellationToken);
+                // Tìm kiếm theo mã vạch
+                giayChungNhan = await giayChungNhanService.GetAsync(maVach: maVach, cancellationToken: cancellationToken);
             }
             else
             {
-                if (long.TryParse(query, out var maVach))
-                {
-                    // Tìm kiếm theo mã vạch
-                    giayChungNhan = await giayChungNhanService.GetAsync(maVach: maVach, cancellationToken: cancellationToken);
-                }
-                else
-                {
-                    // Tìm kiếm theo số serial
-                    giayChungNhan = await giayChungNhanService.GetAsync(query, cancellationToken: cancellationToken);
-                }
-                if (giayChungNhan is null)
-                {
-                    logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
-                    return null;
-                }
-                maGcn = giayChungNhan.MaGcn;
-                maQrInfo = await gcnQrService.GetAsync(maGcnInDataBase: maGcn, cancellationToken: cancellationToken);
+                // Tìm kiếm theo số serial
+                giayChungNhan = await giayChungNhanService.GetAsync(query, cancellationToken: cancellationToken);
             }
+            if (giayChungNhan is null)
+            {
+                logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
+                return null;
+            }
+            var maGcn = giayChungNhan.MaGcn;
+            maQrInfo = await gcnQrService.GetAsync(maGcnInDataBase: maGcn, cancellationToken: cancellationToken);
         }
+        
         if (maQrInfo is null && giayChungNhan is null)
         {
             logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
             return null;
         }
         
-        if (giayChungNhan is not null && giayChungNhan.MaGcn > 0)
-            _ = fusionCache.SetAsync(cacheKey, giayChungNhan.MaGcn, tags: [maGcn.ToString()], token: cancellationToken).AsTask();
-        
-        if (maQrInfo is not null) return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
+        if (maQrInfo is not null)
+        {
+            return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
+        }
         
         var tenDonVi = await gcnQrService.GetTenDonViInDataBaseAsync(giayChungNhan?.MaDonViInGCN, cancellationToken: cancellationToken);
+        
         maQrInfo = new MaQrInfo
         {
+            HieuLuc = true,
             MaHoSoTthc = giayChungNhan?.MaHoSoDVC,
             MaDonVi = giayChungNhan?.MaDonViInGCN,
             TenDonVi = tenDonVi

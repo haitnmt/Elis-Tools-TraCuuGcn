@@ -13,4 +13,5 @@ public class MaQrInfo
     public DateTime ChinhSua { get; set; }
     public int SecurityCode { get; set; }
     public bool HieuLuc { get; set; }
+    public bool Verified { get; set; } = true;
 }

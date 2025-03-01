@@ -17,7 +17,8 @@ public static class GiayChungNhanExtension
             giayChungNhan?.SoVaoSo ?? string.Empty,
             maQrInfo?.HieuLuc ?? false,
             maQrInfo?.KhoiTao ?? DateTime.MinValue,
-            maQrInfo?.PhanMemInGcn ?? string.Empty
+            maQrInfo?.PhanMemInGcn ?? string.Empty,
+            maQrInfo?.Verified ?? true
         );
         return gcnInfo;
     }

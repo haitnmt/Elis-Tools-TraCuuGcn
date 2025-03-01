@@ -114,8 +114,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                         token: cancellationToken);
                 }
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
-                maQrInfo.HieuLuc = qrInData.HieuLuc > 0 && 
-                                   await CheckHieuLucAsync(connection.ElisConnectionString, maQrInfo.MaGcnElis, maQrInfo.SerialNumber, cancellationToken);
+                maQrInfo.HieuLuc = qrInData.HieuLuc.ToString() != "0";
                 _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo,
                     TimeSpan.FromDays(1), 
                     tags: [maQrInfo.MaGcnElis.ToString()],
@@ -168,14 +167,5 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             logger.Error(exception, "Lỗi khi lấy thông tin Tên đơn vị: {MaDonVi}", maDonVi);
         }
         return null;
-    }
-    
-    private async Task<bool> CheckHieuLucAsync(string sqlConnectionString, long maGcn, string serial, CancellationToken cancellationToken = default)
-    {
-        await using var dbConnection = sqlConnectionString.GetConnection();
-        var query = dbConnection.SqlBuilder(
-            $"SELECT 1 FROM GCNQSDD WHERE MaGCN = {maGcn} AND SoSerial = {serial})");
-
-        return await query.QueryFirstOrDefaultAsync<bool>(cancellationToken: cancellationToken);
     }
 }

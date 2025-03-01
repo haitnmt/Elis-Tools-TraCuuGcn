@@ -24,7 +24,7 @@ else
             <MudCard>
                 <MudCardContent>
                     <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
-                    @if (!_giayChungNhanInfo.HieuLucMaQr)
+                    @if (!_giayChungNhanInfo.MaQrVerified)
                     {
                         <MudAlert Class="mb-2" Severity="Severity.Warning">
                             <MudText Typo="Typo.body2">
