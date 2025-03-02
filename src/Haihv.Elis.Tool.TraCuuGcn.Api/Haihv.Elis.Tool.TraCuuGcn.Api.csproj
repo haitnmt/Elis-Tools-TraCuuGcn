@@ -40,6 +40,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\Haihv.Elis.Tool.TraCuuGcn.Models\Haihv.Elis.Tool.TraCuuGcn.Models.csproj" />
+        <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
     </ItemGroup>
-
+        
 </Project>

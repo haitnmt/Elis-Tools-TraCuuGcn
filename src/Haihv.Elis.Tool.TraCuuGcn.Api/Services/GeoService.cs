@@ -71,7 +71,7 @@ public class GeoService(
     private async Task<List<Coordinates>> GetPointFromApiSdeAsync(long maGcnElis, CancellationToken cancellationToken = default)
     {
         var connectionSqls = await connectionElisData.GetConnection(maGcnElis);
-        if (connectionSqls.Count == 0) return null;
+        if (connectionSqls.Count == 0) return [];
         var thuaDats  = await thuaDatService.GetThuaDatInDatabaseAsync(maGcnElis, cancellationToken);
         List<Coordinates> result = [];
         foreach (var (maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) in thuaDats)
