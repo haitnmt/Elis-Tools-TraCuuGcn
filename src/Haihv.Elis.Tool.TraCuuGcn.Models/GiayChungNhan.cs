@@ -11,5 +11,6 @@ public record GiayChungNhan(
     string NguoiKy,
     string SoVaoSo,
     string MaHoSoDVC,
-    string MaDonViInGCN
+    string MaDonViInGCN,
+    string MaVach
 );

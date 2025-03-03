@@ -5,14 +5,17 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
 public static class GiayChungNhanExtensions
 {
-    public static Task SetCacheConnectionName(this IFusionCache fusionCache, 
-        long maGcn, string connectionName, 
+    public static async Task SetCacheConnectionName(this IFusionCache fusionCache, 
+        string connectionName, string? serial = null,
         CancellationToken cancellationToken = default)
     {
-        var cacheKey = CacheSettings.ElisConnectionName(maGcn);
-        return fusionCache.SetAsync(cacheKey, 
-            connectionName, 
-            tags: [maGcn.ToString()],
-            token: cancellationToken).AsTask();
+        if (!string.IsNullOrWhiteSpace(serial))
+        {
+            var cacheKey = CacheSettings.ElisConnectionName(serial.ChuanHoa());
+            await fusionCache.SetAsync(cacheKey,
+                connectionName,
+                tags: [serial],
+                token: cancellationToken).AsTask();
+        }
     }
 }

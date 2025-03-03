@@ -1,6 +1,7 @@
 ﻿namespace Haihv.Elis.Tool.TraCuuGcn.Models;
 
 public record ThuaDat(
+    long MaGcn,
     int MaDvhc,
     string ThuaDatSo,
     string ToBanDo,

@@ -14,7 +14,7 @@
                 @if (!string.IsNullOrWhiteSpace(_searchQuery))
                 { 
                     <ThongTinGiayChungNhan Query="@_searchQuery"
-                                           @bind-MaGcnElis="@_maGcnElis"
+                                           @bind-Serial="@_serial"
                                            DonViChanged="donVi => _donVi = donVi"/>
                     @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
                     {
@@ -32,7 +32,7 @@
                             </MudStack>
                         </MudAlert>
                     }
-                    @if (_maGcnElis > 0)
+                    @if (!string.IsNullOrWhiteSpace(_serial))
                     {
                         <AuthorizeView>
                             <NotAuthorized>
@@ -57,7 +57,7 @@
                 }
             </MudStack>
         </MudItem>
-        @if (_maGcnElis > 0)
+        @if (!string.IsNullOrWhiteSpace(_serial))
         {
             <AuthorizeView>
                 <Authorized>
@@ -65,13 +65,13 @@
                     {
                         <MudItem xs="12" md="6" lg="4">
                             <MudStack>
-                                <ThongTinChuSuDung MaGcnElis="_maGcnElis"/>
-                                <ThongTinThuaDat MaGcnElis="_maGcnElis"/>
+                                <ThongTinChuSuDung Serial="@_serial"/>
+                                <ThongTinThuaDat Serial="@_serial"/>
                                 <ThongTinTaiSan/>
                             </MudStack>
                         </MudItem>
                         <MudItem xs="12" md="6" lg="4">
-                            <ThuaDatLocation MaGcnElis="_maGcnElis"/>
+                            <ThuaDatLocation Serial="@_serial"/>
                         </MudItem>
                     }
                 </Authorized>
@@ -84,7 +84,7 @@
 @inject IAuthService AuthService
 @code {
     private string? _searchQuery;
-    private long _maGcnElis;
+    private string? _serial;
     private bool _isCameraActive;
     private bool _isAuthSuccess = true;
     private AppSettings? _appSettings;
@@ -98,8 +98,8 @@
     {
         if (firstRender)
         {
-            if (string.IsNullOrWhiteSpace(_searchQuery)) 
-               await AuthService.SetMaGcnElis(0);
+            if (string.IsNullOrWhiteSpace(_searchQuery) && !string.IsNullOrWhiteSpace(_serial))
+               await AuthService.SetSerialElis(_serial);
         }
     }
 
@@ -121,7 +121,7 @@
     {
         _searchQuery = searchQuery;
         if (!string.IsNullOrWhiteSpace(searchQuery)) return;
-        _maGcnElis = 0;
+        _serial = null;
         StateHasChanged();
     }
 

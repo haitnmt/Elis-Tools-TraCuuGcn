@@ -201,8 +201,8 @@ else
     [Parameter] public string? Query { get; set; }
     [Parameter] public string? Error { get; set; }
     [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
-    [Parameter] public long MaGcnElis { get; set; }
-    [Parameter] public EventCallback<long> MaGcnElisChanged { get; set; }
+    [Parameter] public string? Serial { get; set; }
+    [Parameter] public EventCallback<string> SerialChanged { get; set; }
     [Parameter] public EventCallback<string> DonViChanged { get; set; }
 
     private const string Url = "/elis/search";
@@ -261,22 +261,22 @@ else
             StateHasChanged();
             if (_giayChungNhanInfo != null)
             {
-                if (MaGcnElis != _giayChungNhanInfo.MaGcnElis)
+                if (Serial != _giayChungNhanInfo.Serial)
                 {
-                    MaGcnElis = _giayChungNhanInfo.MaGcnElis;
+                    Serial = _giayChungNhanInfo.Serial;
                     // Kiểm tra thông tin Xác thực
-                    if (!await AuthService.CheckAuthorByMaGcnElis(MaGcnElis))
+                    if (!await AuthService.CheckAuthorBySerialElis(Serial))
                         await AuthService.Logout();
-                    await MaGcnElisChanged.InvokeAsync(MaGcnElis);
+                    await SerialChanged.InvokeAsync(Serial);
                     await LoadThuaDatAsync();
-                    await AuthService.SetMaGcnElis(MaGcnElis);
+                    await AuthService.SetSerialElis(Serial);
                 }
                 await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
             }
             else
             {
-                MaGcnElis = 0;
-                await MaGcnElisChanged.InvokeAsync(MaGcnElis);
+                Serial = null;
+                await SerialChanged.InvokeAsync(Serial);
             }
         }
     }
@@ -287,13 +287,13 @@ else
     {
         _thuaDatPublics = [];
         _errorLoadThuaDat = null;
-        if (_giayChungNhanInfo is not { MaGcnElis: > 0 })
+        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial))
         {
             return;
         }
         _thuaDatLoaded = false;
         StateHasChanged();
-        var url = $"{UrlThuaDat}?maGcnElis={_giayChungNhanInfo.MaGcnElis}";
+        var url = $"{UrlThuaDat}?serial={_giayChungNhanInfo.Serial}";
         try
         {
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);

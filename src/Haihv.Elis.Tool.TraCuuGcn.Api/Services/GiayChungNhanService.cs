@@ -19,28 +19,33 @@ public sealed class GiayChungNhanService(
     /// Lấy thông tin Giấy chứng nhận theo số serial.
     /// </summary>
     /// <param name="serial">Số serial của Giấy chứng nhận.</param>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
     /// <param name="maVach">Mã vạch của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
-    /// <returns>Kết quả chứa thông tin Giấy chứng nhận hoặc lỗi nếu không tìm thấy.</returns>
+    /// <returns>Kết quả chứa danh sách thông tin Giấy chứng nhận hoặc lỗi nếu không tìm thấy.</returns>
     /// <exception cref="ValueIsNullException">Ném ra ngoại lệ nếu không tìm thấy thông tin Giấy chứng nhận.</exception>
-    public async Task<Result<GiayChungNhan>> GetResultAsync(string? serial = null, long maGcn = 0, long maVach = 0,
+    public async Task<Result<GiayChungNhan>> GetResultAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(serial) && maGcn <= 0)
+        if (string.IsNullOrWhiteSpace(serial) && maVach <= 0)
             return new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
         try
         {
-            var cache = CacheSettings.KeyGiayChungNhan(maGcn);
-            return await fusionCache.GetOrSetAsync(cache,
-                cancel => GetAsync(serial: serial, maGcn: maGcn, maVach: maVach, cancel),
-                tags: [maGcn.ToString()],
-                token: cancellationToken) ?? 
+            var cacheKey = CacheSettings.KeyGiayChungNhan(!string.IsNullOrWhiteSpace(serial) ? serial : CacheSettings.KeySerial(maVach.ToString()));
+            List<string> tags = [];
+            return await fusionCache.GetOrSetAsync(cacheKey,
+                       async cancel =>
+                       {
+                           var giayChungNhan = await GetAsync(serial, maVach, cancel);
+                           tags = giayChungNhan is not null ? [giayChungNhan.Serial.ChuanHoa()] : [];
+                           return giayChungNhan;
+                       },
+                       tags: tags,
+                       token: cancellationToken) ?? 
                    new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
         }
         catch (Exception e)
         {
-            logger.Error(e, "Lỗi khi lấy thông tin Giấy chứng nhận: {Serial} {MaGCN} {MaVach}", serial, maGcn, maVach);
+            logger.Error(e, "Lỗi khi lấy thông tin Giấy chứng nhận: {Serial} {MaVach}", serial, maVach);
             return new Result<GiayChungNhan>(e);
         }
 
@@ -50,22 +55,22 @@ public sealed class GiayChungNhanService(
     /// Lấy thông tin Giấy chứng nhận theo số serial.
     /// </summary>
     /// <param name="serial">Số serial của Giấy chứng nhận.</param>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
     /// <param name="maVach">Mã vạch của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
-    /// <returns>Kết quả chứa thông tin Giấy chứng nhận</returns>
-    public async Task<GiayChungNhan?> GetAsync(string? serial = null, long maGcn = 0, long maVach = 0,
+    /// <returns>Kết quả chứa danh sách thông tin Giấy chứng nhận</returns>
+    public async Task<GiayChungNhan?> GetAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(serial) && maGcn <= 0 && maVach <= 0) return null;
+        if (string.IsNullOrWhiteSpace(serial) && maVach <= 0) return null;
         var maVachString = maVach > 0 ? maVach.ToString("0000000000000") : "-111";
+        serial = serial?.ToLower();
         try
         {
-            var giayChungNhan = await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(maGcn),
-                token: cancellationToken);
+            var giayChungNhan = string.IsNullOrWhiteSpace(serial) ? null : 
+                await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial),
+                    token: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
-            var connectionElis = await connectionElisData.GetConnection(maGcn);
-            serial = serial?.ToLower() ?? string.Empty;
+            var connectionElis = await connectionElisData.GetConnection(serial);
             foreach (var (connectionName, _, elisConnectionString, _) in connectionElis)
             {
                 await using var dbConnection = elisConnectionString.GetConnection();
@@ -84,29 +89,30 @@ public sealed class GiayChungNhanService(
                             NguoiKy, 
                             SoVaoSo,
                             MaHoSoDVC,
-                            MaDonViInGCN
+                            MaDonViInGCN,
+                            MaVach
                      FROM GCNQSDD
-                     WHERE MaGcn > 0
-                       AND ((SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(SoSerial) = {serial})) 
-                                OR MaGCN = {maGcn} 
-                                OR MaVach = {maVachString})
+                     WHERE 
+                         (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(SoSerial) = {serial})) OR 
+                         (MaVach = {maVachString})
                      """);
-                giayChungNhan =
-                    await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
+                giayChungNhan = await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
                 if (giayChungNhan is null) continue;
-                _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(giayChungNhan.MaGcn), 
-                    giayChungNhan, 
-                    tags: [giayChungNhan.MaGcn.ToString()],
+                serial = giayChungNhan.Serial.ChuanHoa();
+                _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), giayChungNhan,
+                    tags: [serial],
                     token: cancellationToken).AsTask();
-                _ = fusionCache.SetCacheConnectionName(giayChungNhan.MaGcn, 
-                    connectionName, cancellationToken);
+                _ = fusionCache.SetAsync(CacheSettings.KeySerial(giayChungNhan.MaVach), serial,
+                    tags: [serial],
+                    token: cancellationToken).AsTask();
+                _ = fusionCache.SetCacheConnectionName(connectionName, serial, cancellationToken);
                 return giayChungNhan;
             }
         
         }
         catch (Exception e)
         {
-            logger.Error(e, "Lỗi khi lấy thông tin Giấy chứng nhận: {Serial} {MaGCN} {MaVach}", serial, maGcn, maVach);
+            logger.Error(e, "Lỗi khi lấy thông tin Giấy chứng nhận: {Serial} {MaVach}", serial, maVach);
             throw;
         }
 

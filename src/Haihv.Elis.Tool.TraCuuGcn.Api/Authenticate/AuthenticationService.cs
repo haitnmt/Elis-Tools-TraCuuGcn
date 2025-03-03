@@ -15,11 +15,11 @@ public interface IAuthenticationService
     /// <summary>
     /// Kiểm tra xác thực.
     /// </summary>
-    /// <param name="maGcn">Mã GCN.</param>
+    /// <param name="serial"> Số Serial của GCN.</param>
     /// <param name="claimsPrincipal">Thông tin xác thực của người dùng.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Trả về Số định danh nếu thành công hoặc null nếu không thành công.</returns>
-    ValueTask<string?> CheckAuthenticationAsync(long maGcn = 0, ClaimsPrincipal? claimsPrincipal = null,
+    ValueTask<string?> CheckAuthenticationAsync(string? serial, ClaimsPrincipal? claimsPrincipal = null,
         CancellationToken cancellationToken = default);
     
     /// <summary>
@@ -39,14 +39,14 @@ public sealed class AuthenticationService(
     /// <summary>
     /// Kiểm tra xác thực.
     /// </summary>
-    /// <param name="maGcn">Mã GCN.</param>
+    /// <param name="serial"> Số Serial của GCN.</param>
     /// <param name="claimsPrincipal">Thông tin xác thực của người dùng.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Trả về Số định danh nếu thành công hoặc null nếu không thành công.</returns>
-    public async ValueTask<string?> CheckAuthenticationAsync(long maGcn = 0, ClaimsPrincipal? claimsPrincipal = null,
+    public async ValueTask<string?> CheckAuthenticationAsync(string? serial, ClaimsPrincipal? claimsPrincipal = null,
         CancellationToken cancellationToken = default)
     {
-        if (claimsPrincipal is null || maGcn <= 0) return null;
+        if (claimsPrincipal is null || string.IsNullOrWhiteSpace(serial)) return null;
         var typeIdentity = claimsPrincipal.GetIdentityType();
         var maDinhDanh = claimsPrincipal.GetMaDinhDanh();
         if (typeIdentity?.ToLower() == "ldap")
@@ -54,14 +54,15 @@ public sealed class AuthenticationService(
             return maDinhDanh;
         }
         if (string.IsNullOrWhiteSpace(maDinhDanh)) return null;
-        var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(maGcn, maDinhDanh),
+        serial = serial.ChuanHoa();
+        var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(serial, maDinhDanh),
             token: cancellationToken);
         if (!string.IsNullOrWhiteSpace(tenChuSuDung) && CompareVietnameseStrings(tenChuSuDung, claimsPrincipal.GetHoVaTen()))
         {
             return maDinhDanh;
         }
         var chuSuDungResult =
-            await chuSuDungService.GetResultAuthChuSuDungAsync(maGcn, maDinhDanh, cancellationToken);
+            await chuSuDungService.GetResultAuthChuSuDungAsync(serial, maDinhDanh, cancellationToken);
         return chuSuDungResult.Match(
             csd => 
                 !CompareVietnameseStrings(csd.HoVaTen, claimsPrincipal.GetHoVaTen()) ? null : maDinhDanh,
@@ -78,12 +79,12 @@ public sealed class AuthenticationService(
         if (authChuSuDung is null)
             return new Result<AccessToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
         var soDinhDanh = authChuSuDung.SoDinhDanh;
-        var maGcn = authChuSuDung.MaGcnElis;
+        var serial = authChuSuDung.Serial.ChuanHoa();
         var hoTen = authChuSuDung.HoVaTen;
-        if (string.IsNullOrWhiteSpace(soDinhDanh) || maGcn <= 0 ||
+        if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial) ||
             string.IsNullOrWhiteSpace(hoTen))
             return new Result<AccessToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
-        var chuSuDung = await chuSuDungService.GetResultAuthChuSuDungAsync(maGcn, soDinhDanh);
+        var chuSuDung = await chuSuDungService.GetResultAuthChuSuDungAsync(serial, soDinhDanh);
         return chuSuDung.Match(
             csd =>
             {

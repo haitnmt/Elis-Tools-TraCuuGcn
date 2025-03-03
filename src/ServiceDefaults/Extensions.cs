@@ -39,7 +39,7 @@ public static class Extensions
         // });
     }
 
-    public static void ConfigureOpenTelemetry<TBuilder>(this TBuilder builder)
+    private static void ConfigureOpenTelemetry<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
         builder.Logging.AddOpenTelemetry(logging =>
@@ -85,7 +85,7 @@ public static class Extensions
         //}
     }
 
-    public static void AddDefaultHealthChecks<TBuilder>(this TBuilder builder)
+    private static void AddDefaultHealthChecks<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
     {
         builder.Services.AddHealthChecks()

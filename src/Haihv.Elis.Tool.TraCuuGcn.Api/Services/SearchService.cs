@@ -71,8 +71,8 @@ public class SearchService(IGcnQrService gcnQrService,
                 logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
                 return null;
             }
-            var maGcn = giayChungNhan.MaGcn;
-            maQrInfo = await gcnQrService.GetAsync(maGcnInDataBase: maGcn, cancellationToken: cancellationToken);
+            var serial = giayChungNhan.Serial;
+            maQrInfo = await gcnQrService.GetAsync(serial: serial, cancellationToken: cancellationToken);
         }
         
         if (maQrInfo is null && giayChungNhan is null)

@@ -24,14 +24,14 @@ public static class ChuSuDungEndpoints
     /// <summary>
     /// Lấy thông tin chủ sử dụng theo số định danh.
     /// </summary>
-    /// <param name="maGcnElis">Mã GCN của Giấy chứng nhận.</param>
+    /// <param name="serial"> Số Serial của GCN.</param>
     /// <param name="httpContext">Ngữ cảnh HTTP hiện tại.</param>
     /// <param name="logger">Logger.</param>
     /// <param name="authenticationService">Dịch vụ xác thực.</param>
     /// <param name="chuSuDungService">Dịch vụ chủ sử dụng.</param>
     /// <returns>Kết quả truy vấn chủ sử dụng.</returns>
     private static async Task<IResult> GetChuSuDung(
-        [FromQuery] long maGcnElis,
+        [FromQuery] string serial,
         HttpContext httpContext,
         ILogger logger,
         IAuthenticationService authenticationService,
@@ -39,7 +39,7 @@ public static class ChuSuDungEndpoints
     {
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
-        var maDinhDanh = await authenticationService.CheckAuthenticationAsync(maGcnElis, user);
+        var maDinhDanh = await authenticationService.CheckAuthenticationAsync(serial, user);
         var ipAddr = httpContext.GetIpAddress();
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
@@ -49,7 +49,7 @@ public static class ChuSuDungEndpoints
                 maDinhDanh);
             return Results.Unauthorized();
         }
-        var result = await chuSuDungService.GetResultAsync(maGcnElis);
+        var result = await chuSuDungService.GetResultAsync(serial);
         return await Task.FromResult(result.Match(
             chuSuDung =>
             {

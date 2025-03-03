@@ -121,6 +121,7 @@ app.MapAuthenticationEndpoints();
 app.MapAppSettingsEndpoints();
 app.MapGeoEndPoints();
 app.MapSearchEndpoints();
+
 // Thêm Endpoint kiểm tra ứng dụng hoạt động
 app.MapGet("/health", () => Results.Ok("OK")).WithName("GetHealth");
 

@@ -8,18 +8,18 @@ public interface IThuaDatService
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
     /// </summary>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
+    /// <param name="serial">Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    Task<Result<List<ThuaDat>>> GetResultAsync(long maGcn,
+    Task<Result<List<ThuaDat>>> GetResultAsync(string serial = "",
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận từ cơ sở dữ liệu.
     /// </summary>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
+    /// <param name="serial">Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(long maGcn = 0,
+    Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(string serial = "",
         CancellationToken cancellationToken = default);
 }

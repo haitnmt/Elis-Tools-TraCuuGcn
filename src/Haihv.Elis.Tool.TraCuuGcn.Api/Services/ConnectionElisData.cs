@@ -1,5 +1,4 @@
-﻿using Dapper;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using InterpolatedSql.Dapper;
 using Microsoft.Data.SqlClient;
@@ -30,23 +29,23 @@ public interface IConnectionElisData
     // /// </summary>
     // List<string> ConnectionStrings { get; }
 
+    // /// <summary>
+    // /// Lấy chuỗi kết nối từ tên kết nối.
+    // /// </summary>
+    // /// <param name="name">Tên kết nối.</param>
+    // /// <returns>Chuỗi kết nối.</returns>
+    // string GetElisConnectionString(string name);
+
     /// <summary>
-    /// Lấy chuỗi kết nối từ tên kết nối.
+    /// Lấy danh sách chuỗi kết nối
     /// </summary>
-    /// <param name="name">Tên kết nối.</param>
-    /// <returns>Chuỗi kết nối.</returns>
-    string GetElisConnectionString(string name);
-    
-    /// <summary>
-    /// Lấy danh sách chuỗi kết nối dựa trên mã GCN.
-    /// </summary>
-    /// <param name="maGcn"></param>
+    /// <param name="serial"> Serial của GCNQSDD.</param>
     /// <returns>Danh sách chuỗi kết nối.</returns>
-    ValueTask<List<ConnectionSql>> GetConnection(long maGcn);
+    ValueTask<List<ConnectionSql>> GetConnection(string? serial = null);
     /// <summary>
     /// Xóa cache dữ liệu dựa trên thời gian.
     /// </summary>
-    /// <param name="dateTime">Thời gian cần xóa cache.</param>
+    /// <param name="timeSpan">Thời gian cần xóa cache.</param>
     /// <param name="cancellationToken">Token hủy.</param>
     /// <returns></returns>
     Task CacheRemoveAsync(TimeSpan timeSpan, CancellationToken cancellationToken = default);
@@ -96,14 +95,6 @@ public sealed class ConnectionElisData(
             return GetConnection();
         }) ?? [];
 
-    // /// <summary>
-    // /// Danh sách các chuỗi kết nối.
-    // /// </summary>
-    // public List<string> ConnectionStrings => ConnectionElis.Select(x => x.ElisConnectionString).ToList();
-    /// <summary>
-    /// Danh sách các chuỗi kết nối.
-    /// </summary>
-    public List<string> SdeConnectionStrings => ConnectionElis.Select(x => x.SdeDatabase).ToList();
 
     /// <summary>
     /// Lấy danh sách các kết nối từ cấu hình.
@@ -143,15 +134,18 @@ public sealed class ConnectionElisData(
         return result;
     }
 
-    public async ValueTask<List<ConnectionSql>> GetConnection(long maGcn)
+    public async ValueTask<List<ConnectionSql>> GetConnection(string? serial)
     {
-        if (maGcn <= 0) return ConnectionElis;
-        var connectionName = await fusionCache.GetOrDefaultAsync<string>(
-            CacheSettings.ElisConnectionName(maGcn));
+        if (string.IsNullOrWhiteSpace(serial)) return ConnectionElis;
+        if (long.TryParse(serial, out var maGcn) && maGcn > 0)
+            return ConnectionElis;
+
+        var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
         return string.IsNullOrWhiteSpace(connectionName)
             ? ConnectionElis
             : ConnectionElis.Where(x => x.Name == connectionName).ToList();
     }
+    
 
     public string GetElisConnectionString(string name)
         => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ElisConnectionString ?? string.Empty;
@@ -185,11 +179,11 @@ public sealed class ConnectionElisData(
         }
         return maxTimeDifference;
     }
-    
+
     /// <summary>
     /// Xóa cache dữ liệu dựa trên thời gian.
     /// </summary>
-    /// <param name="dateTime">Thời gian cần xóa cache.</param>
+    /// <param name="timeSpan">Thời gian cần xóa cache.</param>
     /// <param name="cancellationToken">Token hủy.</param>
     /// <returns></returns>
     public async Task CacheRemoveAsync(TimeSpan timeSpan, CancellationToken cancellationToken = default)
@@ -201,15 +195,16 @@ public sealed class ConnectionElisData(
             var connection = elisConnectionString.GetConnection();
             var query = connection.SqlBuilder(
                 $"""
-                 SELECT DISTINCT [Row_ID]
-                 FROM Audit
-                    WHERE [DateTime] >= {dateTime} AND [TableName] = 'GCNQSDD'
-                 """
+                         SELECT DISTINCT [OldValue]
+                         FROM Audit
+                            WHERE [DateTime] >= {dateTime} AND [TableName] = 'GCNQSDD'
+                         """
             );
-                var result = (await query.QueryAsync<long>(cancellationToken: cancellationToken)).ToList();
-            foreach (var maGcnElis in result)
+            var oldValues = (await query.QueryAsync<string>(cancellationToken: cancellationToken)).ToList();
+            foreach (var oldValue in oldValues.Where(x => !string.IsNullOrWhiteSpace(x)))
             {
-                await fusionCache.RemoveByTagAsync(maGcnElis.ToString(), token: cancellationToken);
+                var split = oldValue.Split("-", StringSplitOptions.RemoveEmptyEntries);
+                await fusionCache.RemoveByTagAsync(split[0].Trim().ToUpper(), token: cancellationToken);
             }
         }
     }

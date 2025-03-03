@@ -44,12 +44,12 @@
 
 @code 
 {
-    [Parameter] public long? MaGcnElis { get; set; }
+    [Parameter] public string? Serial { get; set; }
     private const string MapContainerId = "map";
     private HttpClient? _httpClient;
     private string? _geoJsonData;
     private string? _error = string.Empty;
-    private long? _maGcnElis;
+    private string? _serial;
     private bool _isLoading;
     private const string GetToaDoThuaDatUrl = "/geo/toaDoThua";
     private bool _isMapInitialized;
@@ -62,8 +62,8 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _geoJsonData is not null) return;
-        _maGcnElis = MaGcnElis;
+        if (!string.IsNullOrWhiteSpace(Serial) && Serial == _serial && _geoJsonData is not null) return;
+        _serial = Serial;
         await LoadDataAsync();
     }
 
@@ -74,7 +74,7 @@
         StateHasChanged();
         _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
         _geoJsonData = null;
-        var url = $"{GetToaDoThuaDatUrl}?maGcnElis={_maGcnElis}";
+        var url = $"{GetToaDoThuaDatUrl}?serial={_serial}";
         try
         {
             var response = await _httpClient.GetAsync(url);

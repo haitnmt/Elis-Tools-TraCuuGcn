@@ -75,17 +75,17 @@
 @inject IHttpClientFactory HttpClientFactory
 
 @code {
-    [Parameter] public long? MaGcnElis { get; set; }
+    [Parameter] public string? Serial { get; set; }
     private HttpClient? _httpClient;
     private const string UrlGetThongTinChuSuDung = "/elis/chuSuDung";
     private List<ChuSuDungInfo> _chuSuDungInfos = [];
     private string? _error = string.Empty;
-    private long? _maGcnElis;
+    private string? _serial;
     private bool _isLoading;
     protected override async Task OnParametersSetAsync()
     {
-        if (MaGcnElis > 0 && MaGcnElis == _maGcnElis && _chuSuDungInfos.Count > 0) return;
-        _maGcnElis = MaGcnElis;
+        if (!string.IsNullOrWhiteSpace(Serial) && Serial == _serial && _chuSuDungInfos.Count > 0) return;
+        _serial = Serial;
         await LoadDataAsync();
     }
     
@@ -96,7 +96,7 @@
         StateHasChanged();
         _chuSuDungInfos = [];
         _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
-        var url = $"{UrlGetThongTinChuSuDung}?maGcnElis={_maGcnElis}";
+        var url = $"{UrlGetThongTinChuSuDung}?serial={_serial}";
         try
         {
             var response = await _httpClient.GetFromJsonAsync<Response<List<ChuSuDungInfo>>>(url);

@@ -17,21 +17,21 @@ public interface IGcnQrService
     /// </summary>
     /// <param name="maQr">Mã QR cần truy vấn.</param>
     /// <param name="hashQr">Mã QR đã được băm.</param>
-    /// <param name="maGcnInDataBase">Mã GCN cần truy vấn.</param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Kết quả chứa thông tin Mã QR nếu tìm thấy, ngược lại trả về ngoại lệ.</returns>
-    ValueTask<Result<MaQrInfo>> GetResultAsync(string? maQr = null, string? hashQr = null, long maGcnInDataBase = 0, CancellationToken cancellationToken = default);
+    ValueTask<Result<MaQrInfo>> GetResultAsync(string? maQr = null, string? hashQr = null, string? serial = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lấy thông tin Mã QR không đồng bộ.
     /// </summary>
     /// <param name="maQr">Mã QR cần truy vấn.</param>
     /// <param name="hashQr">Mã QR đã được băm.</param>
-    /// <param name="maGcnInDataBase">Mã GCN cần truy vấn.</param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Kết quả chứa thông tin Mã QR nếu tìm thấy</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
-    ValueTask<MaQrInfo?> GetAsync(string? maQr = null, string? hashQr = null, long maGcnInDataBase = 0,
+    ValueTask<MaQrInfo?> GetAsync(string? maQr = null, string? hashQr = null, string? serial = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -53,14 +53,14 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     /// </summary>
     /// <param name="maQr">Mã QR cần truy vấn.</param>
     /// <param name="hashQr">Mã QR đã được băm.</param>
-    /// <param name="maGcnInDataBase">Mã GCN cần truy vấn.</param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Kết quả chứa thông tin Mã QR nếu tìm thấy, ngược lại trả về ngoại lệ.</returns>
-    public async ValueTask<Result<MaQrInfo>> GetResultAsync(string? maQr= null, string? hashQr = null, long maGcnInDataBase = 0, CancellationToken cancellationToken = default)
+    public async ValueTask<Result<MaQrInfo>> GetResultAsync(string? maQr= null, string? hashQr = null, string? serial = null, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await GetAsync(maQr, hashQr, maGcnInDataBase, cancellationToken) ?? 
+            return await GetAsync(maQr, hashQr, serial, cancellationToken) ?? 
                    new Result<MaQrInfo>(new ValueIsNullException("Không tìm thấy thông tin Mã QR!"));
         }
         catch (Exception e)
@@ -76,33 +76,37 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     /// </summary>
     /// <param name="maQr">Mã QR cần truy vấn.</param>
     /// <param name="hashQr">Mã QR đã được băm.</param>
-    /// <param name="maGcn">Mã GCN cần truy vấn.</param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Tuple chứa mã QR đã băm và thông tin Mã QR nếu tìm thấy, ngược lại trả về null.</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
-    public async ValueTask<MaQrInfo?> GetAsync(string? maQr = null, string? hashQr = null, long maGcn = 0, 
+    public async ValueTask<MaQrInfo?> GetAsync(string? maQr = null, string? hashQr = null, string? serial = null, 
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(maQr) && string.IsNullOrWhiteSpace(hashQr) && maGcn <= 0) return null;
+        if (string.IsNullOrWhiteSpace(maQr) && string.IsNullOrWhiteSpace(hashQr) && string.IsNullOrWhiteSpace(serial)) return null;
         try
         {
-            var maQrInfo = await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(maGcn), 
-                token: cancellationToken);
+            serial = serial?.ChuanHoa();
+            var maQrInfo = string.IsNullOrWhiteSpace(serial) ? null :
+                await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(serial), 
+                    token: cancellationToken);
             if (maQrInfo is not null) return maQrInfo;
-            var connectionElis = await connectionElisData.GetConnection(maGcn);
+            var connectionElis = await connectionElisData.GetConnection(serial);
+            hashQr = hashQr?.Trim().ToLower();
+            maQr = maQr?.ChuanHoa();
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
-                     SELECT GuidID AS Id,
-                            MaGCN AS MaGcn,
-                            MaQR AS MaQr,
-                            MaHoaQR AS HashQr,
-                            HieuLuc
-                     FROM GCNQR
-                     WHERE (LOWER(MaQR) = LOWER({maQr}) OR LOWER(MaHoaQR) = LOWER({hashQr}) OR MaGCN = {maGcn}) AND MaGCN > 0
-                     """);
+                             SELECT GuidID AS Id,
+                                    MaGCN AS MaGcn,
+                                    MaQR AS MaQr,
+                                    MaHoaQR AS HashQr,
+                                    HieuLuc
+                             FROM GCNQR
+                             WHERE (UPPER(MaQR) = {maQr} OR LOWER(MaHoaQR) = {hashQr} OR MaGCN LIKE N'%|{serial}|%') AND MaGCN > 0
+                             """);
                 var qrInData = await query.QueryFirstOrDefaultAsync<dynamic?>(cancellationToken: cancellationToken);
                 if (qrInData is null) continue;
                 maQr = qrInData.MaQr;
@@ -115,11 +119,13 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 }
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
                 maQrInfo.HieuLuc = qrInData.HieuLuc.ToString() != "0";
-                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(maQrInfo.MaGcnElis), maQrInfo,
+                serial = maQrInfo.SerialNumber?.ChuanHoa();
+                if (string.IsNullOrWhiteSpace(serial)) return maQrInfo;
+                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(serial), maQrInfo,
                     TimeSpan.FromDays(1), 
                     tags: [maQrInfo.MaGcnElis.ToString()],
                     token: cancellationToken).AsTask();
-                _ = fusionCache.SetAsync(CacheSettings.ElisConnectionName(maQrInfo.MaGcnElis), connection.Name,
+                _ = fusionCache.SetAsync(CacheSettings.ElisConnectionName(serial), connection.Name,
                     TimeSpan.FromDays(1),
                     tags: [maQrInfo.MaGcnElis.ToString()],
                     token: cancellationToken).AsTask();

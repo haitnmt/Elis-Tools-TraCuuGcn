@@ -42,26 +42,24 @@ $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 #Build new image
 Write-Host "[$currentTime] Đang build api image verion: $version" -ForegroundColor Yellow
 #Build new image without using cache: --no-cache
-docker build -t ${ImageName}:${version} -f DockerfileApi .
+#Create Tag Image to $DOCKERHUB
+docker build -t ${DOCKERHUB}/${ImageName}:${version} -f DockerfileApi .
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Đã build image verion: $version thành công." -ForegroundColor Green
+
+#Create Tag Image latest to $DOCKERHUB
+docker tag ${DOCKERHUB}/${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${TAG}
 
 #Push Image Api to $REGISTRY_URL
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Bắt đầu đẩy api image version $version lên $REGISTRY_URL" -ForegroundColor Yellow
-docker tag ${ImageName}:${version} ${REGISTRY_URL}/${ImageName}:${version}
+docker tag ${DOCKERHUB}/${ImageName}:${version} ${REGISTRY_URL}/${ImageName}:${version}
 docker push ${REGISTRY_URL}/${ImageName}:${version}
 
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Bắt đầu đẩy api image [$TAG] lên [$REGISTRY_URL]" -ForegroundColor Yellow
-docker tag ${ImageName}:${version} ${REGISTRY_URL}/${ImageName}:${TAG}
+docker tag ${REGISTRY_URL}/${ImageName} ${REGISTRY_URL}/${ImageName}:${TAG}
 docker push ${REGISTRY_URL}/${ImageName}:${TAG}
-
-#Create Tag Image to $DOCKERHUB
-$currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-Write-Host "[$currentTime] Bắt đầu đổi image tag cho Docker Hub" -ForegroundColor Yellow
-docker tag ${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${version}
-docker tag ${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${TAG}
 
 $endTime = Get-Date
 $totalTime = $endTime - $startTime

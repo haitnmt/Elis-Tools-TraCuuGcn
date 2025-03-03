@@ -23,7 +23,7 @@
             </MudSelect>
             @if (!_isUserLocal)
             {
-                @if (_maGcnElis <= 0)
+                @if (string.IsNullOrWhiteSpace(_serial))
                 {
                     <MudAlert Severity="Severity.Error">
                         <MudText Typo="Typo.body1">Bạn cần tìm kiếm, quét mã để có thông tin Giấy chứng nhận trước khi đăng nhập</MudText>
@@ -99,7 +99,7 @@
     private string _textXacThuc = "Theo thông tin Chủ sử dụng đất";
     private string _username = string.Empty;
     private string _password = string.Empty;
-    private long _maGcnElis;
+    private string? _serial;
     private bool _isUserLocal;
     private bool _processing;
     private AuthResult? _authResult;
@@ -107,8 +107,8 @@
     {
         if (firstRender)
         {
-            _maGcnElis = await AuthService.GetMaGcnElis();
-            _isUserLocal = _maGcnElis <= 0;
+            _serial = await AuthService.GetSerialElis();
+            _isUserLocal = string.IsNullOrWhiteSpace(_serial);
             _textXacThuc = _isUserLocal ? "Tài khoản nội bộ" : "Theo thông tin Chủ sử dụng đất";
             StateHasChanged();
         }
@@ -130,11 +130,11 @@
             var message = _isUserLocal ? "Đăng nhập người dùng" : "Xác thực theo Chủ sử dụng";
             _authResult = _isUserLocal ? 
                 await AuthService.LoginUser(new AuthUser(_username, _password)) :
-                await AuthService.LoginByChuSuDung(new AuthChuSuDung(_maGcnElis, _username, _password));
+                await AuthService.LoginByChuSuDung(new AuthChuSuDung(_serial, _username, _password));
             if (_authResult.Success)
             {
                 SnackbarService.Add($"{message} thành công", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(_maGcnElis));
+                MudDialog.Close(DialogResult.Ok(_serial));
             }
             else
             {

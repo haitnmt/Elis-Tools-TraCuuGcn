@@ -1,5 +1,6 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
@@ -32,10 +33,11 @@ public static class SearchEndpoints
                     UrlGetSearchResult, 
                     ipAddress);
                 // Lưu thông tin chủ sử dụng để lưu vào cache
-                _ = chuSuDungService.SetCacheAuthChuSuDungAsync(info.MaGcnElis);
-                _ = chuSuDungService.GetAsync(info.MaGcnElis);
+                var serial = info.Serial.ChuanHoa();
+                _ = chuSuDungService.SetCacheAuthChuSuDungAsync(serial);
+                _ = chuSuDungService.GetAsync(serial);
                 // Lưu thông tin toạ độ thửa đất để lưu vào cache
-                _ = geoService.GetAsync(info.MaGcnElis);
+                _ = geoService.GetAsync(serial);
                 return Results.Ok(new Response<GiayChungNhanInfo>(info));
             },
             ex =>

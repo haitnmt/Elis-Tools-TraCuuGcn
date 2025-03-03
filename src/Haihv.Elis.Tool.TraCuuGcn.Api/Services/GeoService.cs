@@ -10,21 +10,21 @@ public interface IGeoService
     /// <summary>
     /// Lấy thông tin toạ độ thửa đất từ cơ sở dữ liệu.
     /// </summary>
-    /// <param name="maGcnElis">Mã GCN của Giấy chứng nhận. </param>
+    /// <param name="serial"> Serial của GCN. </param>
     /// <param name="cancellationToken"></param>
     /// <returns>
     /// Kết quả chứa thông tin toạ độ thửa đất hoặc lỗi nếu không tìm thấy.
     /// </returns>
-    Task<Result<List<Coordinates>>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    Task<Result<List<Coordinates>>> GetResultAsync(string serial, CancellationToken cancellationToken = default);
     /// <summary>
     /// Lấy thông tin toạ độ thửa đất từ cơ sở dữ liệu.
     /// </summary>
-    /// <param name="maGcnElis">Mã GCN của Giấy chứng nhận. </param>
+    /// <param name="serial"> Serial của GCN. </param>
     /// <param name="cancellationToken"></param>
     /// <returns>
     /// Kết quả chứa thông tin toạ độ thửa đất
     /// </returns>
-    Task<List<Coordinates>> GetAsync(long maGcnElis, CancellationToken cancellationToken = default);
+    Task<List<Coordinates>> GetAsync(string serial, CancellationToken cancellationToken = default);
 }
 
 public class GeoService(
@@ -35,46 +35,52 @@ public class GeoService(
 {
 
     private readonly string _apiSdeUrl = connectionElisData.ApiSdeUrl();
-    public async Task<Result<List<Coordinates>>> GetResultAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<Result<List<Coordinates>>> GetResultAsync(string serial, CancellationToken cancellationToken = default)
     {
         try
         {
-            var coordinates = await GetAsync(maGcnElis, cancellationToken);
+            var coordinates = await GetAsync(serial, cancellationToken);
             if (coordinates.Count > 0) return coordinates;
-            logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {MaGcnElis}", maGcnElis);
+            logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {Serial}", serial);
             return new Result<List<Coordinates>>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
 
         }
         catch (Exception e)
         {
-            logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
+            logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {Serial}", serial);
             return new Result<List<Coordinates>>(e);
         }
     }
-    public async Task<List<Coordinates>> GetAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    public async Task<List<Coordinates>> GetAsync(string serial, CancellationToken cancellationToken = default)
     {
         try
         {
-            return await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(maGcnElis), 
-                await GetPointFromApiSdeAsync(maGcnElis, cancellationToken),
-                tags: [maGcnElis.ToString()],
+            List<string> tags = [];
+            return await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(serial),
+                async cancel =>
+                {
+                    (var result, tags) = await GetPointFromApiSdeAsync(serial, cancel);
+                    return result;
+                }, 
+                tags: tags,
                 token: cancellationToken);
         }
         catch (Exception e)
         {
-            logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {MaGcnElis}", maGcnElis);
+            logger.Error(e, "Lỗi khi lấy thông tin toạ độ thửa: {Serial}", serial);
             throw;
         }
     }
     
     private sealed record BodyResponse(string Status, string Message, Coordinates Data);
-    private async Task<List<Coordinates>> GetPointFromApiSdeAsync(long maGcnElis, CancellationToken cancellationToken = default)
+    private async Task<(List<Coordinates> coordinatesList, List<string> tags)> GetPointFromApiSdeAsync(string serial, CancellationToken cancellationToken = default)
     {
-        var connectionSqls = await connectionElisData.GetConnection(maGcnElis);
-        if (connectionSqls.Count == 0) return [];
-        var thuaDats  = await thuaDatService.GetThuaDatInDatabaseAsync(maGcnElis, cancellationToken);
+        var connectionSqls = await connectionElisData.GetConnection(serial);
+        if (connectionSqls.Count == 0) return ([],[]);
+        var thuaDats  = await thuaDatService.GetThuaDatInDatabaseAsync(serial, cancellationToken);
         List<Coordinates> result = [];
-        foreach (var (maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) in thuaDats)
+        List<string> tags = [];
+        foreach (var (maGcn, maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) in thuaDats)
         {
             var soTo = toBanDo.Trim().ToLower();
             var soThua = thuaDatSo.Trim().ToLower();
@@ -96,16 +102,17 @@ public class GeoService(
                     var json = await response.Content.ReadFromJsonAsync<BodyResponse>(cancellationToken: cancellationToken);
                     if (json is null || json.Status != "success") continue;
                     result.Add(json.Data);
+                    tags.Add(maGcn.ToString());
                 }
                 catch (Exception e)
                 {
-                    logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {MaGcnElis}, {SdeName}",
-                        maGcnElis, name);
+                    logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {Serial}{Sde}", 
+                        serial, name);
                     throw;
                 }
             }
         }
-        return result;
+        return (result, tags);
     }
 }
 

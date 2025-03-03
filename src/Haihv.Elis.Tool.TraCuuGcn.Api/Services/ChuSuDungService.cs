@@ -11,7 +11,6 @@ using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 public sealed class ChuSuDungService(
-    IGiayChungNhanService giayChungNhanService,
     IConnectionElisData connectionElisData,
     ILogger logger,
     IFusionCache fusionCache) : IChuSuDungService
@@ -21,25 +20,27 @@ public sealed class ChuSuDungService(
     /// <summary>
     /// Lấy thông tin chủ sử dụng theo số định danh.
     /// </summary>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="soDinhDanh">Số định danh.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Kết quả chứa thông tin chủ sử dụng hoặc lỗi.</returns>
-    public async Task<Result<AuthChuSuDung>> GetResultAuthChuSuDungAsync(long maGcn = 0,
+    public async Task<Result<AuthChuSuDung>> GetResultAuthChuSuDungAsync(string? serial = null,
         string? soDinhDanh = null, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(soDinhDanh) ||  maGcn <= 0)
+        if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial))
             return new Result<AuthChuSuDung>(new ValueIsNullException("Số định danh không hợp lệ!"));
-        var cacheKey = CacheSettings.KeyAuthentication(maGcn, soDinhDanh);
+        var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
         try
         {
+            serial = serial.ChuanHoa();
             var tenChuSuDung = await fusionCache.GetOrSetAsync(cacheKey,
-                cancel => GetTenChuSuDungInDataAsync(maGcn, soDinhDanh, cancel),
-                tags:[maGcn.ToString()],
+                
+                cancel => GetTenChuSuDungInDataAsync(serial, soDinhDanh, cancel),
+                tags:[serial],
                 token: cancellationToken);
             return string.IsNullOrWhiteSpace(tenChuSuDung) ? 
                 new Result<AuthChuSuDung>(new ValueIsNullException("Không tìm thấy chủ sử dụng!")) : 
-                new AuthChuSuDung(maGcn, soDinhDanh, tenChuSuDung);
+                new AuthChuSuDung(serial, soDinhDanh, tenChuSuDung);
         }
         catch (Exception exception)
         {
@@ -49,46 +50,25 @@ public sealed class ChuSuDungService(
     }
 
     /// <summary>
-    /// Lấy thông tin chủ sử dụng từ cơ sở dữ liệu theo số định danh và Serial.
-    /// </summary>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param>
-    /// <param name="soDinhDanh">Số định danh.</param>
-    /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
-    private async Task<string?> GetTenChuSuDungInDataAsync(
-        long maGcn = 0,
-        string? soDinhDanh = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(soDinhDanh) || maGcn <= 0)
-            return null;
-        var giayChungNhanResult = await giayChungNhanService.GetResultAsync(maGcn: maGcn, cancellationToken: cancellationToken);
-        return await giayChungNhanResult.Match(
-            giayChungNhan => GetTenChuSuDungInDataAsync(giayChungNhan, soDinhDanh, cancellationToken),
-            ex => throw ex);
-    }
-
-    /// <summary>
     /// Lấy thông tin chủ sử dụng từ cơ sở dữ liệu theo số định danh và giấy chứng nhận.
     /// </summary>
-    /// <param name="giayChungNhan">Giấy chứng nhận.</param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="soDinhDanh">Số định danh.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>
     /// Tên chủ sử dụng hoặc null nếu không tìm thấy.
     /// </returns>
     private async Task<string?> GetTenChuSuDungInDataAsync(
-        GiayChungNhan? giayChungNhan = null,
+        string? serial = null,
         string? soDinhDanh = null,
         CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(soDinhDanh) ||
-            giayChungNhan is null ||
-            giayChungNhan.MaGcn <= 0)
+        if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial))
             return null;
         try
         {
-            var connectionElis = await connectionElisData.GetConnection(giayChungNhan.MaGcn);
+            serial = serial.ChuanHoa();
+            var connectionElis = await connectionElisData.GetConnection(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -98,12 +78,12 @@ public sealed class ChuSuDungService(
                      FROM (SELECT DISTINCT CSD.Ten1 AS HoVaTen
                            FROM ChuSuDung CSD
                                 INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                            WHERE LOWER(CSD.SoDinhDanh1) = LOWER({soDinhDanh}) AND GCN.MaGCN = {giayChungNhan.MaGcn}
+                            WHERE LOWER(CSD.SoDinhDanh1) = LOWER({soDinhDanh}) AND UPPER(GCN.SoSerial) = {serial}
                            UNION
                            SELECT DISTINCT CSD.Ten2 AS HoVaTen
                            FROM ChuSuDung CSD
                                 INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                            WHERE LOWER(CSD.SoDinhDanh2) = LOWER({soDinhDanh}) AND GCN.MaGCN = {giayChungNhan.MaGcn}
+                            WHERE LOWER(CSD.SoDinhDanh2) = LOWER({soDinhDanh}) AND UPPER(GCN.SoSerial) = {serial}
                             ) AS CSD
                      """);
                 var tenChuSuDung =
@@ -123,18 +103,17 @@ public sealed class ChuSuDungService(
     /// <summary>
     /// Lưu thông tin chủ sử dụng vào cache.
     /// </summary>
-    /// <param name="maGcnElis">
-    /// Mã của Giấy chứng nhận trong hệ thống ELIS.
-    /// </param>
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
     public async Task SetCacheAuthChuSuDungAsync(
-        long maGcnElis,
+        string serial,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var connectionElis = await connectionElisData.GetConnection(maGcnElis);
+            serial = serial.ChuanHoa();
+            var connectionElis = await connectionElisData.GetConnection(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -145,7 +124,7 @@ public sealed class ChuSuDungService(
                                   COALESCE(CSD.Ten1, CSD.Ten2) AS HoVaTen
                               FROM ChuSuDung CSD
                                   INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                              WHERE GCN.MaGCN = {maGcnElis}
+                              WHERE UPPER(GCN.SoSerial) = {serial}
                                   AND NULLIF(COALESCE(CSD.SoDinhDanh1, CSD.SoDinhDanh2), '') IS NOT NULL
                                   AND NULLIF(COALESCE(CSD.Ten1, CSD.Ten2), '') IS NOT NULL
                               """);
@@ -156,14 +135,14 @@ public sealed class ChuSuDungService(
                     string soDinhDanh = chuSuDungData.SoDinhDanh.ToString();
                     string hoVaTen = chuSuDungData.HoVaTen.ToString();
                     if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(hoVaTen)) continue;
-                    var cacheKey = CacheSettings.KeyAuthentication(maGcnElis, soDinhDanh);
-                    await fusionCache.SetAsync(cacheKey, hoVaTen, tags: [maGcnElis.ToString()], token: cancellationToken);
+                    var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
+                    await fusionCache.SetAsync(cacheKey, hoVaTen, tags: [serial], token: cancellationToken);
                 }
             }
         }
         catch (Exception exception)
         {
-            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {MaGcnElis}", maGcnElis);
+            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {Serial}", serial);
         }
     }
     
@@ -174,42 +153,34 @@ public sealed class ChuSuDungService(
     /// <summary>
     /// Lấy thông tin chủ sử dụng và quan hệ chủ sử dụng.
     /// </summary>
-    /// <param name="maGcn">Mã GCN của Giấy chứng nhận.</param> 
+    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Kết quả chứa thông tin chủ sử dụng hoặc lỗi.</returns>
     public async Task<Result<List<ChuSuDungInfo>>> GetResultAsync(
-        long maGcn = 0, CancellationToken cancellationToken = default)
+        string? serial = null, CancellationToken cancellationToken = default)
     {
-        if ( maGcn <= 0)
+        if (string.IsNullOrWhiteSpace(serial))
             return new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
-        var cacheKey = CacheSettings.KeyChuSuDung(maGcn);
+        serial = serial.ChuanHoa();
+        var cacheKey = CacheSettings.KeyChuSuDung(serial);
         var chuSuDungs = await fusionCache.GetOrSetAsync(cacheKey,
-            cancel => GetAsync(maGcn, cancel),
-            tags: [maGcn.ToString()],
+            cancel => GetAsync(serial, cancel),
+            tags: [serial],
             token: cancellationToken);
         return chuSuDungs.Count > 0 ? 
             chuSuDungs : 
             new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
     }
-
-    public async Task<List<ChuSuDungInfo>> GetAsync(
-        long maGcnElis = 0, CancellationToken cancellationToken = default)
-    {
-        if (maGcnElis <= 0) return [];
-        var giayChungNhanResult = await giayChungNhanService.GetResultAsync(maGcn: maGcnElis, cancellationToken: cancellationToken);
-        return await giayChungNhanResult.Match(
-            giayChungNhan => GetAsync(giayChungNhan, cancellationToken),
-            ex => throw ex);
-    }
     
-    private async Task<List<ChuSuDungInfo>> GetAsync(
-        GiayChungNhan? giayChungNhan = null, CancellationToken cancellationToken = default)
+    public async Task<List<ChuSuDungInfo>> GetAsync(
+        string? serial = null, CancellationToken cancellationToken = default)
     {
         List<ChuSuDungInfo> chuSuDungInfos = [];
-        if (giayChungNhan is null || giayChungNhan.MaGcn <= 0) return chuSuDungInfos;
+        if (string.IsNullOrWhiteSpace(serial)) return chuSuDungInfos;
         try
         {
-            var connectionElis = await connectionElisData.GetConnection(giayChungNhan.MaGcn);
+            serial = serial.ChuanHoa();
+            var connectionElis = await connectionElisData.GetConnection(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -232,8 +203,7 @@ public sealed class ChuSuDungService(
                                            
                            FROM ChuSuDung CSD
                                 INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                           WHERE GCN.MaGCN = {giayChungNhan.MaGcn} OR 
-                                 (GCN.SoSerial IS NOT NULL AND LEN(GCN.SoSerial) > 0 AND GCN.SoSerial = {giayChungNhan.Serial})
+                           WHERE (GCN.SoSerial IS NOT NULL AND LEN(GCN.SoSerial) > 0 AND UPPER(GCN.SoSerial) = {serial})
                      """);
                 var chuSuDungDatas = (await query.QueryAsync<ChuSuDungData>(cancellationToken: cancellationToken)).ToList();
                 if (chuSuDungDatas.Count == 0) continue;
@@ -248,7 +218,7 @@ public sealed class ChuSuDungService(
         }
         catch (Exception exception)
         {
-            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {MaGcnElis}", giayChungNhan.MaGcn);
+            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {Serial}", serial);
             throw;
         }
         return chuSuDungInfos;
