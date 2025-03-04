@@ -41,7 +41,10 @@ window.leafletMapInterop = {
             console.error("Map chưa được khởi tạo");
             return;
         }
-
+        if (!geoJsonData) {
+            // Hiển thị vị trí mặc định khi không có dữ liệu:
+            this.map.setView(this.centerDefault, this.zoomDefault);
+        }
         try {
             const parsedData = typeof geoJsonData === 'string' ? JSON.parse(geoJsonData) : geoJsonData;
 
@@ -96,6 +99,8 @@ window.leafletMapInterop = {
             }
         } catch (error) {
             console.error("Lỗi khi xử lý hoặc hiển thị GeoJSON:", error);
+            // Hiển thị vị trí mặc định khi khởi tạo:
+            this.map.setView(this.centerDefault, this.zoomDefault);
         }
     },
     // Tính toán tọa độ trung tâm của geometry

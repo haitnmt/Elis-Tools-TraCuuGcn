@@ -31,7 +31,7 @@ public class SearchService(IGcnQrService gcnQrService,
         }
         await fusionCache.SetAsync(cacheKey, 
             giayChungNhanInfo, 
-            tags: [giayChungNhanInfo.MaGcnElis.ToString()], 
+            tags: [giayChungNhanInfo.Serial], 
             token: cancellationToken);
         return giayChungNhanInfo;
     }
@@ -52,7 +52,7 @@ public class SearchService(IGcnQrService gcnQrService,
             
             giayChungNhan = await giayChungNhanService.GetAsync(serial: maQrInfo.SerialNumber, 
                 cancellationToken: cancellationToken);
-            maQrInfo.Verified = giayChungNhan?.MaGcn == maQrInfo.MaGcnElis;
+            maQrInfo.Verified = giayChungNhan?.Serial == maQrInfo.SerialNumber?.Trim();
         }
         else
         {

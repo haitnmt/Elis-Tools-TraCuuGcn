@@ -106,20 +106,21 @@ public class ThuaDatService(
                 string diaChi = thuaDatToBanDo.DiaChi;
                 diaChi =
                     $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";
-                string soThua = thuaDatToBanDo.SoThua.ToString();
-                string toBanDo = thuaDatToBanDo.SoTo.ToString();
+                string soThua = thuaDatToBanDo.SoThua.ToString().Trim();
+                string toBanDo = thuaDatToBanDo.SoTo.ToString().Trim();
                 int.TryParse(thuaDatToBanDo.TyLe.ToString(), out int tyLe);
                 string ghiChu = thuaDatToBanDo.GhiChu?.ToString() ?? string.Empty;
                 var mucDichSuDung = await mucDichService.GetMucDichSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
                 var nguonGoc = await nguonGocService.GetNguonGocSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
+                if(result.Any(x => x.MaDvhc == maDvhc && x.ThuaDatSo == soThua && x.ToBanDo == toBanDo)) continue;
                 result.Add(new ThuaDat(
                     thuaDatToBanDo.MaGcn,
                     maDvhc,
-                    soThua.Trim(),
-                    toBanDo.Trim(),
+                    soThua,
+                    toBanDo,
                     tyLe,
                     diaChi.Trim().VietHoaDauChuoi(),
-                    $"{thuaDatToBanDo.DienTichRieng + thuaDatToBanDo.DienTichChung} m²",
+                    $"{(thuaDatToBanDo.DienTichRieng + thuaDatToBanDo.DienTichChung).ToString("##.0")} m²",
                     mucDichSuDung.Item1,
                     mucDichSuDung.Item2,
                     mucDichSuDung.Item3,
@@ -127,7 +128,7 @@ public class ThuaDatService(
                     ghiChu.Trim().VietHoaDauChuoi()
                 ));
             }
-            
+
             return result;
         }
         catch (Exception e)

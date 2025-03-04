@@ -249,7 +249,7 @@ public sealed class ChuSuDungService(
             16 => chuSuDungData.GioiTinh switch
             {
                 1 => $"Ông {chuSuDungData.Ten}",
-                2 => $"Bà {chuSuDungData.Ten}",
+                0 => $"Bà {chuSuDungData.Ten}",
                 _ => chuSuDungData.Ten
             },
             _ => chuSuDungData.Ten
@@ -290,7 +290,7 @@ public sealed class ChuSuDungService(
             16 => chuSuDungData.GioiTinh2 switch
             {
                 1 => $"Ông {chuSuDungData.Ten2}",
-                2 => $"Bà {chuSuDungData.Ten2}",
+                0 => $"Bà {chuSuDungData.Ten2}",
                 _ => chuSuDungData.Ten2
             },
             _ => chuSuDungData.Ten2

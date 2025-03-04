@@ -55,14 +55,9 @@ public class GeoService(
     {
         try
         {
-            List<string> tags = [];
             return await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(serial),
-                async cancel =>
-                {
-                    (var result, tags) = await GetPointFromApiSdeAsync(serial, cancel);
-                    return result;
-                }, 
-                tags: tags,
+                cancel => GetPointFromApiSdeAsync(serial, cancel), 
+                tags: [serial.ChuanHoa()],
                 token: cancellationToken);
         }
         catch (Exception e)
@@ -73,13 +68,12 @@ public class GeoService(
     }
     
     private sealed record BodyResponse(string Status, string Message, Coordinates Data);
-    private async Task<(List<Coordinates> coordinatesList, List<string> tags)> GetPointFromApiSdeAsync(string serial, CancellationToken cancellationToken = default)
+    private async Task<List<Coordinates>> GetPointFromApiSdeAsync(string serial, CancellationToken cancellationToken = default)
     {
         var connectionSqls = await connectionElisData.GetConnection(serial);
-        if (connectionSqls.Count == 0) return ([],[]);
+        if (connectionSqls.Count == 0) return [];
         var thuaDats  = await thuaDatService.GetThuaDatInDatabaseAsync(serial, cancellationToken);
         List<Coordinates> result = [];
-        List<string> tags = [];
         foreach (var (maGcn, maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) in thuaDats)
         {
             var soTo = toBanDo.Trim().ToLower();
@@ -102,17 +96,17 @@ public class GeoService(
                     var json = await response.Content.ReadFromJsonAsync<BodyResponse>(cancellationToken: cancellationToken);
                     if (json is null || json.Status != "success") continue;
                     result.Add(json.Data);
-                    tags.Add(maGcn.ToString());
                 }
                 catch (Exception e)
                 {
                     logger.Error(e, "Lỗi khi lấy vị trí thửa đất trong SDE {Serial}{Sde}", 
                         serial, name);
-                    throw;
+                    if (result.Count == 0)
+                        throw;
                 }
             }
         }
-        return (result, tags);
+        return result;
     }
 }
 

@@ -98,8 +98,8 @@
     {
         if (firstRender)
         {
-            if (string.IsNullOrWhiteSpace(_searchQuery) && !string.IsNullOrWhiteSpace(_serial))
-               await AuthService.SetSerialElis(_serial);
+            if (string.IsNullOrWhiteSpace(_searchQuery))
+               await AuthService.SetSerialElis(null);
         }
     }
 

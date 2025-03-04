@@ -84,15 +84,17 @@
                 if (string.IsNullOrWhiteSpace(result))
                 {
                     _error = "Không tìm thấy vị trí thửa đất";
-                    return;
                 }
-                _geoJsonData = JsonSerializer.Serialize(JsonSerializer.Deserialize<object>(result));
-                await LeafletMapService.UpdateMapAsync(_geoJsonData);
+                else
+                {
+                    _geoJsonData = JsonSerializer.Serialize(JsonSerializer.Deserialize<object>(result));
+                }
             }
             else
             {
                 _error = "Không tìm thấy vị trí thửa đất";
             }
+            await LeafletMapService.UpdateMapAsync(_geoJsonData);
             _isLoading = false;
         }
         catch (Exception e)

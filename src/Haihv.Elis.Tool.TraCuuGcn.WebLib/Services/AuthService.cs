@@ -12,8 +12,8 @@ public interface IAuthService
     Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung);
     Task<AuthResult> LoginUser(AuthUser authUser);
     Task<bool> CheckAuthorBySerialElis(string? serial);
-    Task<string> GetSerialElis();
-    Task SetSerialElis(string serial);
+    Task<string?> GetSerialElis();
+    Task SetSerialElis(string? serial);
     Task Logout();
 }
 
@@ -107,12 +107,12 @@ public class AuthService(
         return serialInLocalStorage == serial;
     }
     
-    public async Task<string> GetSerialElis()
+    public async Task<string?> GetSerialElis()
     {
-        return await localStorage.GetItemAsync<string>(SerialKey) ?? string.Empty;
+        return await localStorage.GetItemAsync<string>(SerialKey);
     }
     
-    public async Task SetSerialElis(string serial)
+    public async Task SetSerialElis(string? serial)
     {
         await localStorage.SetItemAsync(SerialKey, serial);
     }
