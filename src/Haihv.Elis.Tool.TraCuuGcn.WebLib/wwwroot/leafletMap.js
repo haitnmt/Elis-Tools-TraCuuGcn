@@ -260,7 +260,6 @@ window.leafletMapInterop = {
         for (const layerName in this.layers) {
             if (this.layers[layerName]) {
                 this.layers[layerName].addTo(this.map);
-                this.layerControl.addOverlay(this.layers[layerName], layerName);
             }
         }
     },

@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using System.Text.RegularExpressions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using InterpolatedSql.Dapper;
 using Microsoft.Data.SqlClient;
@@ -64,7 +65,7 @@ public interface IConnectionElisData
 /// <param name="configuration">Cấu hình ứng dụng.</param>
 /// <param name="logger">Logger để ghi log.</param>
 /// <param name="memoryCache">Bộ nhớ đệm để lưu trữ tạm thời.</param>
-public sealed class ConnectionElisData(
+public sealed partial class ConnectionElisData(
     IConfiguration configuration,
     ILogger logger,
     IMemoryCache memoryCache,
@@ -145,11 +146,11 @@ public sealed class ConnectionElisData(
             ? ConnectionElis
             : ConnectionElis.Where(x => x.Name == connectionName).ToList();
     }
-    
+
 
     public string GetElisConnectionString(string name)
         => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ElisConnectionString ?? string.Empty;
-    
+
     /// <summary>
     /// Lấy thời gian chênh lệch giữa máy chủ và máy khách.
     /// </summary>
@@ -168,7 +169,7 @@ public sealed class ConnectionElisData(
                 );
                 var now = DateTime.UtcNow;
                 var result = await query.QueryFirstAsync<DateTime>(cancellationToken: cancellationToken);
-                var timeDifference = (int) (now - result).TotalSeconds;
+                var timeDifference = (int)(now - result).TotalSeconds;
                 if (timeDifference > maxTimeDifference) maxTimeDifference = timeDifference;
             }
         }
@@ -195,19 +196,44 @@ public sealed class ConnectionElisData(
             var connection = elisConnectionString.GetConnection();
             var query = connection.SqlBuilder(
                 $"""
-                         SELECT DISTINCT [OldValue]
+                         SELECT DISTINCT [OldValue], [NewValue]
                          FROM Audit
                             WHERE [DateTime] >= {dateTime} AND [TableName] = 'GCNQSDD'
                          """
             );
-            var oldValues = (await query.QueryAsync<string>(cancellationToken: cancellationToken)).ToList();
-            foreach (var oldValue in oldValues.Where(x => !string.IsNullOrWhiteSpace(x)))
+            var dynamicList = (await query.QueryAsync(cancellationToken: cancellationToken)).ToList();
+            foreach (var dynamic in dynamicList)
             {
-                var split = oldValue.Split("-", StringSplitOptions.RemoveEmptyEntries);
-                await fusionCache.RemoveByTagAsync(split[0].Trim().ToUpper(), token: cancellationToken);
+                var serial = GetSerialFromAuditLog(dynamic.OldValue);
+                if (!string.IsNullOrWhiteSpace(serial))
+                {
+                    await fusionCache.RemoveByTagAsync(serial, token: cancellationToken);
+                }
+                serial = GetSerialFromAuditLog(dynamic.NewValue);
+                if (string.IsNullOrWhiteSpace(serial)) continue;
+                await fusionCache.RemoveByTagAsync(serial, token: cancellationToken);
             }
         }
     }
+    /// <summary>
+    /// Lấy serial từ audit log.
+    /// </summary>
+    /// <param name="auditValue">Giá trị audit log. </param>
+    /// <returns> Serial của GCNQSDD.</returns>
+    private static string? GetSerialFromAuditLog(dynamic? auditValue)
+    {
+        var auditValueStr = auditValue as string;
+        if (string.IsNullOrWhiteSpace(auditValueStr)) return null;
+        var match = SerialRegex().Match(auditValueStr);
+        return match.Success ? match.Groups[1].Value.Trim().ToUpper() : null;
+    }
+    
+    /// <summary>
+    /// Phương thức tạo đối tượng Regex để trích xuất số serial từ chuỗi.
+    /// </summary>
+    /// <returns>Đối tượng Regex để tìm kiếm và trích xuất mã serial có định dạng "Serial: [chuỗi số]".</returns>
+    [GeneratedRegex(@"Serial: (\w+ \d+)")]
+    private static partial Regex SerialRegex();
 }
 
 /// <summary>
