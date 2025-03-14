@@ -16,6 +16,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 builder.Services.AddScoped<ZxingService>();
+builder.Services.AddScoped<BarcodeDetectionService>();
 builder.Services.AddScoped<LeafletMapService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddCascadingAuthenticationState();

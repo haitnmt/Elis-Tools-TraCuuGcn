@@ -8,6 +8,7 @@ using MudBlazor.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddScoped<ZxingService>();
+builder.Services.AddScoped<BarcodeDetectionService>();
 builder.Services.AddScoped<LeafletMapService>();
 builder.Services.AddMudServices(config =>
 {

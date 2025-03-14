@@ -11,8 +11,8 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     private bool _isInitialized;
     private bool _isCheckedCamera;
     private bool _hasCamera;
-    //private const string UrlZxingJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js";
-    private const string UrlZxingJs = "https://unpkg.com/@zxing/library@latest/umd/index.min.js";
+    private const string UrlZxingJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing.min.js";
+    //private const string UrlZxingJs = "https://unpkg.com/@zxing/library@latest/umd/index.min.js";
     private readonly string _urlBarcodeScannerJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScannerZxing.js" + "?v=" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     public async Task InitializeAsync()
     {
@@ -31,7 +31,7 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         _isCheckedCamera = true;
         return _hasCamera;
     }
-    public async Task<string?> ScanFromImage(IBrowserFile uploadedImage)
+    public async Task<string?> ScanFromImage(IBrowserFile? uploadedImage)
     {
         ArgumentNullException.ThrowIfNull(uploadedImage);
         // Kiểm tra file tải lên có phải là ảnh không?
