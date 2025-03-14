@@ -68,12 +68,14 @@ public class BarcodeDetectionService(IJSRuntime jsRuntime) : IAsyncDisposable
     }
 
     // Bắt đầu phát hiện mã vạch trực tiếp
-    public async Task<BarcodeDetectionResult> StartLiveDetectionAsync(string videoElementId, string resultCallbackName,
+    public async Task<BarcodeDetectionResult> StartLiveDetectionAsync(string videoElementId, 
+        DotNetObjectReference<SearchBar> dotNetObjectReference, 
+        string resultCallbackName,
         string[]? formats = null)
     {
         await InitializeAsync();
         var result = await jsRuntime.InvokeAsync<JsonElement>("BarcodeDetectionService.startLiveDetection",
-            videoElementId, resultCallbackName, formats);
+            videoElementId, formats, dotNetObjectReference, resultCallbackName);
         return ParseResult(result);
     }
 

@@ -51,7 +51,7 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
         return await jsRuntime.InvokeAsync<string?>("scanFromImage", imageDataUrl) ;
     }
     
-    public async Task StartCameraScan(ElementReference videoElement, DotNetObjectReference<SearchBar> dotNetObjectReference)
+    public async Task StartCameraScan(ElementReference videoElement, DotNetObjectReference<SearchBar> dotNetObjectReference, string resultCallbackName)
     {
         _zxingReader ??= await jsRuntime.InvokeAsync<IJSObjectReference>("initZxingReader");
         
@@ -59,7 +59,8 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
             "startCameraScan",
             _zxingReader,
             videoElement,
-            dotNetObjectReference);
+            dotNetObjectReference, 
+            resultCallbackName);
     }
 
     public async Task StopCameraScan()

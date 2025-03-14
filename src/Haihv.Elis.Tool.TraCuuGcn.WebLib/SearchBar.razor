@@ -82,9 +82,11 @@
             StateHasChanged();
             // Đợi render xong video element
             await Task.Yield();
+            var dotNetRef = DotNetObjectReference.Create(this);
             if (!_browserSupportsBarcodeDetection)
-                await ZxingService.StartCameraScan(_videoElement, DotNetObjectReference.Create(this));
-            var result = await BarcodeDetectionService.StartLiveDetectionAsync("camera-preview", "",_barcodeTypes);
+                await ZxingService.StartCameraScan(_videoElement, dotNetRef, nameof(HandleScanResultByZing));
+            var result = await BarcodeDetectionService.StartLiveDetectionAsync("camera-preview", 
+                dotNetRef, nameof(HandleScanResult), _barcodeTypes);
             if (result.Success)
             {
                 if (AutoStopCamera)
@@ -108,7 +110,7 @@
     }
     
     [JSInvokable]
-    public void HandleScanResult(string text)
+    public void HandleScanResultByZing(string text)
     {
         if (AutoStopCamera)
         {
@@ -120,7 +122,24 @@
         Result = text;
         ResultChanged.InvokeAsync(Result);
         StateHasChanged();
-    }
+    }   
+    [JSInvokable]
+    public void HandleScanResult(BarcodeDetectionResult result)
+    {
+        if (!result.Success)
+            return;
+        if (AutoStopCamera)
+        {
+            _ = BarcodeDetectionService.StopLiveDetectionAsync();
+            _isCameraActive = false;
+        }
+        _result = result.Barcodes.FirstOrDefault()?.RawValue;
+        _errorMessage = string.IsNullOrWhiteSpace(_result) ? 
+            "Không tìm thấy mã QR hoặc mã vạch. Vui lòng thử lại!" : string.Empty;
+        Result = _result;
+        ResultChanged.InvokeAsync(Result);
+        StateHasChanged();
+    }   
 
     private async Task HandleImageUpload(IBrowserFile file)
     {

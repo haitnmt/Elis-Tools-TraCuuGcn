@@ -125,7 +125,7 @@ window.BarcodeDetectionService = {
         }
     },
 
-    startLiveDetection: function (videoElementId, resultCallbackName, formats) {
+    startLiveDetection: function (videoElementId, formats, dotNetHelper, resultCallbackName) {
         if (!this.isBarcodeDetectionSupported()) {
             return { success: false, error: "Barcode Detection API không được hỗ trợ trên trình duyệt này." };
         }
@@ -161,14 +161,14 @@ window.BarcodeDetectionService = {
                         }));
 
                         // Gọi lại hàm Blazor với kết quả
-                        DotNet.invokeMethodAsync('YourBlazorAppNamespace', resultCallbackName, {
+                        dotNetHelper.invokeMethodAsync(resultCallbackName, {
                             success: true,
                             results: results
                         });
                     }
                 } catch (error) {
                     console.error("Lỗi trong quá trình phát hiện mã vạch trực tiếp:", error);
-                    DotNet.invokeMethodAsync('YourBlazorAppNamespace', resultCallbackName, {
+                    dotNetHelper.invokeMethodAsync(resultCallbackName, {
                         success: false,
                         error: error.message
                     });

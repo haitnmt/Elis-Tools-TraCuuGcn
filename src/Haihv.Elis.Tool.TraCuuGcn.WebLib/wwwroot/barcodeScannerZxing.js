@@ -55,13 +55,13 @@ window.startVideo = async (videoElement) => {
 };
 
 // Xử lý camera
-window.startCameraScan = async (reader, videoElement, dotNetHelper) => {
+window.startCameraScan = async (reader, videoElement, dotNetHelper, resultCallbackName) => {
     try {
         const stream = await window.startVideo(videoElement);
         
         const decodeCallback = (result, error) => {
             if (result) {
-                dotNetHelper.invokeMethodAsync('HandleScanResult', result.text);
+                dotNetHelper.invokeMethodAsync(resultCallbackName, result.text);
             }
             if (error && error.message !== 'No MultiFormat Readers were able to detect the code.') {
                 console.error('Scanning error:', error);
