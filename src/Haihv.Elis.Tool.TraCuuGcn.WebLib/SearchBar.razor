@@ -61,12 +61,11 @@
     {
         if (firstRender)
         {
-            await BarcodeDetectionService.InitializeAsync();
-            _browserSupportsBarcodeDetection = await BarcodeDetectionService.IsBarcodeDetectionSupportedAsync();
+            //await BarcodeDetectionService.InitializeAsync();
+            _browserSupportsBarcodeDetection = false;
             await ZxingService.InitializeAsync();
-            _barcodeTypes = await BarcodeDetectionService.GetSupportedFormatsAsync();
-            _hasCamera = await BarcodeDetectionService.IsCameraAvailableAsync() || 
-                            await ZxingService.HasCamera();
+            //_barcodeTypes = await BarcodeDetectionService.GetSupportedFormatsAsync();
+            _hasCamera = await ZxingService.HasCamera();
             StateHasChanged();
         }
     }

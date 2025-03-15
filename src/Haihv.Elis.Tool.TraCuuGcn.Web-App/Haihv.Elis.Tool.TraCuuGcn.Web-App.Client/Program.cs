@@ -39,7 +39,7 @@ var authEndpoint = appSettings.AuthEndpoint;
 // Đăng ký httpClient để gọi API
 // Kiểm tra xem API URL hợp lệ hay không
 if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
-{ 
+{
         throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
 builder.Services.AddHttpClient(
