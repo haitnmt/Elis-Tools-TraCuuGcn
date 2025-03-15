@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 
@@ -68,27 +69,28 @@ public class BarcodeDetectionService(IJSRuntime jsRuntime) : IAsyncDisposable
     }
 
     // Bắt đầu phát hiện mã vạch trực tiếp
-    public async Task<BarcodeDetectionResult> StartLiveDetectionAsync(string videoElementId, 
-        DotNetObjectReference<SearchBar> dotNetObjectReference, 
-        string resultCallbackName,
+    public async Task<BarcodeDetectionResult> StartLiveDetectionAsync(
+        DotNetObjectReference<SearchBar> dotNetObjectReference, string resultCallbackName,
+        ElementReference videoElement,
         string[]? formats = null)
     {
         await InitializeAsync();
         var result = await jsRuntime.InvokeAsync<JsonElement>("BarcodeDetectionService.startLiveDetection",
-            videoElementId, formats, dotNetObjectReference, resultCallbackName);
+            dotNetObjectReference, resultCallbackName, videoElement, formats);
         return ParseResult(result);
     }
 
     // Dừng phát hiện mã vạch trực tiếp
-    public async Task<BarcodeDetectionResult> StopLiveDetectionAsync()
+    public async Task<BarcodeDetectionResult> StopLiveDetectionAsync(ElementReference videoElement)
     {
         await InitializeAsync();
-        var result = await jsRuntime.InvokeAsync<JsonElement>("BarcodeDetectionService.stopLiveDetection");
+        var result = await jsRuntime.InvokeAsync<JsonElement>("BarcodeDetectionService.stopLiveDetection",
+            videoElement);
         return ParseResult(result);
     }
 
     // Chuyển đổi kết quả từ JavaScript sang C#
-    private static BarcodeDetectionResult ParseResult(JsonElement result)
+    public static BarcodeDetectionResult ParseResult(JsonElement result)
     {
         var success = result.GetProperty("success").GetBoolean();
         if (success)
