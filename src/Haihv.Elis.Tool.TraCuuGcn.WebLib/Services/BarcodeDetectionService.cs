@@ -10,7 +10,9 @@ public class BarcodeDetectionService(IJSRuntime jsRuntime) : IAsyncDisposable
     private IJSObjectReference? _module;
 
     // Khởi tạo module JavaScript
-    private readonly string _urlBarcodeDetectionJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeDetection.js" + "?v=" 
+    private readonly string _urlBarcodeDetectionJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/BarcodeDetection/barcodeDetection.js" + "?v=" 
+        + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+    private readonly string _urlPonyfillJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/BarcodeDetection/ponyfill.js" + "?v=" 
         + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     public async Task InitializeAsync()
     {
@@ -20,6 +22,10 @@ public class BarcodeDetectionService(IJSRuntime jsRuntime) : IAsyncDisposable
     // Kiểm tra xem API có được hỗ trợ không
     public async Task<bool> IsBarcodeDetectionSupportedAsync()
     {
+        await InitializeAsync();
+        var isBrowserSupport = await jsRuntime.InvokeAsync<bool>("BarcodeDetectionService.isBarcodeDetectionSupported");
+        if (isBrowserSupport) return isBrowserSupport;
+        await jsRuntime.InvokeAsync<IJSObjectReference>("import", _urlPonyfillJs);
         await InitializeAsync();
         return await jsRuntime.InvokeAsync<bool>("BarcodeDetectionService.isBarcodeDetectionSupported");
     }

@@ -1,28 +1,9 @@
 // barcodeDetection.js
 window.BarcodeDetectionService = {
-    isBarcodeDetectionSupported: async function () {
-        if(!'BarcodeDetector' in window)
-        {
-            await this.polyfill();
-        }
+    isBarcodeDetectionSupported: function () {
         return 'BarcodeDetector' in window;
     },
-
-    /**
-     * Loads a polyfill for BarcodeDetector when not natively supported
-     */
-    polyfill: async () => {
-        if (!('BarcodeDetector' in window)) {
-            try {
-                await import('barcode-detector');
-                console.log('Using BarcodeDetector polyfill.');
-            } catch (error) {
-                console.log('BarcodeDetector API is not supported by your browser.');
-            }
-        } else {
-            console.log('Using the native BarcodeDetector API.');
-        }
-    },
+    
     isCameraAvailable : async ()=> {
         try {
             const devices = await navigator.mediaDevices.enumerateDevices();
@@ -33,7 +14,7 @@ window.BarcodeDetectionService = {
     },
     
     getSupportedFormats: async function () {
-        if (!await this.isBarcodeDetectionSupported()) {
+        if (!this.isBarcodeDetectionSupported()) {
             return [];
         }
 
@@ -47,7 +28,7 @@ window.BarcodeDetectionService = {
     },
 
     detectFromImage: async function (imageDataUrl, formats) {
-        if (!await this.isBarcodeDetectionSupported()) {
+        if (!this.isBarcodeDetectionSupported()) {
             return { success: false, error: "Barcode Detection API không được hỗ trợ trên trình duyệt này." };
         }
     
@@ -96,7 +77,7 @@ window.BarcodeDetectionService = {
     },
 
     detectFromVideo: async (videoElementId, formats) => {
-        if (!await this.isBarcodeDetectionSupported()) {
+        if (!this.isBarcodeDetectionSupported()) {
             return { success: false, error: "Barcode Detection API không được hỗ trợ trên trình duyệt này." };
         }
 
@@ -175,7 +156,7 @@ window.BarcodeDetectionService = {
     },
     
     startLiveDetection: async function(dotNetHelper, resultCallbackName, videoElement, formats) {
-        if (!await this.isBarcodeDetectionSupported()) {
+        if (!this.isBarcodeDetectionSupported()) {
             return { success: false, error: "Barcode Detection API không được hỗ trợ trên trình duyệt này." };
         }
     
