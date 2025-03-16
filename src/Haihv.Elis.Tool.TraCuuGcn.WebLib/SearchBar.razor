@@ -129,10 +129,8 @@
             _ = BarcodeDetectionService.StopLiveDetectionAsync(_videoElement);
             _isCameraActive = false;
         }
-        
         _result = barcodeDetectionResult.Barcodes.FirstOrDefault()?.RawValue;
-        _errorMessage = string.IsNullOrWhiteSpace(barcodeDetectionResult.Error) ? 
-            "Không tìm thấy mã QR hoặc mã vạch. Vui lòng thử lại!" : barcodeDetectionResult.Error;
+        _errorMessage = barcodeDetectionResult.Error ?? string.Empty;
         Result = _result;
         ResultChanged.InvokeAsync(Result);
         StateHasChanged();
