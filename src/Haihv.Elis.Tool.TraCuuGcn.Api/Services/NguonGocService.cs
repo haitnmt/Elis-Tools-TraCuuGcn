@@ -47,6 +47,6 @@ public class NguonGocService(string connectionString, ILogger logger)
         => nguonGocSuDungs.Count == 0
             ? string.Empty
             : string.Join(", ", nguonGocSuDungs.Select(nguonGocSuDung =>
-                $"{nguonGocSuDung.Ten}" +
-                $"{(nguonGocSuDungs.Count > 1 ? $"{nguonGocSuDung.DienTich} m²" : "")}"));
+                $"{nguonGocSuDung.Ten} " +
+                $"{(nguonGocSuDungs.Count > 1 ? $"{nguonGocSuDung.DienTich}m²" : "")}"));
 }
