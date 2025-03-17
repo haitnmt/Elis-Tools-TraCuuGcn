@@ -32,7 +32,7 @@ public static class AdminEndPoints
         }
         var maDinhDanh = context.User.GetMaDinhDanh();
         var userAdmins = configuration.GetSection("UserAdmins").Get<string[]>();
-        if (string.IsNullOrWhiteSpace(maDinhDanh) && !userAdmins.Contains(maDinhDanh))
+        if (string.IsNullOrWhiteSpace(maDinhDanh) || userAdmins is null || !userAdmins.Contains(maDinhDanh))
         {
             logger.Warning("Người dùng không được phép xóa cache: {Url}{MaDinhDanh}", 
                 UrlClearCache, maDinhDanh);

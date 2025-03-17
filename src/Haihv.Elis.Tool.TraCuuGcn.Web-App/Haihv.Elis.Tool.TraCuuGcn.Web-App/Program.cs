@@ -38,6 +38,7 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthorizationCore();
+builder.Services.AddScoped<JwtAuthorizationHandler>();
 
 builder.AddAppSettingsServices();
 
@@ -46,8 +47,16 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
 {
     throw new InvalidOperationException("BackendUrl is not configured");
 }
+// Kiểm tra xem API URL hợp lệ hay không
+if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
+{
+    throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
+}
 builder.Services.AddHttpClient(
-    "Endpoint", client => client.BaseAddress = new Uri(apiEndpoint));
+        "Endpoint",
+        opt => opt.BaseAddress = validUri)
+    .AddHttpMessageHandler<JwtAuthorizationHandler>();
+
 var authEndpoint = builder.Configuration["AuthEndpoint"];
 if (string.IsNullOrWhiteSpace(authEndpoint))
 {

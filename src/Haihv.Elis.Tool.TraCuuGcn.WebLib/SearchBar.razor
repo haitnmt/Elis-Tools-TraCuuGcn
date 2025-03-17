@@ -40,6 +40,10 @@
             <MudText Typo="Typo.body2">@_errorMessage</MudText>
         </MudAlert>
     }
+    @if (_processing)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-0"/>
+    }
 </MudStack>
 
 
@@ -57,6 +61,7 @@
     private string _errorMessage = string.Empty;
     private bool _browserSupportsBarcodeDetection;
     private string[] _barcodeTypes = ["qr_code", "code_128"];
+    private bool _processing = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -69,6 +74,7 @@
             //_barcodeTypes = await BarcodeDetectionService.GetSupportedFormatsAsync();
             _hasCamera = await BarcodeDetectionService.IsCameraAvailableAsync();
             _barcodeTypes = await BarcodeDetectionService.GetSupportedFormatsAsync();
+            _processing = false;
             StateHasChanged();
         }
     }
@@ -153,23 +159,35 @@
             _errorMessage = "Vui lòng chọn ảnh cần quét!";
             return;
         }
+        _processing = true;
         _errorMessage = string.Empty;
+        StateHasChanged();
        if (!_browserSupportsBarcodeDetection)
             await ScanFromImageByZxing();
        else
        {
-           var result = await BarcodeDetectionService.DetectFromImageAsync(_uploadedImage, _barcodeTypes);
-           if (result is { Success: true, Barcodes.Length: > 0 })
+           try
            {
-               _result = result.Barcodes.FirstOrDefault()?.RawValue;
-               _errorMessage = string.Empty;
-               Result = _result;
-               await ResultChanged.InvokeAsync(Result);
-               StateHasChanged();
+               var result = await BarcodeDetectionService.DetectFromImageAsync(_uploadedImage, _barcodeTypes);
+               if (result is { Success: true, Barcodes.Length: > 0 })
+               {
+                   _result = result.Barcodes.FirstOrDefault()?.RawValue;
+                   _errorMessage = string.Empty;
+                   Result = _result;
+                   await ResultChanged.InvokeAsync(Result);
+                   _processing = false;
+                   StateHasChanged();
+               }
+               else
+               {
+                   await ScanFromImageByZxing();
+               }
            }
-           else
+           catch (Exception e)
            {
-               await ScanFromImageByZxing();
+               Console.WriteLine(e.Message);
+               _processing = false;
+               StateHasChanged();
            }
        }
     }
@@ -192,6 +210,7 @@
         }
         finally
         {
+            _processing = false;
             Result = _result ?? string.Empty;
             await ResultChanged.InvokeAsync(Result);
         }

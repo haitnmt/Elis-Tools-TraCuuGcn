@@ -23,7 +23,12 @@ else
         <MudStack>
             <MudCard>
                 <MudCardContent>
-                    <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
+                        @* <MudButton Size="Size.Small" OnClick="RefreshData"> *@
+                        @*     Làm mới *@
+                        @* </MudButton> *@
+                    </MudStack>
                     @if (!_giayChungNhanInfo.MaQrVerified)
                     {
                         <MudAlert Class="mb-2" Severity="Severity.Warning">
@@ -207,12 +212,14 @@ else
 
     private const string Url = "/elis/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
+    private const string UrlClearCache = "/elis/delete-cache";
     private string? _query;
     private GiayChungNhanInfo? _giayChungNhanInfo;
     private List<ThuaDatPublic> _thuaDatPublics = [];
     private string? _error;
     private bool _dataLoaded;
     private bool _thuaDatLoaded = true;
+    private bool _clearCacheWhenReload;
 
     protected override void OnInitialized()
     {
@@ -226,13 +233,28 @@ else
         await LoadDataAsync();
     }
 
+    private async Task<bool> ClearCache(string serial)
+    {
+        var url = $"{UrlClearCache}?serial={serial}";
+        try
+        {
+            var responseMessage = await _httpClient.DeleteAsync(url);
+            Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+            return responseMessage.IsSuccessStatusCode;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return false;
+        }
+    }
+    
     private async Task LoadDataAsync()
     {
         if (string.IsNullOrWhiteSpace(_query))
         {
             return;
         }
-
         _error = null;
         _dataLoaded = false;
         StateHasChanged();
@@ -314,6 +336,15 @@ else
         {
             _thuaDatLoaded = true;
             StateHasChanged();
+        }
+    }
+
+    private async Task RefreshData(MouseEventArgs arg)
+    {
+        if (!string.IsNullOrWhiteSpace(Serial))
+        {
+            await ClearCache(Serial);
+            await LoadDataAsync();
         }
     }
 

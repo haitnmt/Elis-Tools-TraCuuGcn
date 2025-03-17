@@ -4,6 +4,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Mvc;
+using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
@@ -13,6 +14,7 @@ public static class GiayChungNhanEndpoints
     private const string UrlGetGiayChungNhan = "/elis/gcn";
     private const string UrlGetThuaDat = "/elis/thua-dat";
     private const string UrlGetThuaDatPublic = "/elis/thua-dat-public";
+    private const string UrlClearCache = "/elis/delete-cache";
     /// <summary>
     /// Định nghĩa các endpoint cho Giấy Chứng Nhận.
     /// </summary>
@@ -28,6 +30,9 @@ public static class GiayChungNhanEndpoints
 
         app.MapGet(UrlGetThuaDatPublic, GetThuaDatPublicAsync)
             .WithName("GetThuaDatPublicAsync");
+        app.MapDelete(UrlClearCache, DeleteCache)
+            .WithName("DeleteCache")
+            .RequireAuthorization();
     }
 
     /// <summary>
@@ -163,5 +168,31 @@ public static class GiayChungNhanEndpoints
                     ipAddr);
                 return Results.BadRequest(new Response<IEnumerable<ThuaDatPublic>>(ex.Message));
             }));
+    }
+    private static async Task<IResult> DeleteCache(HttpContext context,
+        ILogger logger,
+        IFusionCache fusionCache,
+        IConfiguration configuration,
+        [FromQuery] string? serial)
+    {
+        if (string.IsNullOrWhiteSpace(serial))
+        {
+            logger.Warning("Thiếu thông tin số Serial của GCN: {Url}", UrlClearCache);
+            return Results.BadRequest("Thiếu thông tin số Serial của GCN");
+        }
+        var maDinhDanh = context.User.GetMaDinhDanh();
+        try
+        {
+            await fusionCache.RemoveByTagAsync(serial.ChuanHoa());
+            logger.Information("Xóa cache thành công: {Url}{Serial}{MaDinhDanh}",
+                UrlClearCache,serial, maDinhDanh);
+            return Results.Ok("Xóa cache thành công");
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Lỗi khi xóa cache: {Url}{Serial}{MaDinhDanh}",
+                UrlClearCache, serial, maDinhDanh);
+            return Results.BadRequest("Lỗi khi xóa cache");
+        }
     }
 }
