@@ -130,7 +130,9 @@
             var message = _isUserLocal ? "Đăng nhập người dùng" : "Xác thực theo Chủ sử dụng";
             _authResult = _isUserLocal ? 
                 await AuthService.LoginUser(new AuthUser(_username, _password)) :
-                await AuthService.LoginByChuSuDung(new AuthChuSuDung(_serial, _username, _password));
+                string.IsNullOrWhiteSpace(_serial) ? 
+                    new AuthResult(false, "Không tìm thấy thông tin Giấy chứng nhận") :
+                    await AuthService.LoginByChuSuDung(new AuthChuSuDung(_serial, _username, _password));
             if (_authResult.Success)
             {
                 SnackbarService.Add($"{message} thành công", Severity.Success);

@@ -33,7 +33,15 @@ public static class SearchEndpoints
                     UrlGetSearchResult, 
                     ipAddress);
                 // Lưu thông tin chủ sử dụng để lưu vào cache
-                var serial = info.Serial.ChuanHoa();
+                var serial = info.Serial?.ChuanHoa();
+                if (string.IsNullOrWhiteSpace(serial))
+                {
+                    logger.Warning("Không tìm thấy thông tin GCN: {Query}{Url}{ClientIp}", 
+                        query, 
+                        UrlGetSearchResult, 
+                        ipAddress);
+                    return Results.NotFound(new Response<GiayChungNhanInfo>("Không tìm thấy thông tin GCN!"));
+                }
                 _ = chuSuDungService.SetCacheAuthChuSuDungAsync(serial);
                 _ = chuSuDungService.GetAsync(serial);
                 // Lưu thông tin toạ độ thửa đất để lưu vào cache

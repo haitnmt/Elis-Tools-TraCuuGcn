@@ -65,7 +65,6 @@ if (string.IsNullOrWhiteSpace(authEndpoint))
 builder.Services.AddHttpClient(
     "AuthEndpoint", client => client.BaseAddress = new Uri(authEndpoint));
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

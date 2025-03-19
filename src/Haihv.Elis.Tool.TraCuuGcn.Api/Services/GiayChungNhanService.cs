@@ -71,7 +71,7 @@ public sealed class GiayChungNhanService(
                     token: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
             var connectionElis = await connectionElisData.GetConnection(serial);
-            foreach (var (connectionName, _, elisConnectionString, _) in connectionElis)
+            foreach (var (connectionName, _, elisConnectionString, _, groupName) in connectionElis)
             {
                 await using var dbConnection = elisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(

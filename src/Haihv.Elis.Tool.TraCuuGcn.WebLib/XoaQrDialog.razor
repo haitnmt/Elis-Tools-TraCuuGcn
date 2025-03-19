@@ -1,0 +1,102 @@
+﻿<AuthorizeView>
+    <Authorized>
+        <MudDialog>
+            <TitleContent>
+                <MudStack Row="true" AlignItems="AlignItems.End">
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Rounded="true">
+                        <MudIcon Icon="@Icons.Material.Filled.Commit"/>
+                    </MudAvatar>
+                    <MudText Typo="Typo.h6"
+                             Color="Color.Warning">
+                        Xác nhận xóa thông tin mã QR
+                    </MudText>
+                </MudStack>
+            </TitleContent>
+            <DialogContent>
+                <MudText Typo="Typo.body1">Đễ xóa thông tin mã QR của Giấy chứng nhận có số phát hành (Serial)</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Warning">@Serial</MudText>
+                <MudTextField T="string" bind-Value="@_serial" 
+                              Variant="Variant.Outlined" 
+                              Label="Nhập lại số phát hành"
+                              HelperText="Nhập lại số phát hành (Serial) của Giấy chứng nhận"/>
+            </DialogContent>
+            <DialogActions>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Secondary"
+                           OnClick="() => MudDialog.Close()">
+                    Hủy bỏ
+                </MudButton>
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    Disabled="@(_processing || string.IsNullOrWhiteSpace(_serial) || _serial != Serial)"
+                    OnClick="XoaQr">
+                    @if (_processing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                        <MudText Class="ms-2">Đang xóa</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.button">Xóa</MudText>
+                    }
+                </MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
+
+@inject ISnackbar SnackbarService
+@inject IHttpClientFactory HttpClientFactory
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter]
+    public string Serial { get; set; } = string.Empty;
+    private const string UrlDeleteMaQr = "elis/delete-qr";
+    private bool _processing;
+
+    private string? _serial;
+    private HttpClient _httpClient = null!;
+    
+    protected override void OnInitialized()
+    {
+        _httpClient = HttpClientFactory.CreateClient("Endpoint");
+    }
+
+    private async Task XoaQr(MouseEventArgs arg)
+    {
+        if (string.IsNullOrWhiteSpace(_serial) || _serial != Serial)
+        {
+            SnackbarService.Add("Số phát hành không chính xác", Severity.Error);
+            return;
+        }
+        _processing = true;
+        var url = $"{UrlDeleteMaQr}?serial={_serial}";
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                SnackbarService.Add("Xóa thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                SnackbarService.Add($"Xóa không thành công: {await response.Content.ReadAsStringAsync()}", Severity.Error);
+            }
+            
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add($"Lỗi trong quá trình xóa", Severity.Error);
+            Console.WriteLine(e.Message);
+        }
+        finally
+        {
+            _processing = false;
+            StateHasChanged();
+        }
+    }
+
+}

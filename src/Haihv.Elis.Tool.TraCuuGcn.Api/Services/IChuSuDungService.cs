@@ -38,5 +38,5 @@ public interface IChuSuDungService
     /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
-    Task SetCacheAuthChuSuDungAsync(string serial, CancellationToken cancellationToken = default);
+    Task SetCacheAuthChuSuDungAsync(string? serial, CancellationToken cancellationToken = default);
 }

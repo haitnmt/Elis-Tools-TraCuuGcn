@@ -86,7 +86,7 @@ public class GeoService(
                 throw ex;
             }
             var httpClient = new HttpClient { BaseAddress = new Uri(_apiSdeUrl) };
-            foreach (var (name, _, _, database) in connectionSqls)
+            foreach (var (name, _, _, database, _) in connectionSqls)
             {
                 try
                 {

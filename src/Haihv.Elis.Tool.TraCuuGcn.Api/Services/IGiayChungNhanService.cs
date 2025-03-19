@@ -25,4 +25,5 @@ public interface IGiayChungNhanService
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
     Task<GiayChungNhan?> GetAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default);
+    
 }

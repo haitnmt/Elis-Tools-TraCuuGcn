@@ -42,6 +42,20 @@ public interface IGcnQrService
     /// <returns>Tên đơn vị nếu tìm thấy, ngược lại trả về null.</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
     Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Xóa thông tin Mã QR khỏi CSDL
+    /// </summary>
+    /// <param name="serial">
+    /// Số Serial của Giấy chứng nhận.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token để hủy bỏ thao tác không đồng bộ.
+    /// </param>
+    /// <returns>
+    /// Kết quả xóa thông tin Mã QR khỏi CSDL.
+    /// </returns>
+    Task<Result<bool>> DeleteMaQrAsync(string? serial = null, CancellationToken cancellationToken = default);
 }
 
 public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger logger, IFusionCache fusionCache) : IGcnQrService
@@ -173,5 +187,68 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             logger.Error(exception, "Lỗi khi lấy thông tin Tên đơn vị: {MaDonVi}", maDonVi);
         }
         return null;
+    }
+    /// <summary>
+    /// Xóa thông tin Mã QR khỏi CSDL
+    /// </summary>
+    /// <param name="serial">
+    /// Số Serial của Giấy chứng nhận.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token để hủy bỏ thao tác không đồng bộ.
+    /// </param>
+    /// <returns>
+    /// Kết quả xóa thông tin Mã QR khỏi CSDL.
+    /// </returns>
+    public async Task<Result<bool>> DeleteMaQrAsync(string? serial = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(serial)) 
+            return new Result<bool>(new ArgumentNullException(nameof(serial)));
+        var connectionElis = await connectionElisData.GetConnection(serial);
+        try
+        {
+            var giayChungNhan = await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial), token: cancellationToken);
+            if (giayChungNhan is null)
+                return new Result<bool>(new ArgumentNullException(nameof(serial)));
+            var count = 0;
+            foreach (var connectionSql in connectionElis.Select(x => x.ElisConnectionString))
+            {
+                await using var dbConnection = connectionSql.GetConnection();
+                var query = dbConnection.SqlBuilder(
+                    $"""
+                        DELETE FROM GCNQR WHERE MaGCN = {giayChungNhan.MaGcn};
+                        UPDATE [GCNQSDD] 
+                            SET [MaHoSoDVC] = NULL, [MaDonViInGCN] = NULL, [SoSerial] = NULL
+                            WHERE (MaGCN = {giayChungNhan.MaGcn});
+                        """
+                    );
+                var transaction = dbConnection.BeginTransaction();
+                try
+                {
+                    count += await query.ExecuteAsync(cancellationToken: cancellationToken);
+                    await transaction.CommitAsync(cancellationToken: cancellationToken);
+                }
+                catch (Exception e)
+                {
+                    // Rollback transaction
+                    await transaction.RollbackAsync(cancellationToken);
+                    logger.Error(e, "Lỗi khi xóa thông tin Mã QR: {Serial}", serial);
+                    return new Result<bool>(e);
+                }
+            }
+
+            if (count == 0)
+            {
+                logger.Warning("Không có thông tin Mã QR để xóa: {Serial}", serial);
+                return new Result<bool>(new ArgumentNullException(nameof(serial)));
+            }
+            logger.Information("Xóa thông tin Mã QR thành công: {Serial}", serial);
+            return true;
+        } 
+        catch (Exception e)
+        {
+            logger.Error(e, "Lỗi khi xóa thông tin Mã QR: {Serial}", serial);
+            return new Result<bool>(e);
+        }
     }
 }

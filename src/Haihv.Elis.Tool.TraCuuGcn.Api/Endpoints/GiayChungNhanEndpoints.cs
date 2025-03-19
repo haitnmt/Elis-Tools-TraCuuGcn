@@ -11,10 +11,13 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
 public static class GiayChungNhanEndpoints
 {
-    private const string UrlGetGiayChungNhan = "/elis/gcn";
-    private const string UrlGetThuaDat = "/elis/thua-dat";
-    private const string UrlGetThuaDatPublic = "/elis/thua-dat-public";
-    private const string UrlClearCache = "/elis/delete-cache";
+    private const string UrlGroup = "/elis";
+    private const string UrlGetGiayChungNhan = $"{UrlGroup}/gcn";
+    private const string UrlGetThuaDat = $"{UrlGroup}/thua-dat";
+    private const string UrlGetThuaDatPublic = $"{UrlGroup}/thua-dat-public";
+    private const string UrlClearCache = $"{UrlGroup}/delete-cache";
+    private const string UrlPermissionsCanUpdate= $"{UrlGroup}/permissions/can-update";
+    private const string UrlDeleteMaQr = $"{UrlGroup}/delete-qr";
     /// <summary>
     /// Định nghĩa các endpoint cho Giấy Chứng Nhận.
     /// </summary>
@@ -30,11 +33,110 @@ public static class GiayChungNhanEndpoints
 
         app.MapGet(UrlGetThuaDatPublic, GetThuaDatPublicAsync)
             .WithName("GetThuaDatPublicAsync");
+        
         app.MapDelete(UrlClearCache, DeleteCache)
             .WithName("DeleteCache")
             .RequireAuthorization();
+        app.MapGet(UrlPermissionsCanUpdate, GetHasUpdatePermission)
+            .WithName("HasUpdatePermission")
+            .RequireAuthorization();
+        app.MapDelete(UrlDeleteMaQr, DeleteMaQr)
+            .WithName("DeleteMaQr")
+            .RequireAuthorization();
     }
 
+    private static async Task<IResult> DeleteMaQr(HttpContext context,
+        ILogger logger, IFusionCache fusionCache, IConfiguration configuration, IGcnQrService gcnQrService,
+        [FromQuery] string? serial = null)
+    {
+        var urlLdapApi = configuration["AuthEndpoint"];
+        
+        if (string.IsNullOrWhiteSpace(urlLdapApi))
+        {
+            logger.Warning("Thiếu thông tin cấu hình AuthEndpoint: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+            return Results.BadRequest("Thiếu thông tin cấu hình xác thực người dùng");
+        }
+        if (string.IsNullOrWhiteSpace(serial))
+        {
+            logger.Warning("Thiếu thông tin số Serial của GCN: {Url}", UrlPermissionsCanUpdate);
+            return Results.BadRequest("Thiếu thông tin số Serial của GCN");
+        }
+        var maDinhDanh = context.User.GetMaDinhDanh();
+        if (string.IsNullOrWhiteSpace(maDinhDanh))
+        {
+            logger.Warning("Không tìm thấy thông tin mã định danh của người dùng: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+            return Results.Unauthorized();
+        }
+        var user = context.User;
+        if (!user.IsLdap())
+        {
+            logger.Warning("Không có quyền cập nhật GCN: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+            return Results.Unauthorized();
+        }
+
+        var groupName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyUpdateGroupName(serial));
+
+        if (string.IsNullOrWhiteSpace(groupName))
+        {
+            logger.Warning("Không tìm thấy thông tin nhóm có quyền cập nhật GCN: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+            return Results.Unauthorized();
+        }
+
+        if (!await context.HasUpdatePermission(urlLdapApi, groupName)) return Results.Unauthorized();
+        var result = await gcnQrService.DeleteMaQrAsync(serial);
+        return result.Match(
+            _ =>
+            {
+                logger.Information("Xóa mã QR thành công: {Url}{MaDinhDanh}{Serial}",
+                    UrlDeleteMaQr,
+                    maDinhDanh,
+                    serial);
+                return Results.Ok();
+            },
+            ex =>
+            {
+                logger.Error(ex, "Xóa mã QR thất bại: {Url}{MaDinhDanh}{Serial}",
+                    UrlDeleteMaQr,
+                    maDinhDanh,
+                    serial);
+                return Results.BadRequest(ex.Message);
+            });
+
+    }
+    private static async Task<IResult> GetHasUpdatePermission(HttpContext context,
+        ILogger logger, IFusionCache fusionCache, IConfiguration configuration,
+        [FromQuery] string? serial = null)
+    {
+        var urlLdapApi = configuration["AuthEndpoint"];
+        
+        if (string.IsNullOrWhiteSpace(urlLdapApi))
+        {
+            logger.Warning("Thiếu thông tin cấu hình AuthEndpoint: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+            return Results.BadRequest("Thiếu thông tin cấu hình xác thực người dùng");
+        }
+        
+        if (string.IsNullOrWhiteSpace(serial))
+        {
+            logger.Warning("Thiếu thông tin số Serial của GCN: {Url}", UrlPermissionsCanUpdate);
+            return Results.BadRequest("Thiếu thông tin số Serial của GCN");
+        }
+        var user = context.User;
+        if (!user.IsLdap())
+        {
+            logger.Warning("Không có quyền cập nhật GCN: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+            return Results.Unauthorized();
+        }
+
+        var groupName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyUpdateGroupName(serial));
+
+        if (!string.IsNullOrWhiteSpace(groupName))
+            return await context.HasUpdatePermission(urlLdapApi, groupName) ? Results.Ok(true) : Results.Unauthorized();
+        
+        logger.Warning("Không tìm thấy thông tin nhóm có quyền cập nhật GCN: {Url}{Serial}", UrlPermissionsCanUpdate, serial);
+        return Results.Unauthorized();
+
+    }
+    
     /// <summary>
     /// Lấy thông tin Giấy Chứng Nhận theo số serial.
     /// </summary>

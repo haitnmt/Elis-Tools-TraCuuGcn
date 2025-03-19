@@ -107,11 +107,12 @@ public sealed class ChuSuDungService(
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
     public async Task SetCacheAuthChuSuDungAsync(
-        string serial,
+        string? serial,
         CancellationToken cancellationToken = default)
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(serial)) return;
             serial = serial.ChuanHoa();
             var connectionElis = await connectionElisData.GetConnection(serial);
             foreach (var connection in connectionElis)

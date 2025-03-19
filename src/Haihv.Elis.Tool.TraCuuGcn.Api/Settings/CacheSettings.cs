@@ -19,4 +19,5 @@ public static class CacheSettings
     public static string KeyQuocTich(int maQuocTich) => $"QuocTich:{maQuocTich}";
     public static string KeySearch(string query) => $"Search-Query:{query.ChuanHoa()}";
     public static string KeyToaDoThua(string serial) => $"ToaDoThua:{serial}";
+    public static string KeyUpdateGroupName(string serial) => $"UpdateGroupName:{serial}";
 }

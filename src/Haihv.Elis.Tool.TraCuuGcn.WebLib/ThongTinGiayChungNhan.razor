@@ -190,6 +190,16 @@ else
                                 }
                             }
                         </NotAuthorized>
+                        <Authorized>
+                            @if(_permissionsCanUpdate)
+                            {
+                                <MudButton Color="Color.Info" 
+                                           StartIcon="@Icons.Material.Filled.Delete"
+                                           OnClick="XoaQrAsync">
+                                    Xóa thông tin Mã QR
+                                </MudButton>
+                            }
+                        </Authorized>
                     </AuthorizeView>
                 </MudCardContent>
             </MudCard>
@@ -213,6 +223,7 @@ else
     private const string Url = "/elis/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
     private const string UrlClearCache = "/elis/delete-cache";
+    private const string UrlGetPermissionsCanUpdate = "elis/permissions/can-update";
     private string? _query;
     private GiayChungNhanInfo? _giayChungNhanInfo;
     private List<ThuaDatPublic> _thuaDatPublics = [];
@@ -220,6 +231,7 @@ else
     private bool _dataLoaded;
     private bool _thuaDatLoaded = true;
     private bool _clearCacheWhenReload;
+    private bool _permissionsCanUpdate;
 
     protected override void OnInitialized()
     {
@@ -289,7 +301,8 @@ else
                     // Kiểm tra thông tin Xác thực
                     if (!await AuthService.CheckAuthorBySerialElis(Serial))
                         await AuthService.Logout();
-                    await SerialChanged.InvokeAsync(Serial);
+                    await SerialChanged.InvokeAsync(Serial); 
+                    await GetGetPermissionsCanUpdate();
                     await LoadThuaDatAsync();
                     await AuthService.SetSerialElis(Serial);
                 }
@@ -325,7 +338,7 @@ else
                 return;
             }
 
-            _thuaDatPublics = response.Value ?? [];
+            _thuaDatPublics = response.Value;
         }
         catch (Exception e)
         {
@@ -338,6 +351,20 @@ else
             StateHasChanged();
         }
     }
+    
+    private async Task GetGetPermissionsCanUpdate()
+    {
+        var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
+        try
+        {
+            var response = await _httpClient.GetAsync(url);
+            _permissionsCanUpdate = response.IsSuccessStatusCode;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
 
     private async Task RefreshData(MouseEventArgs arg)
     {
@@ -346,6 +373,11 @@ else
             await ClearCache(Serial);
             await LoadDataAsync();
         }
+    }
+
+    private Task XoaQrAsync()
+    {
+        throw new NotImplementedException();
     }
 
 }

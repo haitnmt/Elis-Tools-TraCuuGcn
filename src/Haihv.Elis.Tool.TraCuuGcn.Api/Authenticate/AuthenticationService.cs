@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -6,6 +7,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using LanguageExt;
 using LanguageExt.Common;
+using Microsoft.Net.Http.Headers;
 using ZiggyCreatures.Caching.Fusion;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
@@ -141,6 +143,25 @@ public static class AuthenticationExtensions
     /// <returns>
     /// Trả về true nếu xác thực LDAP, ngược lại trả về false.
     /// </returns>
-    public static bool IsLdapAsync(this ClaimsPrincipal claimsPrincipal)
+    public static bool IsLdap(this ClaimsPrincipal claimsPrincipal)
         =>claimsPrincipal.GetIdentityType()?.ToLower() == "ldap";
+
+    public static async Task<bool> HasUpdatePermission(this HttpContext httpContext, string urlLdapApi, string groupName)
+    {
+        if (!httpContext.User.IsLdap())
+            return false;
+        // Lấy Token Access trong Header
+        var token = httpContext.Request.Headers[HeaderNames.Authorization].ToString();
+        if (string.IsNullOrWhiteSpace(token))
+            return false;
+        // Kiểm tra quyền từ Api xác thực:
+        var httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(urlLdapApi),
+        };
+        // Bổ sung Token vào Header
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ",""));
+        var response = await httpClient.GetAsync($"user/checkGroup?groupName={groupName}");
+        return response.IsSuccessStatusCode;
+    }
 }

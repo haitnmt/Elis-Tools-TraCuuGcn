@@ -78,6 +78,7 @@ public sealed partial class ConnectionElisData(
     private const string KeyElisConnectionString = "ElisConnectionString";
     private const string KeySdeDatabase = "SdeDatabase";
     private const string KeyApiSde = "ApiSde";
+    private const string KeyUpdateGroupName = "UpdateGroupName";
 
 
     /// <summary>
@@ -112,13 +113,14 @@ public sealed partial class ConnectionElisData(
             var maDvhc = configurationSection[KeyMaDvhc] ?? string.Empty;
             var elisConnectionString = configurationSection[KeyElisConnectionString] ?? string.Empty;
             var sdeConnectionString = configurationSection[KeySdeDatabase] ?? string.Empty;
+            var groupName = configurationSection[KeyUpdateGroupName] ?? string.Empty;
             if (string.IsNullOrWhiteSpace(elisConnectionString)) continue;
             using var connection = new SqlConnection(elisConnectionString);
             try
             {
                 connection.Open();
                 result.Add(new ConnectionSql(name, int.TryParse(maDvhc, out var maDvhcInt) ? maDvhcInt : 0,
-                    elisConnectionString, sdeConnectionString));
+                    elisConnectionString, sdeConnectionString, groupName));
                 connection.Close();
             }
             catch (Exception e)
@@ -243,4 +245,5 @@ public sealed partial class ConnectionElisData(
 /// <param name="MaDvhc">Mã đơn vị hành chính.</param>
 /// <param name="ElisConnectionString">Chuỗi kết nối CSDL.</param>
 /// <param name="SdeDatabase">Tên CSDL SDE.</param>
-public record ConnectionSql(string Name, int MaDvhc, string ElisConnectionString, string SdeDatabase);
+/// <param name="UpdateGroupName">Tên nhóm có quyền cập nhật.</param>
+public record ConnectionSql(string Name, int MaDvhc, string ElisConnectionString, string SdeDatabase, string UpdateGroupName);

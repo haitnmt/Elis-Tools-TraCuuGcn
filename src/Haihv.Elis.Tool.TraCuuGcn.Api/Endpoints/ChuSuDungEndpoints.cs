@@ -66,7 +66,7 @@ public static class ChuSuDungEndpoints
                     return Results.NotFound(new Response<List<ChuSuDungInfo>>("Không tìm thấy thông tin chủ sử dụng."));
                 }
 
-                if (user.IsLdapAsync())
+                if (user.IsLdap())
                 {
                     return Results.Ok(new Response<List<ChuSuDungInfo>>(chuSuDung));
                 }

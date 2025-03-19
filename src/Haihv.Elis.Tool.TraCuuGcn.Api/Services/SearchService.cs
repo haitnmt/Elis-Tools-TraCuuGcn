@@ -8,6 +8,7 @@ using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 public class SearchService(IGcnQrService gcnQrService, 
+    IConnectionElisData connectionElisData,
     IGiayChungNhanService giayChungNhanService,
     ILogger logger, IFusionCache fusionCache) : ISearchService
 {
@@ -25,7 +26,7 @@ public class SearchService(IGcnQrService gcnQrService,
             return giayChungNhanInfo;
         }
         giayChungNhanInfo = await GetInDatabaseAsync(query, cancellationToken);
-        if (giayChungNhanInfo is null)
+        if (giayChungNhanInfo is null || string.IsNullOrWhiteSpace(giayChungNhanInfo.Serial))
         {
             return new Result<GiayChungNhanInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
         }
@@ -71,8 +72,7 @@ public class SearchService(IGcnQrService gcnQrService,
                 logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
                 return null;
             }
-            var serial = giayChungNhan.Serial;
-            maQrInfo = await gcnQrService.GetAsync(serial: serial, cancellationToken: cancellationToken);
+            maQrInfo = await gcnQrService.GetAsync(serial: giayChungNhan.Serial, cancellationToken: cancellationToken);
         }
         
         if (maQrInfo is null && giayChungNhan is null)
@@ -80,7 +80,22 @@ public class SearchService(IGcnQrService gcnQrService,
             logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
             return null;
         }
-        
+
+        if (maQrInfo is not null || giayChungNhan is not null)
+        {
+            var serial = maQrInfo?.SerialNumber ?? giayChungNhan?.Serial;
+            if (!string.IsNullOrWhiteSpace(serial))
+            {
+                var connectionSqls = await connectionElisData.GetConnection(serial);
+                foreach (var connectionSql in connectionSqls)
+                {
+                    _ = fusionCache.SetAsync(CacheSettings.KeyUpdateGroupName(serial), 
+                        connectionSql.UpdateGroupName, 
+                        tags: [serial],
+                        token: cancellationToken).AsTask();
+                }
+            }
+        }
         if (maQrInfo is not null)
         {
             return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);
