@@ -70,7 +70,7 @@ public class GeoService(
     private sealed record BodyResponse(string Status, string Message, Coordinates Data);
     private async Task<List<Coordinates>> GetPointFromApiSdeAsync(string serial, CancellationToken cancellationToken = default)
     {
-        var connectionSqls = await connectionElisData.GetConnection(serial);
+        var connectionSqls = await connectionElisData.GetAllConnection(serial);
         if (connectionSqls.Count == 0) return [];
         var thuaDats  = await thuaDatService.GetThuaDatInDatabaseAsync(serial, cancellationToken);
         List<Coordinates> result = [];

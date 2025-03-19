@@ -58,7 +58,7 @@ public class ThuaDatService(
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(serial)) return [];
-        var connectionSqls = await connectionElisData.GetConnection(serial);
+        var connectionSqls = await connectionElisData.GetAllConnection(serial);
 
         List<ThuaDat> thuaDats = [];
         foreach (var connectionString in connectionSqls.Select(x => x.ElisConnectionString))

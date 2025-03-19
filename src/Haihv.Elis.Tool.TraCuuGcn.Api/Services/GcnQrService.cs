@@ -105,7 +105,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(serial), 
                     token: cancellationToken);
             if (maQrInfo is not null) return maQrInfo;
-            var connectionElis = await connectionElisData.GetConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnection(serial);
             hashQr = hashQr?.Trim().ToLower();
             maQr = maQr?.ChuanHoa();
             foreach (var connection in connectionElis)
@@ -204,7 +204,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     {
         if (string.IsNullOrWhiteSpace(serial)) 
             return new Result<bool>(new ArgumentNullException(nameof(serial)));
-        var connectionElis = await connectionElisData.GetConnection(serial);
+        var connectionElis = await connectionElisData.GetAllConnection(serial);
         try
         {
             var giayChungNhan = await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial), token: cancellationToken);

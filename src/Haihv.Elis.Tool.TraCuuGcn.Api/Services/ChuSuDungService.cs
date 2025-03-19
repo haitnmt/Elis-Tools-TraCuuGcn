@@ -68,7 +68,7 @@ public sealed class ChuSuDungService(
         try
         {
             serial = serial.ChuanHoa();
-            var connectionElis = await connectionElisData.GetConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -114,7 +114,7 @@ public sealed class ChuSuDungService(
         {
             if (string.IsNullOrWhiteSpace(serial)) return;
             serial = serial.ChuanHoa();
-            var connectionElis = await connectionElisData.GetConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -181,7 +181,7 @@ public sealed class ChuSuDungService(
         try
         {
             serial = serial.ChuanHoa();
-            var connectionElis = await connectionElisData.GetConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();

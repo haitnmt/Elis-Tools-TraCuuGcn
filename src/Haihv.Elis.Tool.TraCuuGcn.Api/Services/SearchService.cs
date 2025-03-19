@@ -80,22 +80,7 @@ public class SearchService(IGcnQrService gcnQrService,
             logger.Warning("Không tìm thấy thông tin Giấy chứng nhận: {Query}", query);
             return null;
         }
-
-        if (maQrInfo is not null || giayChungNhan is not null)
-        {
-            var serial = maQrInfo?.SerialNumber ?? giayChungNhan?.Serial;
-            if (!string.IsNullOrWhiteSpace(serial))
-            {
-                var connectionSqls = await connectionElisData.GetConnection(serial);
-                foreach (var connectionSql in connectionSqls)
-                {
-                    _ = fusionCache.SetAsync(CacheSettings.KeyUpdateGroupName(serial), 
-                        connectionSql.UpdateGroupName, 
-                        tags: [serial],
-                        token: cancellationToken).AsTask();
-                }
-            }
-        }
+        
         if (maQrInfo is not null)
         {
             return giayChungNhan.ToGiayChungNhanInfo(maQrInfo);

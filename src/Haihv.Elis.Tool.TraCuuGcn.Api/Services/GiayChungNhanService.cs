@@ -70,7 +70,7 @@ public sealed class GiayChungNhanService(
                 await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial),
                     token: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
-            var connectionElis = await connectionElisData.GetConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var (connectionName, _, elisConnectionString, _, groupName) in connectionElis)
             {
                 await using var dbConnection = elisConnectionString.GetConnection();

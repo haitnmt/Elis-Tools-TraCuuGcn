@@ -38,11 +38,19 @@ public interface IConnectionElisData
     // string GetElisConnectionString(string name);
 
     /// <summary>
-    /// Lấy danh sách chuỗi kết nối
+    /// Lấy danh sách kết nối
     /// </summary>
     /// <param name="serial"> Serial của GCNQSDD.</param>
     /// <returns>Danh sách chuỗi kết nối.</returns>
-    ValueTask<List<ConnectionSql>> GetConnection(string? serial = null);
+    ValueTask<List<ConnectionSql>> GetAllConnection(string? serial = null);
+    /// <summary>
+    /// Lấy kết nối CSDL dựa trên serial.
+    /// </summary>
+    /// <param name="serial"> Serial của GCNQSDD.</param>
+    /// <returns>Kết nối CSDL.
+    /// <see cref="ConnectionSql"/>
+    /// </returns>
+    ValueTask<ConnectionSql?> GetConnectionAsync(string? serial = null);
     /// <summary>
     /// Xóa cache dữ liệu dựa trên thời gian.
     /// </summary>
@@ -57,6 +65,20 @@ public interface IConnectionElisData
     /// <param name="cancellationToken">Token hủy.</param>
     /// <returns></returns>
     Task<int> GetTimeDifferenceAsync(CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Lấy tên nhóm có quyền cập nhật theo serial.
+    /// </summary>
+    /// <param name="serial">
+    /// Serial của GCNQSDD.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token hủy.
+    /// </param>
+    /// <returns>
+    /// Tên nhóm có quyền cập nhật.
+    /// </returns>
+    Task<string?> GetUpdateGroupName(string? serial, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -94,7 +116,7 @@ public sealed partial class ConnectionElisData(
         memoryCache.GetOrCreate(CacheSettings.ElisConnections, entry =>
         {
             entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5);
-            return GetConnection();
+            return GetAllConnection();
         }) ?? [];
 
 
@@ -102,7 +124,7 @@ public sealed partial class ConnectionElisData(
     /// Lấy danh sách các kết nối từ cấu hình.
     /// </summary>
     /// <returns>Danh sách các kết nối ELIS.</returns>
-    private List<ConnectionSql> GetConnection()
+    private List<ConnectionSql> GetAllConnection()
     {
         var section = configuration.GetSection(SectionName);
         var data = section.GetSection(SectionData).GetChildren().ToList();
@@ -137,18 +159,23 @@ public sealed partial class ConnectionElisData(
         return result;
     }
 
-    public async ValueTask<List<ConnectionSql>> GetConnection(string? serial)
+    public async ValueTask<List<ConnectionSql>> GetAllConnection(string? serial)
     {
         if (string.IsNullOrWhiteSpace(serial)) return ConnectionElis;
-        if (long.TryParse(serial, out var maGcn) && maGcn > 0)
-            return ConnectionElis;
-
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
         return string.IsNullOrWhiteSpace(connectionName)
             ? ConnectionElis
             : ConnectionElis.Where(x => x.Name == connectionName).ToList();
     }
-
+    
+    public async ValueTask<ConnectionSql?> GetConnectionAsync(string? serial)
+    {
+        if (string.IsNullOrWhiteSpace(serial)) return null;
+        var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
+        return string.IsNullOrWhiteSpace(connectionName)
+            ? null
+            : ConnectionElis.FirstOrDefault(x => x.Name == connectionName);
+    }
 
     public string GetElisConnectionString(string name)
         => ConnectionElis.FirstOrDefault(x => x.Name == name)?.ElisConnectionString ?? string.Empty;
@@ -181,6 +208,24 @@ public sealed partial class ConnectionElisData(
             maxTimeDifference = 300;
         }
         return maxTimeDifference;
+    }
+    /// <summary>
+    /// Lấy tên nhóm có quyền cập nhật theo serial.
+    /// </summary>
+    /// <param name="serial">
+    /// Serial của GCNQSDD.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Token hủy.
+    /// </param>
+    /// <returns>
+    /// Tên nhóm có quyền cập nhật.
+    /// </returns>
+    public async Task<string?> GetUpdateGroupName(string? serial, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(serial)) return null;
+        var connectionSql = await GetConnectionAsync(serial);
+        return connectionSql?.UpdateGroupName;
     }
 
     /// <summary>

@@ -18,15 +18,4 @@ public static class GiayChungNhanExtensions
                 token: cancellationToken);
         }
     }
-
-    public static async Task SetUpdateGroupName(this IFusionCache fusionCache,
-        string serial, string groupName,
-        CancellationToken cancellationToken = default)
-    {
-        var cacheKey = CacheSettings.KeyUpdateGroupName(serial.ChuanHoa());
-        await fusionCache.SetAsync(cacheKey,
-            groupName,
-            tags: [serial],
-            token: cancellationToken);
-    }
 }
