@@ -132,18 +132,26 @@ else
                     }
                     <AuthorizeView>
                         <Authorized>
-                            @if (_giayChungNhanInfo.HasMaQr)
+                            @if (_isLdapUser  && _giayChungNhanInfo.HasMaQr)
                             { 
-                                <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mt-2">
-                                    
-                                    <MudButton Color="Color.Primary"
-                                               Disabled="@(!_permissionsCanUpdate || 
-                                                           _giayChungNhanInfo.HasGiayChungNhan || 
-                                                           true)"
-                                               StartIcon="@Icons.Material.Filled.Update">
-                                        Cập nhật thông tin Giấy chứng nhận
-                                    </MudButton>
-                                    <MudButton Color="Color.Error" Disabled="!_permissionsCanUpdate"
+                                <MudStack Row="true" 
+                                          Justify="Justify.SpaceBetween" 
+                                          AlignItems="AlignItems.Stretch" 
+                                          Class="mt-2">
+                                    @if (false)
+                                    {
+                                        <MudButton Color="Color.Primary"
+                                                   FullWidth="true"
+                                                   Disabled="@(!_permissionsCanUpdate ||
+                                                               _giayChungNhanInfo.HasGiayChungNhan ||
+                                                               true)"
+                                                   StartIcon="@Icons.Material.Filled.Update">
+                                            Cập nhật thông tin Giấy chứng nhận
+                                        </MudButton>
+                                    }
+                                    <MudButton Color="Color.Error" 
+                                               FullWidth="true"
+                                               Disabled="!_permissionsCanUpdate"
                                                StartIcon="@Icons.Material.Filled.Delete"
                                                OnClick="XoaQrAsync">
                                         Xóa thông tin Mã QR
@@ -180,7 +188,7 @@ else
                                 }
                                 else
                                 {
-                                    foreach (var thuaDatPublic in _thuaDatPublics)
+                                    foreach (var thuaDatPublic in _thuaDatPublic)
                                     {
                                         <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
                                             <MudGrid>
@@ -246,20 +254,29 @@ else
     private const string UrlGetPermissionsCanUpdate = "elis/permissions/can-update";
     private string? _query;
     private GiayChungNhanInfo? _giayChungNhanInfo;
-    private List<ThuaDatPublic> _thuaDatPublics = [];
+    private List<ThuaDatPublic> _thuaDatPublic = [];
     private string? _error;
     private bool _dataLoaded;
     private bool _thuaDatLoaded = true;
     private bool _clearCacheWhenReload;
     private bool _permissionsCanUpdate;
     private string? _permissionsStatus;
-
+    private bool _isLdapUser;
+    
     protected override void OnInitialized()
     {
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
         base.OnInitialized();
     }
-    
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isLdapUser = await AuthService.IsLdapUser();
+        }
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrWhiteSpace(Query) || Query == _query) return;
@@ -344,7 +361,7 @@ else
     private async Task LoadThuaDatAsync()
     {
         
-        _thuaDatPublics = [];
+        _thuaDatPublic = [];
         _errorLoadThuaDat = null;
         if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || _giayChungNhanInfo.HasGiayChungNhan)
         {
@@ -362,7 +379,7 @@ else
                 return;
             }
 
-            _thuaDatPublics = response.Value;
+            _thuaDatPublic = response.Value;
         }
         catch (Exception e)
         {
@@ -378,7 +395,7 @@ else
     
     private async Task GetGetPermissionsCanUpdate()
     {
-        if (_giayChungNhanInfo is null || !_giayChungNhanInfo.HasMaQr)
+        if (_isLdapUser || _giayChungNhanInfo is null || !_giayChungNhanInfo.HasMaQr)
         {
             return;
         }

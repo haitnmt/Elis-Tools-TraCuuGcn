@@ -14,6 +14,7 @@ public interface IAuthService
     Task<bool> CheckAuthorBySerialElis(string? serial);
     Task<string?> GetSerialElis();
     Task SetSerialElis(string? serial);
+    Task<bool> IsLdapUser();
     Task Logout();
 }
 
@@ -105,6 +106,14 @@ public class AuthService(
             return false;
         var serialInLocalStorage = await localStorage.GetItemAsync<string>(SerialKey);
         return serialInLocalStorage == serial;
+    }
+    
+    public async Task<bool> IsLdapUser()
+    {
+        var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
+        if (authenticationState.User.Identity is not ClaimsIdentity claimsIdentity)
+            return false;
+        return claimsIdentity.FindFirst(JwtRegisteredClaimNames.Typ)?.Value.ToLower() == "ldap";
     }
     
     public async Task<string?> GetSerialElis()
