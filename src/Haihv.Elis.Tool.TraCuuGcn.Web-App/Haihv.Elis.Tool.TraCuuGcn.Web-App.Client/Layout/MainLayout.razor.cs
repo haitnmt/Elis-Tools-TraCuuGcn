@@ -18,6 +18,7 @@ public partial class MainLayout
     private AppSettingsService AppSettingsService { get; set; } = null!;
     [Inject]
     private IAuthService AuthService { get; set; } = null!;
+    
     private const string UrlGitHub = "https://github.com/haitnmt/";
     private string _displayName = string.Empty;
     private AuthenticationState? _authen;
@@ -29,7 +30,6 @@ public partial class MainLayout
         AuthenticationStateProvider.AuthenticationStateChanged += AuthenticationStateChanged;
         await base.OnInitializedAsync();
     }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

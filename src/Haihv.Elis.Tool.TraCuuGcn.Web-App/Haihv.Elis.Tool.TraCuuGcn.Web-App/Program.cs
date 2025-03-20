@@ -19,8 +19,6 @@ builder.Services.AddScoped<ZxingService>();
 builder.Services.AddScoped<BarcodeDetectionService>();
 builder.Services.AddScoped<LeafletMapService>();
 builder.Services.AddMemoryCache();
-builder.Services.AddCascadingAuthenticationState();
-
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopRight;
@@ -34,14 +32,14 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
 });
 
+builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthorizationHandler>();
+builder.Services.AddAuthorizationCore();
 
 builder.AddAppSettingsServices();
-
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
 {
@@ -52,6 +50,7 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 {
     throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
+
 builder.Services.AddHttpClient(
         "Endpoint",
         opt => opt.BaseAddress = validUri)

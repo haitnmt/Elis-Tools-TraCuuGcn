@@ -29,17 +29,17 @@ else
                         @*     Làm mới *@
                         @* </MudButton> *@
                     </MudStack>
-                    @if (!_giayChungNhanInfo.MaQrVerified)
-                    {
-                        <MudAlert Class="mb-2" Severity="Severity.Warning">
-                            <MudText Typo="Typo.body2">
-                                Mã QR không hợp lệ!
-                            </MudText>
-                            <MudText Typo="Typo.body1">
-                                Thông tin tìm thấy theo Số phát hành (Serial) có trong mã QR.
-                            </MudText>
-                        </MudAlert>
-                    }
+                    @* @if (!_giayChungNhanInfo.MaQrVerified) *@
+                    @* { *@
+                    @*     <MudAlert Class="mb-2" Severity="Severity.Warning"> *@
+                    @*         <MudText Typo="Typo.body2"> *@
+                    @*             Mã QR không hợp lệ! *@
+                    @*         </MudText> *@
+                    @*         <MudText Typo="Typo.body1"> *@
+                    @*             Thông tin tìm thấy theo Số phát hành (Serial) có trong mã QR. *@
+                    @*         </MudText> *@
+                    @*     </MudAlert> *@
+                    @* } *@
                     <MudPaper Class="pa-4" Outlined="true" Elevation="1">
                         <MudGrid>
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.DonVi))
@@ -122,7 +122,8 @@ else
                             <MudAlert Severity="Severity.Error">
                                 Không tìm thấy thông tin Thửa đất!
                             </MudAlert>
-                            <MudButton EndIcon="@Icons.Material.Filled.Refresh"
+                            <MudButton EndIcon="@Icons.Material.Filled.Refresh" 
+                                       FullWidth="true"
                                        Color="Color.Secondary"
                                        Variant="Variant.Text"
                                        OnClick="LoadDataAsync">Thử lại
@@ -130,6 +131,32 @@ else
                         </MudPaper>
                     }
                     <AuthorizeView>
+                        <Authorized>
+                            @if (_giayChungNhanInfo.HasMaQr)
+                            { 
+                                <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mt-2">
+                                    
+                                    <MudButton Color="Color.Primary"
+                                               Disabled="@(!_permissionsCanUpdate || 
+                                                           _giayChungNhanInfo.HasGiayChungNhan || 
+                                                           true)"
+                                               StartIcon="@Icons.Material.Filled.Update">
+                                        Cập nhật thông tin Giấy chứng nhận
+                                    </MudButton>
+                                    <MudButton Color="Color.Error" Disabled="!_permissionsCanUpdate"
+                                               StartIcon="@Icons.Material.Filled.Delete"
+                                               OnClick="XoaQrAsync">
+                                        Xóa thông tin Mã QR
+                                    </MudButton>
+                                </MudStack>
+                                @if (!_permissionsCanUpdate && !string.IsNullOrWhiteSpace(_permissionsStatus))
+                                {
+                                    <MudAlert Severity="Severity.Warning">
+                                        @_permissionsStatus
+                                    </MudAlert>
+                                }
+                            }
+                        </Authorized>
                         <NotAuthorized>
                             @if (!_thuaDatLoaded)
                             {
@@ -144,6 +171,7 @@ else
                                             @(string.IsNullOrWhiteSpace(_errorLoadThuaDat) ? "Không có thông tin" : _errorLoadThuaDat)
                                         </MudAlert>
                                         <MudButton EndIcon="@Icons.Material.Filled.Refresh"
+                                                   FullWidth="true"
                                                    Color="Color.Secondary"
                                                    Variant="Variant.Text"
                                                    OnClick="LoadThuaDatAsync">Thử lại
@@ -190,16 +218,6 @@ else
                                 }
                             }
                         </NotAuthorized>
-                        <Authorized>
-                            @if(_permissionsCanUpdate)
-                            {
-                                <MudButton Color="Color.Info" 
-                                           StartIcon="@Icons.Material.Filled.Delete"
-                                           OnClick="XoaQrAsync">
-                                    Xóa thông tin Mã QR
-                                </MudButton>
-                            }
-                        </Authorized>
                     </AuthorizeView>
                 </MudCardContent>
             </MudCard>
@@ -209,6 +227,7 @@ else
 
 @inject IAuthService AuthService
 @inject IHttpClientFactory HttpClientFactory
+@inject IDialogService DialogService
 
 @code {
 
@@ -219,6 +238,7 @@ else
     [Parameter] public string? Serial { get; set; }
     [Parameter] public EventCallback<string> SerialChanged { get; set; }
     [Parameter] public EventCallback<string> DonViChanged { get; set; }
+    [Parameter] public EventCallback<bool> HasGiayChungNhanChanged { get; set; }
 
     private const string Url = "/elis/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
@@ -232,12 +252,14 @@ else
     private bool _thuaDatLoaded = true;
     private bool _clearCacheWhenReload;
     private bool _permissionsCanUpdate;
+    private string? _permissionsStatus;
 
     protected override void OnInitialized()
     {
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
+        base.OnInitialized();
     }
-
+    
     protected override async Task OnParametersSetAsync()
     {
         if (string.IsNullOrWhiteSpace(Query) || Query == _query) return;
@@ -305,6 +327,7 @@ else
                     await GetGetPermissionsCanUpdate();
                     await LoadThuaDatAsync();
                     await AuthService.SetSerialElis(Serial);
+                    await HasGiayChungNhanChanged.InvokeAsync(_giayChungNhanInfo.HasGiayChungNhan);
                 }
                 await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
             }
@@ -320,9 +343,10 @@ else
 
     private async Task LoadThuaDatAsync()
     {
+        
         _thuaDatPublics = [];
         _errorLoadThuaDat = null;
-        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial))
+        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || _giayChungNhanInfo.HasGiayChungNhan)
         {
             return;
         }
@@ -354,11 +378,18 @@ else
     
     private async Task GetGetPermissionsCanUpdate()
     {
+        if (_giayChungNhanInfo is null || !_giayChungNhanInfo.HasMaQr)
+        {
+            return;
+        }
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
         try
         {
             var response = await _httpClient.GetAsync(url);
             _permissionsCanUpdate = response.IsSuccessStatusCode;
+            _permissionsStatus = (await response.Content.ReadAsStringAsync()).TrimStart('\"').TrimEnd('\n', '\"');
+            if(string.IsNullOrWhiteSpace(_permissionsStatus))
+                _permissionsStatus = "Không có quyền cập nhật thông tin Giấy chứng nhận";
         }
         catch (Exception e)
         {
@@ -375,9 +406,23 @@ else
         }
     }
 
-    private Task XoaQrAsync()
+    private async Task XoaQrAsync()
     {
-        throw new NotImplementedException();
+        var parameters = new DialogParameters<XoaQrDialog> { {x => x.Serial, Serial!} };
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true
+        };
+        var xoaQReference =  await DialogService.ShowAsync<XoaQrDialog>(null, parameters, options);
+        var result = await xoaQReference.Result;
+        if (!result?.Canceled ?? false)
+        {
+            await LoadDataAsync();
+        }
+        else
+        {
+            StateHasChanged();
+        }
     }
 
 }

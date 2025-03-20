@@ -71,31 +71,32 @@ public sealed class GiayChungNhanService(
                     token: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
             var connectionElis = await connectionElisData.GetAllConnection(serial);
-            foreach (var (connectionName, _, elisConnectionString, _, groupName) in connectionElis)
+            foreach (var (connectionName, _, elisConnectionString, _, _) in connectionElis)
             {
                 await using var dbConnection = elisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
-                     SELECT MaGCN AS MaGcn, 
-                            MaDangKy AS MaDangKy, 
-                            MaHinhThucSH AS MaHinhThucSh,
-                            DienTichRieng,
-                            DienTichChung,
-                            SoSerial AS Serial, 
-                            CASE WHEN NgayKy < '1990-01-01' 
-                                THEN NgayVaoSo 
-                                ELSE NgayKy 
-                            END AS NgayKy, 
-                            NguoiKy, 
-                            SoVaoSo,
-                            MaHoSoDVC,
-                            MaDonViInGCN,
-                            MaVach
-                     FROM GCNQSDD
-                     WHERE 
-                         (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(SoSerial) = {serial})) OR 
-                         (MaVach = {maVachString})
-                     """);
+                                 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+                                 SELECT MaGCN AS MaGcn, 
+                                        MaDangKy AS MaDangKy, 
+                                        MaHinhThucSH AS MaHinhThucSh,
+                                        DienTichRieng,
+                                        DienTichChung,
+                                        SoSerial AS Serial, 
+                                        CASE WHEN NgayKy < '1990-01-01' 
+                                            THEN NgayVaoSo 
+                                            ELSE NgayKy 
+                                        END AS NgayKy, 
+                                        NguoiKy, 
+                                        SoVaoSo,
+                                        MaHoSoDVC,
+                                        MaDonViInGCN,
+                                        MaVach
+                                 FROM GCNQSDD
+                                 WHERE 
+                                     (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(SoSerial) = {serial})) OR 
+                                     (MaVach = {maVachString})
+                            """);
                 giayChungNhan = await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
                 if (giayChungNhan is null) continue;
                 serial = giayChungNhan.Serial.ChuanHoa();

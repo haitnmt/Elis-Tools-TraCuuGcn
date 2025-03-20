@@ -4,7 +4,7 @@
             <TitleContent>
                 <MudStack Row="true" AlignItems="AlignItems.End">
                     <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Rounded="true">
-                        <MudIcon Icon="@Icons.Material.Filled.Commit"/>
+                        <MudIcon Icon="@Icons.Material.Filled.Delete"/>
                     </MudAvatar>
                     <MudText Typo="Typo.h6"
                              Color="Color.Warning">
@@ -13,23 +13,30 @@
                 </MudStack>
             </TitleContent>
             <DialogContent>
-                <MudText Typo="Typo.body1">Đễ xóa thông tin mã QR của Giấy chứng nhận có số phát hành (Serial)</MudText>
-                <MudText Typo="Typo.body1" Color="Color.Warning">@Serial</MudText>
-                <MudTextField T="string" bind-Value="@_serial" 
-                              Variant="Variant.Outlined" 
-                              Label="Nhập lại số phát hành"
-                              HelperText="Nhập lại số phát hành (Serial) của Giấy chứng nhận"/>
+                <MudStack Row="true" AlignItems="AlignItems.Start">
+                    <MudText Typo="Typo.body2">Số phát hành (Serial) Giấy chứng nhận:</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Warning">@Serial</MudText>
+                </MudStack>
+                <MudTextField T="string"
+                              bind-Value="@_serial"
+                              Margin="Margin.Dense"
+                              Variant="Variant.Text"
+                              Label="Số phát hành Giấy chứng nhận"
+                              HelperText="Nhập lại số phát hành (serial) để xác nhận xóa!"
+                              DebounceInterval="200" OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
             </DialogContent>
             <DialogActions>
                 <MudButton Variant="Variant.Text"
                            Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Cancel"
                            OnClick="() => MudDialog.Close()">
                     Hủy bỏ
                 </MudButton>
                 <MudButton
                     Variant="Variant.Filled"
                     Color="Color.Primary"
-                    Disabled="@(_processing || string.IsNullOrWhiteSpace(_serial) || _serial != Serial)"
+                    StartIcon="@Icons.Material.Filled.Delete"
+                    Disabled="@(_processing || _disabledXoaQr)"
                     OnClick="XoaQr">
                     @if (_processing)
                     {
@@ -57,6 +64,7 @@
     private bool _processing;
 
     private string? _serial;
+    private bool _disabledXoaQr = true;
     private HttpClient _httpClient = null!;
     
     protected override void OnInitialized()
@@ -75,7 +83,7 @@
         var url = $"{UrlDeleteMaQr}?serial={_serial}";
         try
         {
-            var response = await _httpClient.GetAsync(url);
+            var response = await _httpClient.DeleteAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 SnackbarService.Add("Xóa thành công", Severity.Success);
@@ -99,4 +107,10 @@
         }
     }
 
+    private void HandleIntervalElapsed(string value)
+    {
+        _disabledXoaQr = string.IsNullOrWhiteSpace(value) || value != Serial;
+        _serial = value;
+        StateHasChanged();
+    }
 }

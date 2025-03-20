@@ -15,7 +15,8 @@
                 { 
                     <ThongTinGiayChungNhan Query="@_searchQuery"
                                            @bind-Serial="@_serial"
-                                           DonViChanged="donVi => _donVi = donVi"/>
+                                           DonViChanged="donVi => _donVi = donVi"
+                                           HasGiayChungNhanChanged="b => { _visibleChiTiet = b; StateHasChanged(); }"/>
                     @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
                     {
                         <MudAlert Severity="Severity.Warning" ShowCloseIcon="true">
@@ -57,7 +58,7 @@
                 }
             </MudStack>
         </MudItem>
-        @if (!string.IsNullOrWhiteSpace(_serial))
+        @if (_visibleChiTiet && !string.IsNullOrWhiteSpace(_serial))
         {
             <AuthorizeView>
                 <Authorized>
@@ -88,6 +89,7 @@
     private bool _isCameraActive;
     private bool _isAuthSuccess = true;
     private AppSettings? _appSettings;
+    private bool _visibleChiTiet;
     private string? _donVi;
     protected override void OnInitialized()
     {

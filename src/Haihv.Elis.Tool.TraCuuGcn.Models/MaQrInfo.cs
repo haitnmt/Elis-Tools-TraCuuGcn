@@ -2,6 +2,7 @@
 
 public class MaQrInfo
 {
+    public Guid? MaQrId { get; set; }
     public DateTime KhoiTao { get; set; }
     public string? MaDonVi { get; set; }
     public string? TenDonVi { get; set; }

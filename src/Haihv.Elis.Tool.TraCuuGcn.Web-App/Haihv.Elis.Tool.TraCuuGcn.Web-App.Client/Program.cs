@@ -27,14 +27,17 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<JwtAuthorizationHandler>();
+builder.Services.AddAuthorizationCore();
 
 // Tải cấu hình từ Blazor Server
 var baseUrl = builder.HostEnvironment.BaseAddress;
 var appSettings = await AppSettingsService.GetAppSettings(baseUrl);
 var apiEndpoint = appSettings.ApiEndpoint;
 var authEndpoint = appSettings.AuthEndpoint;
+
+// Đăng ký dịch vụ cấu hình ứng dụng
+builder.AddAppSettingsServices(appSettings);
 
 // Đăng ký httpClient để gọi API
 // Kiểm tra xem API URL hợp lệ hay không
@@ -54,7 +57,5 @@ if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
 builder.Services.AddHttpClient(
         "AuthEndpoint",
         opt => opt.BaseAddress = validAuthUri);
-// Đăng ký dịch vụ cấu hình ứng dụng
-builder.AddAppSettingsServices(appSettings);
 
 await builder.Build().RunAsync();

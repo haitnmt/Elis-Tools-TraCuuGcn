@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using System.Data;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
@@ -113,6 +114,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
+                             SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
                              SELECT GuidID AS Id,
                                     MaGCN AS MaGcn,
                                     MaQR AS MaQr,
@@ -131,6 +133,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                         cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
                         token: cancellationToken);
                 }
+                maQrInfo.MaQrId = qrInData.Id;
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
                 maQrInfo.HieuLuc = qrInData.HieuLuc.ToString() != "0";
                 serial = maQrInfo.SerialNumber?.ChuanHoa();
@@ -204,28 +207,45 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     {
         if (string.IsNullOrWhiteSpace(serial)) 
             return new Result<bool>(new ArgumentNullException(nameof(serial)));
-        var connectionElis = await connectionElisData.GetAllConnection(serial);
         try
         {
-            var giayChungNhan = await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial), token: cancellationToken);
-            if (giayChungNhan is null)
-                return new Result<bool>(new ArgumentNullException(nameof(serial)));
             var count = 0;
-            foreach (var connectionSql in connectionElis.Select(x => x.ElisConnectionString))
+            var connectionSql = await connectionElisData.GetConnectionAsync(serial);
+            if (connectionSql is null)
             {
-                await using var dbConnection = connectionSql.GetConnection();
+                logger.Warning("Không tìm thấy thông tin kết nối cơ sở dữ liệu: {Serial}", serial);
+                return new Result<bool>(new ValueIsNullException("Không tìm thấy thông tin kết nối cơ sở dữ liệu!"));
+            }
+            await using var dbConnection = connectionSql.ElisConnectionString.GetConnection();
+            var serialLike = $"%|{serial.ChuanHoa()}||%";
+            var selectQuery = dbConnection.SqlBuilder(
+                $"""
+                            SELECT DISTINCT 
+                                GuidID AS GuidId,
+                                MaGCN AS MaGcn
+                            FROM GCNQR
+                            WHERE MaQR LIKE {serialLike}
+                        """);
+            var qrInfos = (await selectQuery.QueryAsync<QrInfo>(cancellationToken: cancellationToken)).ToList();
+            foreach (var (guidId, maGcn) in qrInfos)
+            {
                 var query = dbConnection.SqlBuilder(
                     $"""
-                        DELETE FROM GCNQR WHERE MaGCN = {giayChungNhan.MaGcn};
-                        UPDATE [GCNQSDD] 
-                            SET [MaHoSoDVC] = NULL, [MaDonViInGCN] = NULL, [SoSerial] = NULL
-                            WHERE (MaGCN = {giayChungNhan.MaGcn});
-                        """
-                    );
+                     DELETE FROM GCNQR WHERE GuidID = {guidId};
+                     UPDATE [GCNQSDD] 
+                         SET [MaHoSoDVC] = NULL, [MaDonViInGCN] = NULL, [SoSerial] = NULL, [DaCapGCN] = NULL
+                         WHERE (MaGCN = {maGcn});
+                     UPDATE [TS_ChuSuDung_TaiSan] 
+                         SET [DaCapGCN] = NULL, [soSerial] = NULL, [namCap] = NULL
+                         WHERE [soSerial]= {serial};
+                     """
+                );
+                if (dbConnection.State == ConnectionState.Closed)
+                    await dbConnection.OpenAsync(cancellationToken);
                 var transaction = dbConnection.BeginTransaction();
                 try
                 {
-                    count += await query.ExecuteAsync(cancellationToken: cancellationToken);
+                    count += await query.ExecuteAsync(transaction: transaction, cancellationToken: cancellationToken);
                     await transaction.CommitAsync(cancellationToken: cancellationToken);
                 }
                 catch (Exception e)
@@ -242,6 +262,8 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 logger.Warning("Không có thông tin Mã QR để xóa: {Serial}", serial);
                 return new Result<bool>(new ArgumentNullException(nameof(serial)));
             }
+            // Xóa cache
+            _ = fusionCache.RemoveByTagAsync(serial, token: cancellationToken).AsTask();
             logger.Information("Xóa thông tin Mã QR thành công: {Serial}", serial);
             return true;
         } 
@@ -251,4 +273,5 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             return new Result<bool>(e);
         }
     }
+    private record QrInfo(Guid GuidId, long MaGcn);
 }

@@ -12,5 +12,7 @@ public record GiayChungNhanInfo(
     bool HieuLucMaQr,
     DateTime? KhoiTaoQr,
     string? PhanMemInGcn,
-    bool MaQrVerified = true);
+    bool HasGiayChungNhan,
+    bool HasMaQr,
+    bool MaQrVerified);
     

@@ -120,6 +120,7 @@ public sealed class ChuSuDungService(
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
+                              SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
                               SELECT DISTINCT 
                                   COALESCE(CSD.SoDinhDanh1, CSD.SoDinhDanh2) AS SoDinhDanh,
                                   COALESCE(CSD.Ten1, CSD.Ten2) AS HoVaTen
