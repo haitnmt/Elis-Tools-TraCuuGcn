@@ -395,7 +395,7 @@ else
     
     private async Task GetGetPermissionsCanUpdate()
     {
-        if (_isLdapUser || _giayChungNhanInfo is null || !_giayChungNhanInfo.HasMaQr)
+        if (!_isLdapUser || _giayChungNhanInfo is null || !_giayChungNhanInfo.HasMaQr)
         {
             return;
         }
