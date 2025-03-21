@@ -37,18 +37,14 @@
                                   HelperText="Số căn cước, CCCD, CMND, Mã số doanh nghiệp,... in trên Giấy chứng nhận"
                                   Required="true"
                                   RequiredError="Số định danh không được để trống"
-                                  @bind-Value="@_username"
-                                  DebounceInterval="200" 
-                                  OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+                                  @bind-Value="@_username"/>
                     <MudTextField Label="Tên chủ sử dụng"
                                   Variant="Variant.Text"
                                   HelperTextOnFocus="true"
                                   HelperText="Họ và tên chủ sử dụng, tên doanh nghiệp, người đại diện,... in trên Giấy chứng nhận"
                                   Required="true"
                                   RequiredError="Tên chủ sử dụng không được để trống"
-                                  @bind-Value="@_password"
-                                  DebounceInterval="200" 
-                                  OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+                                  @bind-Value="@_password"/>
                 }
             }
             else
@@ -59,9 +55,7 @@
                               HelperText="Tên đăng nhập trên hệ thống"
                               Required="true"
                               RequiredError="Tên đăng nhập không được để trống"
-                              @bind-Value="@_username"
-                              DebounceInterval="200"
-                              OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+                              @bind-Value="@_username"/>
                 <MudTextField Label="Mật khẩu"
                               Variant="Variant.Text"
                               InputType="InputType.Password"
@@ -69,9 +63,7 @@
                               HelperText="Mật khẩu đăng nhập"
                               Required="true"
                               RequiredError="Mật khẩu không được để trống"
-                              @bind-Value="@_password"
-                              DebounceInterval="200"
-                              OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+                              @bind-Value="@_password"/>
             }
         </MudPaper>
     </DialogContent>
@@ -85,7 +77,7 @@
         <MudButton
             Variant="Variant.Filled"
             Color="Color.Primary"
-            Disabled="@(_processing || _disabledXacThuc)"
+            Disabled="@_processing"
             OnClick="XacThuc">
             @if (_processing)
             {
@@ -111,7 +103,6 @@
     private bool _isUserLocal;
     private bool _processing;
     private AuthResult? _authResult;
-    private bool _disabledXacThuc = true;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -163,10 +154,5 @@
         _textXacThuc = kieuXacThuc;
         StateHasChanged();
     }
-
-    private void HandleIntervalElapsed(string obj)
-    {
-        _disabledXacThuc = string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password);
-    }
-
+    
 }

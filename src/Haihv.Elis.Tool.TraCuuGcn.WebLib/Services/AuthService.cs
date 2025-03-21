@@ -1,4 +1,5 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using Blazored.LocalStorage;
@@ -127,6 +128,16 @@ public class AuthService(
     }
     public async Task Logout()
     {
+        try
+        {
+            var token = await localStorage.GetItemAsync<string>(AuthenTokenKey);
+            _httpClientAuth.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            await _httpClientAuth.GetAsync("/logout");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
         await localStorage.RemoveItemAsync(AuthenTokenKey);
         await localStorage.RemoveItemAsync(RefreshTokenKey);
         await localStorage.RemoveItemAsync(MaDinhDanhKey);

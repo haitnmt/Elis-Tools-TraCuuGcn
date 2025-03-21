@@ -132,7 +132,7 @@ else
                     }
                     <AuthorizeView>
                         <Authorized>
-                            @if (_isLdapUser  && _giayChungNhanInfo.HasMaQr)
+                            @if (_visibleUpdate)
                             { 
                                 <MudStack Row="true" 
                                           Justify="Justify.SpaceBetween" 
@@ -261,6 +261,7 @@ else
     private bool _clearCacheWhenReload;
     private bool _permissionsCanUpdate;
     private string? _permissionsStatus;
+    private bool _visibleUpdate;
     private bool _isLdapUser;
     
     protected override void OnInitialized()
@@ -395,8 +396,10 @@ else
     
     private async Task GetGetPermissionsCanUpdate()
     {
-        if (!_isLdapUser || _giayChungNhanInfo is null || !_giayChungNhanInfo.HasMaQr)
+        if (!_isLdapUser || _giayChungNhanInfo is null || !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
         {
+            _visibleUpdate = false;
+            StateHasChanged();
             return;
         }
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
@@ -411,6 +414,14 @@ else
         catch (Exception e)
         {
             Console.WriteLine(e);
+            _permissionsCanUpdate = false;
+            _permissionsStatus = "Lỗi khi kiểm tra quyền cập nhật thông tin Giấy chứng nhận";
+            
+        }
+        finally
+        {
+            _visibleUpdate = true;
+            StateHasChanged();
         }
     }
 
