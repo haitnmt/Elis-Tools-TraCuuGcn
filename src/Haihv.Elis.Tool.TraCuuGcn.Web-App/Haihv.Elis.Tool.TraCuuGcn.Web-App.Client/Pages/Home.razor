@@ -16,7 +16,7 @@
                     <ThongTinGiayChungNhan Query="@_searchQuery"
                                            @bind-Serial="@_serial"
                                            DonViChanged="donVi => _donVi = donVi"
-                                           HasGiayChungNhanChanged="b => { _visibleChiTiet = b; StateHasChanged(); }"/>
+                                           HasGiayChungNhanChanged="HasGiayChungNhanChanged"/>
                     @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
                     {
                         <MudAlert Severity="Severity.Warning" ShowCloseIcon="true">
@@ -58,26 +58,26 @@
                 }
             </MudStack>
         </MudItem>
-        @if (_visibleChiTiet && !string.IsNullOrWhiteSpace(_serial))
-        {
             <AuthorizeView>
                 <Authorized>
-                    @if (_isAuthSuccess)
+                    @if (_isAuthSuccess && _hasGiayChungNhan)
                     {
                         <MudItem xs="12" md="6" lg="4">
                             <MudStack>
-                                <ThongTinChuSuDung Serial="@_serial"/>
-                                <ThongTinThuaDat Serial="@_serial"/>
-                                <ThongTinTaiSan/>
+                                <ThongTinChuSuDung Serial="@_serial"
+                                                   HasGiayChungNhan="_hasGiayChungNhan"/>
+                                <ThongTinThuaDat Serial="@_serial"
+                                                 HasGiayChungNhan="_hasGiayChungNhan"/>
+                                <ThongTinTaiSan HasGiayChungNhan="_hasGiayChungNhan"/>
                             </MudStack>
                         </MudItem>
                         <MudItem xs="12" md="6" lg="4">
-                            <ThuaDatLocation Serial="@_serial"/>
+                            <ThuaDatLocation Serial="@_serial"
+                                             HasGiayChungNhan="_hasGiayChungNhan"/>
                         </MudItem>
                     }
                 </Authorized>
             </AuthorizeView>
-        }
     </MudGrid>
 </MudStack>
 @inject IDialogService DialogService
@@ -89,7 +89,7 @@
     private bool _isCameraActive;
     private bool _isAuthSuccess = true;
     private AppSettings? _appSettings;
-    private bool _visibleChiTiet;
+    private bool _hasGiayChungNhan;
     private string? _donVi;
     protected override void OnInitialized()
     {
@@ -124,6 +124,12 @@
         _searchQuery = searchQuery;
         if (!string.IsNullOrWhiteSpace(searchQuery)) return;
         _serial = null;
+        StateHasChanged();
+    }
+
+    private void HasGiayChungNhanChanged(bool obj)
+    {
+        _hasGiayChungNhan = obj;
         StateHasChanged();
     }
 
