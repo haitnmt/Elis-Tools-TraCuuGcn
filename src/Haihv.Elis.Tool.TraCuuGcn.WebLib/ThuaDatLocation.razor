@@ -1,43 +1,45 @@
 @using System.Text.Json
-
-<MudCard>
-    <MudCardContent>
-        <MudStack Row="true" Justify="Justify.SpaceBetween">
-            <MudText Typo="Typo.h6">Vị trí thửa đất</MudText>
-            <MudSpacer/>
-            <MudTooltip Text="Mở trên Google Map">
-                <MudIconButton Icon="@Icons.Material.Filled.Map" OnClick="LeafletMapService.ShareToGoogleMaps"/>
-            </MudTooltip>
-        </MudStack>
-        <AuthorizeView>
-            <Authorized>
-                @if (!_isMapInitialized || _isLoading)
-                {
-                    <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
-
-                }
-                else
-                {
-                    @if (_geoJsonData is null || !string.IsNullOrWhiteSpace(_error))
+@if (HasGiayChungNhan)
+{
+    <MudCard>
+        <MudCardContent>
+            <MudStack Row="true" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.h6">Vị trí thửa đất</MudText>
+                <MudSpacer/>
+                <MudTooltip Text="Mở trên Google Map">
+                    <MudIconButton Icon="@Icons.Material.Filled.Map" OnClick="LeafletMapService.ShareToGoogleMaps"/>
+                </MudTooltip>
+            </MudStack>
+            <AuthorizeView>
+                <Authorized>
+                    @if (!_isMapInitialized || _isLoading)
                     {
-                        <MudAlert Severity="Severity.Error">
-                            @(_error ?? "Không tìm thấy vị trí thửa đất")
-                        </MudAlert>
+                        <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+
                     }
-                }
-                <MudPaper Outlined="true" Elevation="1">
-                    <div id="@MapContainerId" 
-                         style="width: 100%; aspect-ratio: 1;"></div>
-                </MudPaper>
-            </Authorized>
-            <NotAuthorized>
-                <MudAlert Severity="Severity.Error">
-                    Bạn không có quyền truy cập
-                </MudAlert>
-            </NotAuthorized>
-        </AuthorizeView>
-    </MudCardContent>
-</MudCard>
+                    else
+                    {
+                        @if (_geoJsonData is null || !string.IsNullOrWhiteSpace(_error))
+                        {
+                            <MudAlert Severity="Severity.Error">
+                                @(_error ?? "Không tìm thấy vị trí thửa đất")
+                            </MudAlert>
+                        }
+                    }
+                    <MudPaper Outlined="true" Elevation="1">
+                        <div id="@MapContainerId" 
+                             style="width: 100%; aspect-ratio: 1;"></div>
+                    </MudPaper>
+                </Authorized>
+                <NotAuthorized>
+                    <MudAlert Severity="Severity.Error">
+                        Bạn không có quyền truy cập
+                    </MudAlert>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudCardContent>
+    </MudCard>
+}
 
 @inject IHttpClientFactory HttpClientFactory
 @inject LeafletMapService LeafletMapService
@@ -45,6 +47,7 @@
 @code 
 {
     [Parameter] public string? Serial { get; set; }
+    [Parameter] public bool HasGiayChungNhan { get; set; }
     private const string MapContainerId = "map";
     private HttpClient? _httpClient;
     private string? _geoJsonData;
@@ -62,7 +65,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!string.IsNullOrWhiteSpace(Serial) && Serial == _serial && _geoJsonData is not null) return;
+        if (!HasGiayChungNhan || !string.IsNullOrWhiteSpace(Serial) && Serial == _serial && _geoJsonData is not null) return;
         _serial = Serial;
         await LoadDataAsync();
     }
