@@ -132,11 +132,18 @@ else
                     }
                     <AuthorizeView>
                         <Authorized>
+                            @if (_processingGetPermissionsCanUpdate)
+                            {
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+                                <MudAlert Severity="Severity.Info">
+                                    Đang kiểm tra quyền cập nhật thông tin Giấy chứng nhận
+                                </MudAlert>
+                            }
                             @if (_visibleUpdate)
-                            { 
-                                <MudStack Row="true" 
-                                          Justify="Justify.SpaceBetween" 
-                                          AlignItems="AlignItems.Stretch" 
+                            {
+                                <MudStack Row="true"
+                                          Justify="Justify.SpaceBetween"
+                                          AlignItems="AlignItems.Stretch"
                                           Class="mt-2">
                                     @if (false)
                                     {
@@ -149,7 +156,7 @@ else
                                             Cập nhật thông tin Giấy chứng nhận
                                         </MudButton>
                                     }
-                                    <MudButton Color="Color.Error" 
+                                    <MudButton Color="Color.Error"
                                                FullWidth="true"
                                                Disabled="!_permissionsCanUpdate"
                                                StartIcon="@Icons.Material.Filled.Delete"
@@ -394,6 +401,7 @@ else
         }
     }
     
+    private bool _processingGetPermissionsCanUpdate;
     private async Task GetGetPermissionsCanUpdate()
     {
         if (!_isLdapUser || _giayChungNhanInfo is null || !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
@@ -402,6 +410,8 @@ else
             StateHasChanged();
             return;
         }
+        _processingGetPermissionsCanUpdate = true;
+        StateHasChanged();
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
         try
         {
@@ -420,6 +430,7 @@ else
         }
         finally
         {
+            _processingGetPermissionsCanUpdate = false;
             _visibleUpdate = true;
             StateHasChanged();
         }
@@ -452,5 +463,4 @@ else
             StateHasChanged();
         }
     }
-
 }
