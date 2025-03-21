@@ -227,6 +227,13 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                             WHERE MaQR LIKE {serialLike}
                         """);
             var qrInfos = (await selectQuery.QueryAsync<QrInfo>(cancellationToken: cancellationToken)).ToList();
+            if (qrInfos.Count == 0)
+            {
+                var giayChungNhan = await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial), 
+                    token: cancellationToken);
+                if (giayChungNhan is not null)
+                    qrInfos = [new QrInfo(Guid.Empty, giayChungNhan.MaGcn)];
+            }
             foreach (var (guidId, maGcn) in qrInfos)
             {
                 var query = dbConnection.SqlBuilder(
