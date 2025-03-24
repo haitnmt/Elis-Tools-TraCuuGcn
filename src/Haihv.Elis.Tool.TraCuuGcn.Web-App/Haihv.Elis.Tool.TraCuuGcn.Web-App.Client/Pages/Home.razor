@@ -152,11 +152,9 @@
 
     private void HasGiayChungNhanChanged(bool hasGiayChungNhan)
     {
-        if (hasGiayChungNhan)
-        {
-            _hasGiayChungNhan = true;
-            StateHasChanged();
-        }
+        if (!hasGiayChungNhan) return;
+        _hasGiayChungNhan = true;
+        StateHasChanged();
     }
 
     public void Dispose()

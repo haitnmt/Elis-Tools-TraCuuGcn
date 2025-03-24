@@ -59,6 +59,8 @@ $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Bắt đầu đổi image tag cho Docker Hub" -ForegroundColor Yellow
 docker tag ${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${version}
 docker tag ${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${TAG}
+docker push ${DOCKERHUB}/${ImageName}:${version}
+docker push ${DOCKERHUB}/${ImageName}:${TAG}
 
 $endTime = Get-Date
 $totalTime = $endTime - $startTime

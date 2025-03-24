@@ -45,8 +45,13 @@ Write-Host "[$currentTime] Đang build app image verion: $version" -ForegroundCo
 docker build -t ${DOCKERHUB}/${ImageName}:${version} -f DockerfileApp .
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Write-Host "[$currentTime] Đã build image verion: $version thành công." -ForegroundColor Green
+#Push Image Api to $DOCKERHUB
+$currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+Write-Host "[$currentTime] Bắt đầu đẩy app image version $version lên $DOCKERHUB" -ForegroundColor Yellow
+docker push ${DOCKERHUB}/${ImageName}:${version}
 
 docker tag ${DOCKERHUB}/${ImageName}:${version} ${DOCKERHUB}/${ImageName}:${TAG}
+docker push ${DOCKERHUB}/${ImageName}:${TAG}
 
 #Push Image Api to $REGISTRY_URL
 $currentTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
