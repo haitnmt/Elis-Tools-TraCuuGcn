@@ -1,9 +1,7 @@
 ﻿name: Build and Push Docker Image Api
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:  # Manual trigger only
 
 jobs:
   build-and-push:
@@ -34,8 +32,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          context: .
-          file: ./src/DockerfileApi  # Đường dẫn tới DockerFile
+          context: ./src
+          file: ./DockerfileApi  # Đường dẫn tới DockerFile
           push: true
           tags: |
             haitnmt/tracuugcn-api:${{ env.DATE }}
