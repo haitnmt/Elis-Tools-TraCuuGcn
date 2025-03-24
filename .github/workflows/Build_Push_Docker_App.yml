@@ -2,12 +2,6 @@
 
 on:
   workflow_dispatch:  # Manual trigger only
-    inputs:
-      version_number:
-        description: 'Version number (will be appended after date)'
-        required: false
-        default: '1'
-        type: string
 
 jobs:
   build-and-push:
