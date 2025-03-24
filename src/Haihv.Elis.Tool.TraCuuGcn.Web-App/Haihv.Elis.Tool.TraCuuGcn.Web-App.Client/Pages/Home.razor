@@ -15,6 +15,7 @@
                 { 
                     <ThongTinGiayChungNhan Query="@_searchQuery"
                                            @bind-Serial="@_serial"
+                                           IsLdapUser="_isLdapUser"
                                            DonViChanged="donVi => _donVi = donVi"
                                            HasGiayChungNhanChanged="HasGiayChungNhanChanged"/>
                     @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
@@ -58,42 +59,47 @@
                 }
             </MudStack>
         </MudItem>
-            <AuthorizeView>
-                <Authorized>
-                    @if (_isAuthSuccess && _hasGiayChungNhan)
-                    {
-                        <MudItem xs="12" md="6" lg="4">
-                            <MudStack>
-                                <ThongTinChuSuDung Serial="@_serial"
-                                                   HasGiayChungNhan="_hasGiayChungNhan"/>
-                                <ThongTinThuaDat Serial="@_serial"
-                                                 HasGiayChungNhan="_hasGiayChungNhan"/>
-                                <ThongTinTaiSan HasGiayChungNhan="_hasGiayChungNhan"/>
-                            </MudStack>
-                        </MudItem>
-                        <MudItem xs="12" md="6" lg="4">
-                            <ThuaDatLocation Serial="@_serial"
+        <AuthorizeView>
+            <Authorized>
+                @if (_hasGiayChungNhan)
+                {
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudStack>
+                            <ThongTinChuSuDung Serial="@_serial"
+                                               HasGiayChungNhan="_hasGiayChungNhan"/>
+                            <ThongTinThuaDat Serial="@_serial"
                                              HasGiayChungNhan="_hasGiayChungNhan"/>
-                        </MudItem>
-                    }
-                </Authorized>
-            </AuthorizeView>
+                            <ThongTinTaiSan HasGiayChungNhan="_hasGiayChungNhan"/>
+                        </MudStack>
+                    </MudItem>
+                    <MudItem xs="12" md="6" lg="4">
+                        <ThuaDatLocation Serial="@_serial"
+                                         HasGiayChungNhan="_hasGiayChungNhan"/>
+                    </MudItem>
+                }
+            </Authorized>
+        </AuthorizeView>
     </MudGrid>
 </MudStack>
+
+@implements IDisposable
 @inject IDialogService DialogService
 @inject AppSettingsService AppSettingService
 @inject IAuthService AuthService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @code {
     private string? _searchQuery;
     private string? _serial;
     private bool _isCameraActive;
-    private bool _isAuthSuccess = true;
     private AppSettings? _appSettings;
     private bool _hasGiayChungNhan;
     private string? _donVi;
+    private bool _isAuthenticated;
+    private bool _isLdapUser;
     protected override void OnInitialized()
     {
         _appSettings = AppSettingService.AppSettings;
+        AuthenticationStateProvider.AuthenticationStateChanged += AuthenticationStateChanged;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -102,35 +108,59 @@
         {
             if (string.IsNullOrWhiteSpace(_searchQuery))
                await AuthService.SetSerialElis(null);
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            AuthenticationStateChanged(Task.FromResult(authState));
+            StateHasChanged();
         }
     }
-
+    
+    private void AuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        InvokeAsync(async () => 
+        {
+            var authState = await task;
+            var wasAuthenticated = _isAuthenticated;
+            _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+            _isLdapUser = await AuthService.IsLdapUser();
+            
+            // If authentication state changed, we need to refresh the UI
+            if (wasAuthenticated != _isAuthenticated)
+            {
+                StateHasChanged();
+            }
+        });
+    }
+    
     private async Task OpenAuthDialog()
     {
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true
         };
-        var authorByChuSuDung = await DialogService.ShowAsync<XacThucNguoiDung>(null, options);
-        var result = await authorByChuSuDung.Result;
-        
-        _isAuthSuccess = result is not null && !result.Canceled;
-        
-        StateHasChanged();
+        await DialogService.ShowAsync<XacThucNguoiDung>(null, options);
     }
 
     private void SearchBarResultChanged(string? searchQuery)
     {
+        if (string.Equals(_searchQuery, searchQuery, StringComparison.Ordinal)) return;
+        _hasGiayChungNhan = false;
         _searchQuery = searchQuery;
         if (!string.IsNullOrWhiteSpace(searchQuery)) return;
         _serial = null;
         StateHasChanged();
     }
 
-    private void HasGiayChungNhanChanged(bool obj)
+    private void HasGiayChungNhanChanged(bool hasGiayChungNhan)
     {
-        _hasGiayChungNhan = obj;
-        StateHasChanged();
+        if (hasGiayChungNhan)
+        {
+            _hasGiayChungNhan = true;
+            StateHasChanged();
+        }
     }
 
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= AuthenticationStateChanged;
+    }
 }

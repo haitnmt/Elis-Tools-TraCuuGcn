@@ -249,6 +249,7 @@ else
     private HttpClient _httpClient = null!;
     [Parameter] public string? Query { get; set; }
     [Parameter] public string? Error { get; set; }
+    [Parameter] public bool IsLdapUser { get; set; }
     [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
     [Parameter] public string? Serial { get; set; }
     [Parameter] public EventCallback<string> SerialChanged { get; set; }
@@ -277,16 +278,13 @@ else
         base.OnInitialized();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _isLdapUser = await AuthService.IsLdapUser();
-        }
-    }
-
     protected override async Task OnParametersSetAsync()
     {
+        if (_isLdapUser != IsLdapUser)
+        {
+            _isLdapUser = IsLdapUser;
+            await GetGetPermissionsCanUpdate();
+        }
         if (string.IsNullOrWhiteSpace(Query) || Query == _query) return;
         _query = Query;
         await LoadDataAsync();

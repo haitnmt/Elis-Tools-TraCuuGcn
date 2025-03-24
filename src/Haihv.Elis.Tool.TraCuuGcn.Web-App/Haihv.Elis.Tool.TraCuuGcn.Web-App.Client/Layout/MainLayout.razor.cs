@@ -41,7 +41,6 @@ public partial class MainLayout
             StateHasChanged();
         }
     }
-    
 
     private void AuthenticationStateChanged(Task<AuthenticationState> task)
     {
@@ -58,6 +57,7 @@ public partial class MainLayout
             CloseOnEscapeKey = true
         };
         await DialogService.ShowAsync<XacThucNguoiDung>(null, options);
+
         StateHasChanged();
     }
 
