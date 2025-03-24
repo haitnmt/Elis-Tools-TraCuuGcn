@@ -183,10 +183,10 @@ public static class BrowserFileExtensions
     public static async Task<string> ToDataUrlAsync(this IBrowserFile file)
     {
         var buffer = new byte[file.Size];
-        await file.OpenReadStream(maxAllowedSize: 10485760).ReadAsync(buffer); // 10MB max
+        await file.OpenReadStream(maxAllowedSize: 10485760).ReadExactlyAsync(buffer); // 10MB max
         
-        string base64String = Convert.ToBase64String(buffer);
-        string contentType = file.ContentType;
+        var base64String = Convert.ToBase64String(buffer);
+        var contentType = file.ContentType;
         
         return $"data:{contentType};base64,{base64String}";
     }
