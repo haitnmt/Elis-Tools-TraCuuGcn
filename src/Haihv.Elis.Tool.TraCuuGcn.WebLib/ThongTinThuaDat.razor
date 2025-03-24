@@ -101,13 +101,22 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!HasGiayChungNhan || !string.IsNullOrWhiteSpace(Serial) && Serial == _serial && _thuaDats.Count > 0) return;
+        if (!HasGiayChungNhan || (Serial == _serial && _thuaDats.Count > 0)) return;
         _serial = Serial;
-        await LoadDataAsync();
+        if (string.IsNullOrWhiteSpace(_serial))
+        {
+            HasGiayChungNhan = false;
+            StateHasChanged();
+        }
+        else
+        {
+            await LoadDataAsync();
+        }
     }
 
     private async Task LoadDataAsync()
     {
+        if (string.IsNullOrWhiteSpace(_serial)) return;
         _error = null;
         _isLoading = true;
         StateHasChanged();

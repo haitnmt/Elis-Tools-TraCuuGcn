@@ -2,6 +2,12 @@
 
 on:
   workflow_dispatch:  # Manual trigger only
+    inputs:
+      version_number:
+        description: 'Version number (will be appended after date)'
+        required: false
+        default: '1'
+        type: string
 
 jobs:
   build-and-push:
@@ -29,6 +35,9 @@ jobs:
         id: date
         run: echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
 
+      - name: Define version tag
+        run: echo "VERSION_TAG=${{ env.DATE }}.${{ github.event.inputs.version_number || '1' }}" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -36,7 +45,8 @@ jobs:
           file: ./src/DockerfileApi  # Đường dẫn tới DockerFile
           push: true
           tags: |
-            haitnmt/tracuugcn-api:${{ env.DATE }}
+            haitnmt/tracuugcn-api:${{ env.VERSION_TAG }}
             haitnmt/tracuugcn-api:latest
+            
       - name: Logout of Docker Hub
         run: docker logout

@@ -17,7 +17,8 @@
                                            @bind-Serial="@_serial"
                                            IsLdapUser="_isLdapUser"
                                            DonViChanged="donVi => _donVi = donVi"
-                                           HasGiayChungNhanChanged="HasGiayChungNhanChanged"/>
+                                           HasGiayChungNhanChanged="HasGiayChungNhanChanged"
+                                           RefreshDataChanged="RefreshDataChanged"/>
                     @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
                     {
                         <MudAlert Severity="Severity.Warning" ShowCloseIcon="true">
@@ -61,7 +62,7 @@
         </MudItem>
         <AuthorizeView>
             <Authorized>
-                @if (_hasGiayChungNhan)
+                @if (_hasGiayChungNhan && !string.IsNullOrWhiteSpace(_serial))
                 {
                     <MudItem xs="12" md="6" lg="4">
                         <MudStack>
@@ -96,6 +97,7 @@
     private string? _donVi;
     private bool _isAuthenticated;
     private bool _isLdapUser;
+
     protected override void OnInitialized()
     {
         _appSettings = AppSettingService.AppSettings;
@@ -107,22 +109,22 @@
         if (firstRender)
         {
             if (string.IsNullOrWhiteSpace(_searchQuery))
-               await AuthService.SetSerialElis(null);
+                await AuthService.SetSerialElis(null);
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             AuthenticationStateChanged(Task.FromResult(authState));
             StateHasChanged();
         }
     }
-    
+
     private void AuthenticationStateChanged(Task<AuthenticationState> task)
     {
-        InvokeAsync(async () => 
+        InvokeAsync(async () =>
         {
             var authState = await task;
             var wasAuthenticated = _isAuthenticated;
             _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
             _isLdapUser = await AuthService.IsLdapUser();
-            
+
             // If authentication state changed, we need to refresh the UI
             if (wasAuthenticated != _isAuthenticated)
             {
@@ -130,7 +132,7 @@
             }
         });
     }
-    
+
     private async Task OpenAuthDialog()
     {
         var options = new DialogOptions
@@ -161,4 +163,16 @@
     {
         AuthenticationStateProvider.AuthenticationStateChanged -= AuthenticationStateChanged;
     }
+
+    private Task RefreshDataChanged(bool refresh)
+    {
+        if (!refresh || string.IsNullOrWhiteSpace(_serial) || !_hasGiayChungNhan) return Task.CompletedTask;
+        var serial = _serial;
+        _serial = null;
+        StateHasChanged();
+        _serial = serial;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+    
 }

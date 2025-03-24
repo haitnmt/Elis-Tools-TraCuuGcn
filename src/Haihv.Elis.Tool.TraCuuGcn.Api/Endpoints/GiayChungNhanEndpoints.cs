@@ -12,37 +12,30 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
 public static class GiayChungNhanEndpoints
 {
-    private const string UrlGroup = "/elis";
-    private const string UrlGetGiayChungNhan = $"{UrlGroup}/gcn";
-    private const string UrlGetThuaDat = $"{UrlGroup}/thua-dat";
-    private const string UrlGetThuaDatPublic = $"{UrlGroup}/thua-dat-public";
-    private const string UrlClearCache = $"{UrlGroup}/delete-cache";
-    private const string UrlPermissionsCanUpdate = $"{UrlGroup}/permissions/can-update";
-    private const string UrlDeleteMaQr = $"{UrlGroup}/delete-qr";
-
     /// <summary>
     /// Định nghĩa các endpoint cho Giấy Chứng Nhận.
     /// </summary>
     /// <param name="app">Ứng dụng web.</param>
     public static void MapGiayChungNhanEndpoints(this WebApplication app)
     {
-        app.MapGet(UrlGetGiayChungNhan, GetGiayChungNhanAsync)
+        var mapGroup = app.MapGroup("/elis");
+        mapGroup.MapGet("/gcn", GetGiayChungNhanAsync)
             .WithName("GetGiayChungNhan");
 
-        app.MapGet(UrlGetThuaDat, GetThuaDatAsync)
+        mapGroup.MapGet("/thua-dat", GetThuaDatAsync)
             .WithName("GetThuaDatAsync")
             .RequireAuthorization();
 
-        app.MapGet(UrlGetThuaDatPublic, GetThuaDatPublicAsync)
+        mapGroup.MapGet("/thua-dat-public", GetThuaDatPublicAsync)
             .WithName("GetThuaDatPublicAsync");
 
-        app.MapDelete(UrlClearCache, DeleteCache)
+        mapGroup.MapDelete("/delete-cache", DeleteCache)
             .WithName("DeleteCache")
             .RequireAuthorization();
-        app.MapGet(UrlPermissionsCanUpdate, GetHasUpdatePermission)
+        mapGroup.MapGet("/permissions/can-update", GetHasUpdatePermission)
             .WithName("HasUpdatePermission")
             .RequireAuthorization();
-        app.MapDelete(UrlDeleteMaQr, DeleteMaQr)
+        mapGroup.MapDelete("/delete-qr", DeleteMaQr)
             .WithName("DeleteMaQr")
             .RequireAuthorization();
     }
@@ -66,20 +59,21 @@ public static class GiayChungNhanEndpoints
         }
         var maDinhDanh = context.User.GetMaDinhDanh();
         var result = await gcnQrService.DeleteMaQrAsync(serial);
+        var url = context.Request.GetEncodedUrl();
         return result.Match(
             succ =>
             {
                 if (succ)
                 {
                     logger.Information("Xóa mã QR thành công: {Url}{Serial}{MaDinhDanh}",
-                        UrlDeleteMaQr, 
+                        url, 
                         serial,
                         maDinhDanh);
                     return Results.Ok("Xóa mã QR thành công!");
                 }
 
                 logger.Information("Xóa mã QR không thành công: {Url}{Serial}{MaDinhDanh}",
-                    UrlDeleteMaQr,
+                    url,
                     serial,
                     maDinhDanh);
                 return Results.BadRequest("Lỗi khi xóa mã QR: [Không xác định]");
@@ -87,7 +81,7 @@ public static class GiayChungNhanEndpoints
             ex =>
             {
                 logger.Error(ex, "Lỗi khi xóa mã QR: {Url}{Serial}{MaDinhDanh}",
-                    UrlDeleteMaQr, 
+                    url, 
                     serial,
                     maDinhDanh);
                 return Results.BadRequest($"Lỗi khi xóa mã QR: [{ex.Message}]");
@@ -186,9 +180,10 @@ public static class GiayChungNhanEndpoints
     private static async Task<IResult> GetGiayChungNhanAsync([FromQuery] string? serial, ILogger logger,
         IGiayChungNhanService giayChungNhanService, HttpContext httpContext)
     {
+        var url = httpContext.Request.GetDisplayUrl();
         if (string.IsNullOrWhiteSpace(serial))
         {
-            logger.Warning("Số serial không được để trống: {Url}", UrlGetGiayChungNhan);
+            logger.Warning("Số serial không được để trống: {Url}", url);
             return Results.BadRequest("Số serial không được để trống!");
         }
 
@@ -200,7 +195,7 @@ public static class GiayChungNhanEndpoints
             {
                 logger.Information("Lấy thông tin Giấy Chứng Nhận thành công: {Serial}{Url}{ClientIp}",
                     serial,
-                    UrlGetGiayChungNhan,
+                    url,
                     ipAddr);
                 return Results.Ok(new Response<GiayChungNhan>(giayChungNhan));
             },
@@ -208,7 +203,7 @@ public static class GiayChungNhanEndpoints
             {
                 logger.Error(ex, "Lỗi khi lấy thông tin Giấy Chứng Nhận: {Serial}{Url}{ClientIp}",
                     serial,
-                    UrlGetGiayChungNhan,
+                    url,
                     ipAddr);
                 return Results.BadRequest(ex.Message);
             });
@@ -229,9 +224,10 @@ public static class GiayChungNhanEndpoints
         IAuthenticationService authenticationService,
         IThuaDatService thuaDatService)
     {
+        var url = httpContext.Request.GetDisplayUrl();
         if (string.IsNullOrWhiteSpace(serial))
         {
-            logger.Warning("Số serial không được để trống: {Url}", UrlGetThuaDat);
+            logger.Warning("Số serial không được để trống: {Url}", url);
             return Results.BadRequest("Số serial không được để trống!");
         }
 
@@ -243,7 +239,7 @@ public static class GiayChungNhanEndpoints
         {
             logger.Warning("Người dùng không được phép truy cập thông tin Thửa Đất: {Serial}{Url}{MaDinhDanh}",
                 serial,
-                UrlGetThuaDat,
+                url,
                 maDinhDanh);
             return Results.Unauthorized();
         }
@@ -254,7 +250,7 @@ public static class GiayChungNhanEndpoints
             {
                 logger.Information("Lấy thông tin Thửa Đất thành công: {Serial}{Url}{MaDinhDanh}",
                     serial,
-                    UrlGetThuaDat,
+                    url,
                     maDinhDanh);
                 return Results.Ok(new Response<List<ThuaDat>>(thuaDats));
             },
@@ -262,7 +258,7 @@ public static class GiayChungNhanEndpoints
             {
                 logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {Serial}{Url}{MaDinhDanh}",
                     serial,
-                    UrlGetThuaDat,
+                    url,
                     maDinhDanh);
                 return Results.BadRequest(new Response<List<ThuaDat>>(ex.Message));
             });
@@ -283,9 +279,10 @@ public static class GiayChungNhanEndpoints
         HttpContext httpContext,
         IThuaDatService thuaDatService)
     {
+        var url = httpContext.Request.GetDisplayUrl();
         if (string.IsNullOrWhiteSpace(serial))
         {
-            logger.Warning("Số serial không được để trống: {Url}", UrlGetThuaDatPublic);
+            logger.Warning("Số serial không được để trống: {Url}", url);
             return Results.BadRequest("Số serial không được để trống");
         }
 
@@ -297,7 +294,7 @@ public static class GiayChungNhanEndpoints
             {
                 logger.Information("Lấy thông tin Thửa Đất công khai thành công: {Serial}{Url}{ClientIp}",
                     serial,
-                    UrlGetThuaDatPublic,
+                    url,
                     ipAddr);
                 var thuaDatPublic = thuaDats.Select(x => x.ConvertToThuaDatPublic());
                 return Results.Ok(new Response<IEnumerable<ThuaDatPublic>>(thuaDatPublic));
@@ -306,7 +303,7 @@ public static class GiayChungNhanEndpoints
             {
                 logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất công khai: {Serial}{Url}{ClientIp}",
                     serial,
-                    UrlGetThuaDatPublic,
+                    url,
                     ipAddr);
                 return Results.BadRequest(new Response<IEnumerable<ThuaDatPublic>>(ex.Message));
             });
@@ -318,24 +315,31 @@ public static class GiayChungNhanEndpoints
         IConfiguration configuration,
         [FromQuery] string? serial)
     {
+        var url = context.Request.GetDisplayUrl();
         if (string.IsNullOrWhiteSpace(serial))
         {
-            logger.Warning("Thiếu thông tin số Serial của Giấy chứng nhận: {Url}", UrlClearCache);
+            logger.Warning("Thiếu thông tin số Serial của Giấy chứng nhận: {Url}", url);
             return Results.BadRequest("Thiếu thông tin số Serial của Giấy chứng nhận!");
         }
 
         var maDinhDanh = context.User.GetMaDinhDanh();
+        if (string.IsNullOrWhiteSpace(maDinhDanh) || !context.User.IsLdap())
+        {
+            logger.Warning("Người dùng không được phép xóa cache: {Url}{MaDinhDanh}",
+                url, maDinhDanh);
+            return Results.Unauthorized();
+        }
         try
         {
             await fusionCache.RemoveByTagAsync(serial.ChuanHoa());
             logger.Information("Xóa cache thành công: {Url}{Serial}{MaDinhDanh}",
-                UrlClearCache, serial, maDinhDanh);
+                url, serial, maDinhDanh);
             return Results.Ok("Xóa cache thành công");
         }
         catch (Exception e)
         {
             logger.Error(e, "Lỗi khi xóa cache: {Url}{Serial}{MaDinhDanh}",
-                UrlClearCache, serial, maDinhDanh);
+                url, serial, maDinhDanh);
             return Results.BadRequest("Lỗi khi xóa cache");
         }
     }

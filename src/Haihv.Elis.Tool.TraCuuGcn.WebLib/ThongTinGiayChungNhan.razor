@@ -25,9 +25,14 @@ else
                 <MudCardContent>
                     <MudStack Row="true" Justify="Justify.SpaceBetween">
                         <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
-                        @* <MudButton Size="Size.Small" OnClick="RefreshData"> *@
-                        @*     Làm mới *@
-                        @* </MudButton> *@
+                        @if (IsLdapUser)
+                        {
+                            <MudTooltip Text="Làm mới thông tin">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh" 
+                                               Size="Size.Small"
+                                               OnClick="RefreshData"/>
+                            </MudTooltip>
+                        }
                     </MudStack>
                     @* @if (!_giayChungNhanInfo.MaQrVerified) *@
                     @* { *@
@@ -255,6 +260,7 @@ else
     [Parameter] public EventCallback<string> SerialChanged { get; set; }
     [Parameter] public EventCallback<string> DonViChanged { get; set; }
     [Parameter] public EventCallback<bool> HasGiayChungNhanChanged { get; set; }
+    [Parameter] public EventCallback<bool> RefreshDataChanged { get; set; }
 
     private const string Url = "/elis/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
@@ -433,12 +439,13 @@ else
         }
     }
 
-    private async Task RefreshData(MouseEventArgs arg)
+    private async Task RefreshData()
     {
         if (!string.IsNullOrWhiteSpace(Serial))
         {
             await ClearCache(Serial);
             await LoadDataAsync();
+            await RefreshDataChanged.InvokeAsync(true);
         }
     }
 

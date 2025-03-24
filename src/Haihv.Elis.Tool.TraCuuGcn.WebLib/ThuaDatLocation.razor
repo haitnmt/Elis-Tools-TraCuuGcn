@@ -12,7 +12,7 @@
             </MudStack>
             <AuthorizeView>
                 <Authorized>
-                    @if (!_isMapInitialized || _isLoading)
+                    @if (_isLoading)
                     {
                         <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
 
@@ -55,19 +55,20 @@
     private string? _serial;
     private bool _isLoading;
     private const string GetToaDoThuaDatUrl = "/geo/toaDoThua";
-    private bool _isMapInitialized;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await LeafletMapService.InitializeAsync(MapContainerId);
-        _isMapInitialized = true;
-    }
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!HasGiayChungNhan || !string.IsNullOrWhiteSpace(Serial) && Serial == _serial && _geoJsonData is not null) return;
+        if (!HasGiayChungNhan || (Serial == _serial && _geoJsonData is not null)) return;
         _serial = Serial;
-        await LoadDataAsync();
+        if (string.IsNullOrWhiteSpace(_serial))
+        {
+            HasGiayChungNhan = false;
+            StateHasChanged();
+        }
+        else
+        {
+            await LoadDataAsync();
+        }
     }
 
     private async Task LoadDataAsync()
@@ -76,8 +77,8 @@
         _isLoading = true;
         StateHasChanged();
         _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
-        _geoJsonData = null;
         var url = $"{GetToaDoThuaDatUrl}?serial={_serial}";
+        _geoJsonData = null;
         try
         {
             var response = await _httpClient.GetAsync(url);
@@ -97,8 +98,8 @@
             {
                 _error = "Không tìm thấy vị trí thửa đất";
             }
+            await LeafletMapService.InitializeAsync(MapContainerId);
             await LeafletMapService.UpdateMapAsync(_geoJsonData);
-            _isLoading = false;
         }
         catch (Exception e)
         {
