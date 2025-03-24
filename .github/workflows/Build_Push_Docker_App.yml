@@ -21,6 +21,15 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '9.x' # Phiên bản .NET đang sử dụng
+      
+      # Đọc phiên bản từ file .csproj của APP
+      - name: Get version from APP .csproj
+        id: get_version_app
+        run: |
+          csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.Client/Haihv.Elis.Tool.TraCuuGcn.Web-App.Client.csproj)
+          version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
+          echo "VERSION_TAG=$version" >> $GITHUB_ENV
+        shell: bash
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
