@@ -1,4 +1,4 @@
-﻿name: WebApi Build and Push Docker Image
+﻿name: WebApp Build and Push Docker Image
 
 on:
   workflow_dispatch:  # Manual trigger only
@@ -33,10 +33,10 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: ./src
-          file: ./src/DockerfileApi  # Đường dẫn tới DockerFile
+          file: ./src/DockerfileApp  # Đường dẫn tới DockerFile
           push: true
           tags: |
-            haitnmt/tracuugcn-api:${{ env.DATE }}
-            haitnmt/tracuugcn-api:latest
+            haitnmt/tracuugcn-app:${{ env.DATE }}
+            haitnmt/tracuugcn-app:latest
       - name: Logout of Docker Hub
         run: docker logout

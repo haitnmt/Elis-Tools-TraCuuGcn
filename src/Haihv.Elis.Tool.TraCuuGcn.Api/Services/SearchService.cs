@@ -7,8 +7,7 @@ using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
-public class SearchService(IGcnQrService gcnQrService, 
-    IConnectionElisData connectionElisData,
+public class SearchService(IGcnQrService gcnQrService,
     IGiayChungNhanService giayChungNhanService,
     ILogger logger, IFusionCache fusionCache) : ISearchService
 {
