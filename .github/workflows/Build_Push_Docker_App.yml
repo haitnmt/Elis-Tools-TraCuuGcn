@@ -17,7 +17,7 @@ jobs:
       - name: Get version from APP .csproj
         id: get_version_app
         run: |
-          csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.csproj)
+          csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.csproj)
           version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
           echo "APP_VERSION_TAG=$version" >> $GITHUB_ENV
         shell: bash
