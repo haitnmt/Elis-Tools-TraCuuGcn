@@ -2,7 +2,12 @@
 
 on:
   workflow_dispatch:  # Manual trigger only
-
+    inputs:
+      version:
+        description: 'Version number (e.g. 1.0.0). Leave empty for date-based version.'
+        required: false
+        default: ''
+      
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -21,12 +26,11 @@ jobs:
       - name: Get API SDE version
         id: get_version_api_sde
         run: |
-          # Assuming version is stored in a VERSION file - adjust as needed
-          if [ -f "src/Haihv.Elis.Tool.TraCuuGcn.Api.Sde/version.txt" ]; then
-            # Use tr to remove any non-printable characters
-            version=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Api.Sde/version.txt | tr -d '\r\n\t\f\v\0\ufeff')
+          # Check if a version was manually provided via input
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            version="${{ github.event.inputs.version }}"
           else
-            # Default to a timestamp-based version if no version file exists
+            # Default to a timestamp-based version if no version is provided
             version=$(date +'%Y.%m.%d')
           fi
           echo "API_SDE_VERSION_TAG=$version" >> $GITHUB_ENV
