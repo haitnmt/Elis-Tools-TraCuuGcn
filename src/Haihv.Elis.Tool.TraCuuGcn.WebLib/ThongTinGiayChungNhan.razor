@@ -28,7 +28,7 @@ else
                         @if (IsLdapUser)
                         {
                             <MudTooltip Text="Làm mới thông tin">
-                                <MudIconButton Icon="@Icons.Material.Filled.Refresh" 
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                                Size="Size.Small"
                                                OnClick="RefreshData"/>
                             </MudTooltip>
@@ -74,7 +74,8 @@ else
                                     }
                                     else
                                     {
-                                        <MudField Label="Thời điểm tạo mã QR" Variant="Variant.Text" Error="true" ErrorText="Thời gian không hợp lệ">
+                                        <MudField Label="Thời điểm tạo mã QR" Variant="Variant.Text" Error="true"
+                                                  ErrorText="Thời gian không hợp lệ">
                                             @_giayChungNhanInfo.KhoiTaoQr.Value.ToString("dd/MM/yyyy HH:mm:ss")
                                         </MudField>
                                     }
@@ -127,7 +128,7 @@ else
                             <MudAlert Severity="Severity.Error">
                                 Không tìm thấy thông tin Thửa đất!
                             </MudAlert>
-                            <MudButton EndIcon="@Icons.Material.Filled.Refresh" 
+                            <MudButton EndIcon="@Icons.Material.Filled.Refresh"
                                        FullWidth="true"
                                        Color="Color.Secondary"
                                        Variant="Variant.Text"
@@ -135,110 +136,113 @@ else
                             </MudButton>
                         </MudPaper>
                     }
-                    <AuthorizeView>
-                        <Authorized>
-                            @if (_processingGetPermissionsCanUpdate)
-                            {
-                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
-                                <MudAlert Severity="Severity.Info">
-                                    Đang kiểm tra quyền cập nhật thông tin Giấy chứng nhận
-                                </MudAlert>
-                            }
-                            @if (_visibleUpdate)
-                            {
-                                <MudStack Row="true"
-                                          Justify="Justify.SpaceBetween"
-                                          AlignItems="AlignItems.Stretch"
-                                          Class="mt-2">
-                                    @if (false)
-                                    {
-                                        <MudButton Color="Color.Primary"
-                                                   FullWidth="true"
-                                                   Disabled="@(!_permissionsCanUpdate ||
-                                                               _giayChungNhanInfo.HasGiayChungNhan ||
-                                                               true)"
-                                                   StartIcon="@Icons.Material.Filled.Update">
-                                            Cập nhật thông tin Giấy chứng nhận
-                                        </MudButton>
-                                    }
-                                    <MudButton Color="Color.Error"
-                                               FullWidth="true"
-                                               Disabled="!_permissionsCanUpdate"
-                                               StartIcon="@Icons.Material.Filled.Delete"
-                                               OnClick="XoaQrAsync">
-                                        Xóa thông tin Mã QR
-                                    </MudButton>
-                                </MudStack>
-                                @if (!_permissionsCanUpdate && !string.IsNullOrWhiteSpace(_permissionsStatus))
+                    else
+                    {
+                        <AuthorizeView>
+                            <Authorized>
+                                @if (_processingGetPermissionsCanUpdate)
                                 {
-                                    <MudAlert Severity="Severity.Warning">
-                                        @_permissionsStatus
+                                    <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+                                    <MudAlert Severity="Severity.Info">
+                                        Đang kiểm tra quyền cập nhật thông tin Giấy chứng nhận
                                     </MudAlert>
                                 }
-                            }
-                        </Authorized>
-                        <NotAuthorized>
-                            @if (!_thuaDatLoaded)
-                            {
-                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
-                            }
-                            else
-                            {
-                                if (!string.IsNullOrWhiteSpace(_errorLoadThuaDat))
+                                @if (_visibleUpdate)
                                 {
-                                    <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
-                                        <MudAlert Severity="Severity.Error">
-                                            @(string.IsNullOrWhiteSpace(_errorLoadThuaDat) ? "Không có thông tin" : _errorLoadThuaDat)
-                                        </MudAlert>
-                                        <MudButton EndIcon="@Icons.Material.Filled.Refresh"
+                                    <MudStack Row="true"
+                                              Justify="Justify.SpaceBetween"
+                                              AlignItems="AlignItems.Stretch"
+                                              Class="mt-2">
+                                        @if (false)
+                                        {
+                                            <MudButton Color="Color.Primary"
+                                                       FullWidth="true"
+                                                       Disabled="@(!_permissionsCanUpdate ||
+                                                                   _giayChungNhanInfo.HasGiayChungNhan ||
+                                                                   true)"
+                                                       StartIcon="@Icons.Material.Filled.Update">
+                                                Cập nhật thông tin Giấy chứng nhận
+                                            </MudButton>
+                                        }
+                                        <MudButton Color="Color.Error"
                                                    FullWidth="true"
-                                                   Color="Color.Secondary"
-                                                   Variant="Variant.Text"
-                                                   OnClick="LoadThuaDatAsync">Thử lại
+                                                   Disabled="!_permissionsCanUpdate"
+                                                   StartIcon="@Icons.Material.Filled.Delete"
+                                                   OnClick="XoaQrAsync">
+                                            Xóa thông tin Mã QR
                                         </MudButton>
-                                    </MudPaper>
+                                    </MudStack>
+                                    @if (!_permissionsCanUpdate && !string.IsNullOrWhiteSpace(_permissionsStatus))
+                                    {
+                                        <MudAlert Severity="Severity.Warning">
+                                            @_permissionsStatus
+                                        </MudAlert>
+                                    }
+                                }
+                            </Authorized>
+                            <NotAuthorized>
+                                @if (!_thuaDatLoaded)
+                                {
+                                    <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
                                 }
                                 else
                                 {
-                                    foreach (var thuaDatPublic in _thuaDatPublic)
+                                    if (!string.IsNullOrWhiteSpace(_errorLoadThuaDat))
                                     {
                                         <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
-                                            <MudGrid>
-                                                <MudItem xs="6" lg="4">
-                                                    <MudField Label="Tờ bản đồ" Variant="Variant.Text">
-                                                        @thuaDatPublic.ToBanDo
-                                                    </MudField>
-                                                </MudItem>
-                                                <MudItem xs="6" lg="4">
-                                                    <MudField Label="Thửa đất số" Variant="Variant.Text">
-                                                        @thuaDatPublic.ThuaDatSo
-                                                    </MudField>
-                                                </MudItem>
-                                                <MudItem xs="6" lg="4">
-                                                    <MudField Label="Diện tích" Variant="Variant.Text">
-                                                        @thuaDatPublic.DienTich
-                                                    </MudField>
-                                                </MudItem>
-                                                <MudItem xs="12">
-                                                    <MudField Label="Địa chỉ" Variant="Variant.Text">
-                                                        @thuaDatPublic.DiaChi
-                                                    </MudField>
-                                                </MudItem>
-                                                @if (!string.IsNullOrWhiteSpace(thuaDatPublic.GhiChu))
-                                                {
-                                                    <MudItem xs="12">
-                                                        <MudField Label="Ghi chú" Variant="Variant.Text">
-                                                            @thuaDatPublic.GhiChu
-                                                        </MudField>
-                                                    </MudItem>
-                                                }
-                                            </MudGrid>
+                                            <MudAlert Severity="Severity.Error">
+                                                @(string.IsNullOrWhiteSpace(_errorLoadThuaDat) ? "Không có thông tin" : _errorLoadThuaDat)
+                                            </MudAlert>
+                                            <MudButton EndIcon="@Icons.Material.Filled.Refresh"
+                                                       FullWidth="true"
+                                                       Color="Color.Secondary"
+                                                       Variant="Variant.Text"
+                                                       OnClick="LoadThuaDatAsync">Thử lại
+                                            </MudButton>
                                         </MudPaper>
                                     }
+                                    else
+                                    {
+                                        foreach (var thuaDatPublic in _thuaDatPublic)
+                                        {
+                                            <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
+                                                <MudGrid>
+                                                    <MudItem xs="6" lg="4">
+                                                        <MudField Label="Tờ bản đồ" Variant="Variant.Text">
+                                                            @thuaDatPublic.ToBanDo
+                                                        </MudField>
+                                                    </MudItem>
+                                                    <MudItem xs="6" lg="4">
+                                                        <MudField Label="Thửa đất số" Variant="Variant.Text">
+                                                            @thuaDatPublic.ThuaDatSo
+                                                        </MudField>
+                                                    </MudItem>
+                                                    <MudItem xs="6" lg="4">
+                                                        <MudField Label="Diện tích" Variant="Variant.Text">
+                                                            @thuaDatPublic.DienTich
+                                                        </MudField>
+                                                    </MudItem>
+                                                    <MudItem xs="12">
+                                                        <MudField Label="Địa chỉ" Variant="Variant.Text">
+                                                            @thuaDatPublic.DiaChi
+                                                        </MudField>
+                                                    </MudItem>
+                                                    @if (!string.IsNullOrWhiteSpace(thuaDatPublic.GhiChu))
+                                                    {
+                                                        <MudItem xs="12">
+                                                            <MudField Label="Ghi chú" Variant="Variant.Text">
+                                                                @thuaDatPublic.GhiChu
+                                                            </MudField>
+                                                        </MudItem>
+                                                    }
+                                                </MudGrid>
+                                            </MudPaper>
+                                        }
+                                    }
                                 }
-                            }
-                        </NotAuthorized>
-                    </AuthorizeView>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    }
                 </MudCardContent>
             </MudCard>
         </MudStack>
@@ -276,7 +280,7 @@ else
     private string? _permissionsStatus;
     private bool _visibleUpdate;
     private bool _isLdapUser;
-    
+
     protected override void OnInitialized()
     {
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
@@ -290,6 +294,7 @@ else
             _isLdapUser = IsLdapUser;
             await GetGetPermissionsCanUpdate();
         }
+
         if (string.IsNullOrWhiteSpace(Query) || Query == _query) return;
         _query = Query;
         await LoadDataAsync();
@@ -310,13 +315,14 @@ else
             return false;
         }
     }
-    
+
     private async Task LoadDataAsync()
     {
         if (string.IsNullOrWhiteSpace(_query))
         {
             return;
         }
+
         _error = null;
         _dataLoaded = false;
         StateHasChanged();
@@ -351,12 +357,13 @@ else
                     // Kiểm tra thông tin Xác thực
                     if (!await AuthService.CheckAuthorBySerialElis(Serial))
                         await AuthService.Logout();
-                    await SerialChanged.InvokeAsync(Serial); 
+                    await SerialChanged.InvokeAsync(Serial);
                     await GetGetPermissionsCanUpdate();
                     await LoadThuaDatAsync();
                     await AuthService.SetSerialElis(Serial);
                     await HasGiayChungNhanChanged.InvokeAsync(_giayChungNhanInfo.HasGiayChungNhan);
                 }
+
                 await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
             }
             else
@@ -371,13 +378,13 @@ else
 
     private async Task LoadThuaDatAsync()
     {
-        
         _thuaDatPublic = [];
         _errorLoadThuaDat = null;
         if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || _giayChungNhanInfo.HasGiayChungNhan)
         {
             return;
         }
+
         _thuaDatLoaded = false;
         StateHasChanged();
         var url = $"{UrlThuaDat}?serial={_giayChungNhanInfo.Serial}";
@@ -403,8 +410,9 @@ else
             StateHasChanged();
         }
     }
-    
+
     private bool _processingGetPermissionsCanUpdate;
+
     private async Task GetGetPermissionsCanUpdate()
     {
         if (!_isLdapUser || _giayChungNhanInfo is null || !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
@@ -413,6 +421,7 @@ else
             StateHasChanged();
             return;
         }
+
         _processingGetPermissionsCanUpdate = true;
         StateHasChanged();
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
@@ -421,7 +430,7 @@ else
             var response = await _httpClient.GetAsync(url);
             _permissionsCanUpdate = response.IsSuccessStatusCode;
             _permissionsStatus = (await response.Content.ReadAsStringAsync()).TrimStart('\"').TrimEnd('\n', '\"');
-            if(string.IsNullOrWhiteSpace(_permissionsStatus))
+            if (string.IsNullOrWhiteSpace(_permissionsStatus))
                 _permissionsStatus = "Không có quyền cập nhật thông tin Giấy chứng nhận";
         }
         catch (Exception e)
@@ -429,7 +438,6 @@ else
             Console.WriteLine(e);
             _permissionsCanUpdate = false;
             _permissionsStatus = "Lỗi khi kiểm tra quyền cập nhật thông tin Giấy chứng nhận";
-            
         }
         finally
         {
@@ -451,12 +459,12 @@ else
 
     private async Task XoaQrAsync()
     {
-        var parameters = new DialogParameters<XoaQrDialog> { {x => x.Serial, Serial!} };
+        var parameters = new DialogParameters<XoaQrDialog> { { x => x.Serial, Serial! } };
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true
         };
-        var xoaQReference =  await DialogService.ShowAsync<XoaQrDialog>(null, parameters, options);
+        var xoaQReference = await DialogService.ShowAsync<XoaQrDialog>(null, parameters, options);
         var result = await xoaQReference.Result;
         if (!result?.Canceled ?? false)
         {
@@ -467,4 +475,5 @@ else
             StateHasChanged();
         }
     }
+
 }

@@ -161,6 +161,7 @@ public sealed partial class ConnectionElisData(
 
     public async ValueTask<List<ConnectionSql>> GetAllConnection(string? serial)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return ConnectionElis;
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
         return string.IsNullOrWhiteSpace(connectionName)
@@ -170,6 +171,7 @@ public sealed partial class ConnectionElisData(
     
     public async ValueTask<ConnectionSql?> GetConnectionAsync(string? serial)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return null;
         var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
         return string.IsNullOrWhiteSpace(connectionName)
@@ -223,6 +225,7 @@ public sealed partial class ConnectionElisData(
     /// </returns>
     public async Task<string?> GetUpdateGroupName(string? serial, CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return null;
         var connectionSql = await GetConnectionAsync(serial);
         return connectionSql?.UpdateGroupName;

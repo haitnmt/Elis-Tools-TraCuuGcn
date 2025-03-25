@@ -27,12 +27,12 @@ public sealed class ChuSuDungService(
     public async Task<Result<AuthChuSuDung>> GetResultAuthChuSuDungAsync(string? serial = null,
         string? soDinhDanh = null, CancellationToken cancellationToken = default)
     {
+        serial = serial?.ChuanHoa();
         if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial))
             return new Result<AuthChuSuDung>(new ValueIsNullException("Số định danh không hợp lệ!"));
         var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
         try
         {
-            serial = serial.ChuanHoa();
             var tenChuSuDung = await fusionCache.GetOrSetAsync(cacheKey,
                 
                 cancel => GetTenChuSuDungInDataAsync(serial, soDinhDanh, cancel),
@@ -112,8 +112,8 @@ public sealed class ChuSuDungService(
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(serial)) return;
             serial = serial.ChuanHoa();
+            if (string.IsNullOrWhiteSpace(serial)) return;
             var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var connection in connectionElis)
             {
@@ -161,9 +161,9 @@ public sealed class ChuSuDungService(
     public async Task<Result<List<ChuSuDungInfo>>> GetResultAsync(
         string? serial = null, CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial))
             return new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
-        serial = serial.ChuanHoa();
         var cacheKey = CacheSettings.KeyChuSuDung(serial);
         var chuSuDungs = await fusionCache.GetOrSetAsync(cacheKey,
             cancel => GetAsync(serial, cancel),
@@ -178,6 +178,7 @@ public sealed class ChuSuDungService(
         string? serial = null, CancellationToken cancellationToken = default)
     {
         List<ChuSuDungInfo> chuSuDungInfos = [];
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return chuSuDungInfos;
         try
         {

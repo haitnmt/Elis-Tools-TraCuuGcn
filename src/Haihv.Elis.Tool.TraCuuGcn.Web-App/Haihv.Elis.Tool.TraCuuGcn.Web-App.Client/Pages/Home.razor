@@ -147,7 +147,7 @@
         if (string.Equals(_searchQuery, searchQuery, StringComparison.Ordinal)) return;
         _hasGiayChungNhan = false;
         _searchQuery = searchQuery;
-        if (!string.IsNullOrWhiteSpace(searchQuery)) return;
+        if (string.IsNullOrWhiteSpace(searchQuery)) return;
         _serial = null;
         StateHasChanged();
     }

@@ -53,11 +53,13 @@ public class GeoService(
     }
     public async Task<List<Coordinates>> GetAsync(string serial, CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa() ?? "";
+        if (string.IsNullOrWhiteSpace(serial)) return [];
         try
         {
             return await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(serial),
                 cancel => GetPointFromApiSdeAsync(serial, cancel), 
-                tags: [serial.ChuanHoa()],
+                tags: [serial],
                 token: cancellationToken);
         }
         catch (Exception e)

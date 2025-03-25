@@ -26,6 +26,7 @@ public sealed class GiayChungNhanService(
     public async Task<Result<GiayChungNhan>> GetResultAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial) && maVach <= 0)
             return new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
         try
@@ -36,7 +37,12 @@ public sealed class GiayChungNhanService(
                        async cancel =>
                        {
                            var giayChungNhan = await GetAsync(serial, maVach, cancel);
-                           tags = giayChungNhan is not null ? [giayChungNhan.Serial.ChuanHoa()] : [];
+                           var serialInData = giayChungNhan?.Serial.ChuanHoa();
+                           if (!string.IsNullOrWhiteSpace(serialInData))
+                           {
+                               tags = [serialInData];
+                           }
+
                            return giayChungNhan;
                        },
                        tags: tags,
@@ -61,9 +67,9 @@ public sealed class GiayChungNhanService(
     public async Task<GiayChungNhan?> GetAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa()?.ToLower();
         if (string.IsNullOrWhiteSpace(serial) && maVach <= 0) return null;
         var maVachString = maVach > 0 ? maVach.ToString("0000000000000") : "-111";
-        serial = serial?.ToLower();
         try
         {
             var giayChungNhan = string.IsNullOrWhiteSpace(serial) ? null : 
@@ -94,12 +100,13 @@ public sealed class GiayChungNhanService(
                                         MaVach
                                  FROM GCNQSDD
                                  WHERE 
-                                     (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(SoSerial) = {serial})) OR 
+                                     (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(LTRIM(RTRIM(SoSerial))) = {serial})) OR 
                                      (MaVach = {maVachString})
                             """);
                 giayChungNhan = await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
                 if (giayChungNhan is null) continue;
                 serial = giayChungNhan.Serial.ChuanHoa();
+                if (string.IsNullOrWhiteSpace(serial)) continue;
                 _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), giayChungNhan,
                     tags: [serial],
                     token: cancellationToken).AsTask();

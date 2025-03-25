@@ -2,7 +2,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 
 public static class CacheSettings
 {
-    public static string ChuanHoa(this string input) => input.Trim().ToUpper();
+    public static string? ChuanHoa(this string? input) => input?.Trim().ToUpper() ?? null;
     
     public const string ElisConnections = "ElisConnections";
     public static string ElisConnectionName(string serial) => $"ElisConnectionName:{serial}";

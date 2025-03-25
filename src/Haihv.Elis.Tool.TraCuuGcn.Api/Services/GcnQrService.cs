@@ -98,10 +98,10 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     public async ValueTask<MaQrInfo?> GetAsync(string? maQr = null, string? hashQr = null, string? serial = null, 
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(maQr) && string.IsNullOrWhiteSpace(hashQr) && string.IsNullOrWhiteSpace(serial)) return null;
         try
         {
-            serial = serial?.ChuanHoa();
             var maQrInfo = string.IsNullOrWhiteSpace(serial) ? null :
                 await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(serial), 
                     token: cancellationToken);
@@ -205,6 +205,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     /// </returns>
     public async Task<Result<bool>> DeleteMaQrAsync(string? serial = null, CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) 
             return new Result<bool>(new ArgumentNullException(nameof(serial)));
         try
@@ -216,15 +217,17 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 logger.Warning("Không tìm thấy thông tin kết nối cơ sở dữ liệu: {Serial}", serial);
                 return new Result<bool>(new ValueIsNullException("Không tìm thấy thông tin kết nối cơ sở dữ liệu!"));
             }
+
+            serial = serial.ToLower();
             await using var dbConnection = connectionSql.ElisConnectionString.GetConnection();
-            var serialLike = $"%|{serial.ChuanHoa()}||%";
+            var serialLike = $"%|{serial}||%";
             var selectQuery = dbConnection.SqlBuilder(
                 $"""
                             SELECT DISTINCT 
                                 GuidID AS GuidId,
                                 MaGCN AS MaGcn
                             FROM GCNQR
-                            WHERE MaQR LIKE {serialLike}
+                            WHERE LOWER(TRIM(MaQR)) LIKE {serialLike}
                         """);
             var qrInfos = (await selectQuery.QueryAsync<QrInfo>(cancellationToken: cancellationToken)).ToList();
             if (qrInfos.Count == 0)
@@ -244,7 +247,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                          WHERE (MaGCN = {maGcn});
                      UPDATE [TS_ChuSuDung_TaiSan] 
                          SET [DaCapGCN] = NULL, [soSerial] = NULL, [namCap] = NULL
-                         WHERE [soSerial]= {serial};
+                         WHERE (LOWER(LTRIM(RTRIM([soSerial]))) = {serial};
                      """
                 );
                 if (dbConnection.State == ConnectionState.Closed)

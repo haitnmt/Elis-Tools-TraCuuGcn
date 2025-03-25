@@ -42,7 +42,7 @@ public static class AuthenticationEndPoints
     {
         if (string.IsNullOrWhiteSpace(authChuSuDung.SoDinhDanh) || string.IsNullOrWhiteSpace(authChuSuDung.HoVaTen))
         {
-            return Results.BadRequest(new Response<AccessToken>("Số định danh và mật khẩu không được để trống!"));
+            return Results.BadRequest(new Response<AccessToken>("Số định danh và Họ tên không được để trống!"));
         }
         var ipInfo = httpContext.GetIpInfo();
         var (count, exprSecond)  = ipInfo.IsPrivate ? (0, 0) : await checkIpService.CheckLockAsync(ipInfo.IpAddress);

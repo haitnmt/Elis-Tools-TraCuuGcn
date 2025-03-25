@@ -15,7 +15,7 @@ public interface ICheckIpService
     /// <summary>
     /// Đặt khóa cho IP.
     /// </summary>
-    /// <param name="ip">
+    /// <param name="ipAddress">
     /// Địa chỉ IP cần đặt khóa.
     /// </param>
     Task SetLockAsync(string ipAddress);
@@ -23,10 +23,10 @@ public interface ICheckIpService
     /// <summary>
     /// Xóa khóa của IP.
     /// </summary>
-    /// <param name="ip">
+    /// <param name="ipAddress">
     /// Địa chỉ IP cần xóa khóa.
     /// </param>
-    Task ClearLockAsync(string  pAddress);
+    Task ClearLockAsync(string ipAddress);
 }
 
 public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
@@ -55,7 +55,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     /// <summary>
     /// Đặt khóa cho IP.
     /// </summary>
-    /// <param name="ip">
+    /// <param name="ipAddress">
     /// Địa chỉ IP cần đặt khóa.
     /// </param>
     public async Task SetLockAsync(string ipAddress)
@@ -92,7 +92,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     /// <summary>
     /// Xóa khóa của IP.
     /// </summary>
-    /// <param name="ip">
+    /// <param name="ipAddress">
     /// Địa chỉ IP cần xóa khóa.
     /// </param>
     public async Task ClearLockAsync(string ipAddress)

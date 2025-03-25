@@ -62,9 +62,9 @@ public class FeatureModel
         // Giải mã GeoJSON geometry
         Geometry = JsonSerializer.Deserialize<object>(geoJsonGeom);
         Properties = properties ?? [];
+        if (geometry.GetPointCount() <= 1) return;
         var area = geometry.GetArea();
         var length = geometry.Length();
-        if (Properties.Count != 0) return;
         if (area > 0)
             Properties.Add("Diện tích", $"{area:00.0}m²");
         if (length > 0)

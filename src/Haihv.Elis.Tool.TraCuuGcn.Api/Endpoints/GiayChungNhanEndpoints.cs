@@ -186,8 +186,7 @@ public static class GiayChungNhanEndpoints
             logger.Warning("Số serial không được để trống: {Url}", url);
             return Results.BadRequest("Số serial không được để trống!");
         }
-
-        serial = serial.ChuanHoa();
+        
         var result = await giayChungNhanService.GetResultAsync(serial);
         var ipAddr = httpContext.GetIpAddress();
         return result.Match(
@@ -230,8 +229,7 @@ public static class GiayChungNhanEndpoints
             logger.Warning("Số serial không được để trống: {Url}", url);
             return Results.BadRequest("Số serial không được để trống!");
         }
-
-        serial = serial.ChuanHoa();
+        
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(serial, user);
@@ -285,8 +283,7 @@ public static class GiayChungNhanEndpoints
             logger.Warning("Số serial không được để trống: {Url}", url);
             return Results.BadRequest("Số serial không được để trống");
         }
-
-        serial = serial.ChuanHoa();
+        
         var result = await thuaDatService.GetResultAsync(serial);
         var ipAddr = httpContext.GetIpAddress();
         return result.Match(

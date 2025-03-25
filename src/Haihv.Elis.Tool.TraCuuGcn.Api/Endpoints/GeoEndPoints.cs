@@ -32,7 +32,6 @@ public static class GeoEndPoints
             return Results.BadRequest("Thiếu thông tin số Serial của Giấy chứng nhận");
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
-        serial = serial.ChuanHoa();
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(serial, user);
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {

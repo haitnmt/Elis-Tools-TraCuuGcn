@@ -25,6 +25,11 @@ public class ThuaDatService(
     public async Task<Result<List<ThuaDat>>> GetResultAsync(string serial = "",
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(serial))
+        {
+            return new Result<List<ThuaDat>>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
+        }
         var cacheKey = CacheSettings.KeyThuaDat(serial);
         try
         {
@@ -57,6 +62,7 @@ public class ThuaDatService(
     public async Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(string serial = "",
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(serial)) return [];
         var connectionSqls = await connectionElisData.GetAllConnection(serial);
 
@@ -73,6 +79,7 @@ public class ThuaDatService(
     private async Task<List<ThuaDat>> GetThuaDatInDataBaseAsync(string serial, string connectionString,
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(serial)) return [];
         serial = serial.ToLower();
         List<ThuaDat> result = [];
@@ -94,7 +101,7 @@ public class ThuaDatService(
                      INNER JOIN ToBanDo TBD ON TD.MaToBanDo = TBD.MaToBanDo 
                      INNER JOIN DangKyQSDD DK ON TD.MaThuaDat = DK.MaThuaDat
                      INNER JOIN GCNQSDD GCN ON DK.MaDangKy = GCN.MaDangKy
-                 WHERE LOWER(GCN.SoSerial) = {serial}
+                 WHERE LOWER(LTRIM(RTRIM(GCN.SoSerial))) = {serial}
                  """);
             var thuaDatToBanDos = (await query.QueryAsync(cancellationToken: cancellationToken))
                 .ToList();
