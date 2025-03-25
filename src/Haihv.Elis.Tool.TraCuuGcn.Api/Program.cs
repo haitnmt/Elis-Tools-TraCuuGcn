@@ -59,6 +59,9 @@ builder.Services.AddAuthentication(options =>
 // Add ConnectionElisData
 builder.Services.AddSingleton<IConnectionElisData, ConnectionElisData>();
 
+// Add WriteLogService
+builder.Services.AddSingleton<ILogElisDataServices, LogElisDataServices>();
+
 // Add GcnQrService
 builder.Services.AddSingleton<IGcnQrService, GcnQrService>();
 // Add GiayChungNhanService

@@ -1,4 +1,7 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using InterpolatedSql.Dapper;
+using Microsoft.Data.SqlClient;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
@@ -21,4 +24,6 @@ public static class ConnectionExtensions
 
         return new SqlConnection(connectionString);
     }
+
+
 }

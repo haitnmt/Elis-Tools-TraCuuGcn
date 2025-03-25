@@ -42,7 +42,8 @@ public static class GiayChungNhanEndpoints
 
     private static async Task<IResult> DeleteMaQr(HttpContext context,
         ILogger logger, IFusionCache fusionCache, IConfiguration configuration,
-        IConnectionElisData connectionElisData, IGiayChungNhanService giayChungNhanService,
+        IConnectionElisData connectionElisData, ILogElisDataServices logElisDataServices,
+        IGiayChungNhanService giayChungNhanService,
         IGcnQrService gcnQrService,
         [FromQuery] string? serial = null)
     {
@@ -69,6 +70,11 @@ public static class GiayChungNhanEndpoints
                         url, 
                         serial,
                         maDinhDanh);
+                        
+                    // Ghi log vào ELIS Data
+                    logElisDataServices.WriteLogToElisDataAsync(serial,maDinhDanh, 
+                        $"Xóa mã QR của Giấy chứng nhận có phát hành (Serial): {serial}", LogElisDataServices.LoaiTacVu.Xoa);
+
                     return Results.Ok("Xóa mã QR thành công!");
                 }
 
