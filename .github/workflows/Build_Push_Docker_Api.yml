@@ -22,7 +22,7 @@ jobs:
         run: |
           csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj)
           version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
-          echo "VERSION_TAG=$version" >> $GITHUB_ENV
+          echo "API_VERSION_TAG=$version" >> $GITHUB_ENV
         shell: bash
         
 
@@ -43,7 +43,7 @@ jobs:
           file: ./src/DockerfileApi  # Đường dẫn tới DockerFile
           push: true
           tags: |
-            haitnmt/tracuugcn-api:${{ env.VERSION_TAG }}
+            haitnmt/tracuugcn-api:${{ env.API_VERSION_TAG }}
             haitnmt/tracuugcn-api:latest
             
       - name: Logout of Docker Hub

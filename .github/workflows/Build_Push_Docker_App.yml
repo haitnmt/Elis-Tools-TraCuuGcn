@@ -22,7 +22,7 @@ jobs:
         run: |
           csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.csproj)
           version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
-          echo "VERSION_TAG=$version" >> $GITHUB_ENV
+          echo "APP_VERSION_TAG=$version" >> $GITHUB_ENV
         shell: bash
 
       - name: Set up Docker Buildx
@@ -42,7 +42,7 @@ jobs:
           file: ./src/DockerfileApp  # Đường dẫn tới DockerFile
           push: true
           tags: |
-            haitnmt/tracuugcn-app:${{ env.VERSION_TAG }}
+            haitnmt/tracuugcn-app:${{ env.APP_VERSION_TAG }}
             haitnmt/tracuugcn-app:latest
             
       - name: Logout of Docker Hub
