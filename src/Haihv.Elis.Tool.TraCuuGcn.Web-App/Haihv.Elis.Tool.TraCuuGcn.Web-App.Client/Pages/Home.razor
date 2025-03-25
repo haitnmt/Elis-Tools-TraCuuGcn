@@ -166,12 +166,14 @@
 
     private Task RefreshDataChanged(bool refresh)
     {
-        if (!refresh || string.IsNullOrWhiteSpace(_serial) || !_hasGiayChungNhan) return Task.CompletedTask;
-        var serial = _serial;
+        if (!refresh) return Task.CompletedTask;
+        var searchQuery = _searchQuery;
+        _searchQuery = null;
         _serial = null;
+        _hasGiayChungNhan = false;
+        _donVi = null;
         StateHasChanged();
-        _serial = serial;
-        StateHasChanged();
+        SearchBarResultChanged(searchQuery);
         return Task.CompletedTask;
     }
     

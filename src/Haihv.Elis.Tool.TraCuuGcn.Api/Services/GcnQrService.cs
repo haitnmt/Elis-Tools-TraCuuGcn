@@ -227,7 +227,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                                 GuidID AS GuidId,
                                 MaGCN AS MaGcn
                             FROM GCNQR
-                            WHERE LOWER(TRIM(MaQR)) LIKE {serialLike}
+                            WHERE  (LOWER(LTRIM(RTRIM([MaQR]))) LIKE {serialLike})
                         """);
             var qrInfos = (await selectQuery.QueryAsync<QrInfo>(cancellationToken: cancellationToken)).ToList();
             if (qrInfos.Count == 0)
@@ -247,7 +247,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                          WHERE (MaGCN = {maGcn});
                      UPDATE [TS_ChuSuDung_TaiSan] 
                          SET [DaCapGCN] = NULL, [soSerial] = NULL, [namCap] = NULL
-                         WHERE (LOWER(LTRIM(RTRIM([soSerial]))) = {serial};
+                         WHERE (LOWER(LTRIM(RTRIM([soSerial]))) = {serial});
                      """
                 );
                 if (dbConnection.State == ConnectionState.Closed)

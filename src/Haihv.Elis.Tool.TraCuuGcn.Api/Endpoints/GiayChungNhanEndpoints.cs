@@ -313,6 +313,7 @@ public static class GiayChungNhanEndpoints
         [FromQuery] string? serial)
     {
         var url = context.Request.GetDisplayUrl();
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial))
         {
             logger.Warning("Thiếu thông tin số Serial của Giấy chứng nhận: {Url}", url);
@@ -328,7 +329,7 @@ public static class GiayChungNhanEndpoints
         }
         try
         {
-            await fusionCache.RemoveByTagAsync(serial.ChuanHoa());
+            await fusionCache.RemoveByTagAsync(serial);
             logger.Information("Xóa cache thành công: {Url}{Serial}{MaDinhDanh}",
                 url, serial, maDinhDanh);
             return Results.Ok("Xóa cache thành công");
