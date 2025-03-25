@@ -20,7 +20,7 @@ jobs:
       - name: Get version from APP .csproj
         id: get_version_app
         run: |
-          csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.Client/Haihv.Elis.Tool.TraCuuGcn.Web-App.Client.csproj)
+          csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.csproj)
           version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
           echo "VERSION_TAG=$version" >> $GITHUB_ENV
         shell: bash
@@ -34,12 +34,6 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Get the current date
-        id: date
-        run: echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-
-      - name: Define version tag
-        run: echo "VERSION_TAG=${{ env.DATE }}.${{ github.event.inputs.version_number || '1' }}" >> $GITHUB_ENV
 
       - name: Build and push
         uses: docker/build-push-action@v4
