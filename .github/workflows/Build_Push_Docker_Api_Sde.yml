@@ -23,7 +23,8 @@ jobs:
         run: |
           # Assuming version is stored in a VERSION file - adjust as needed
           if [ -f "src/Haihv.Elis.Tool.TraCuuGcn.Api.Sde/version.txt" ]; then
-            version=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Api.Sde/version.txt)
+            # Use tr to remove any non-printable characters
+            version=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Api.Sde/version.txt | tr -d '\r\n\t\f\v\0\ufeff')
           else
             # Default to a timestamp-based version if no version file exists
             version=$(date +'%Y.%m.%d')
