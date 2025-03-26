@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strings"
 
+	"slices"
+
 	_ "github.com/denisenkom/go-mssqldb"
 	"gopkg.in/ini.v1"
 )
@@ -57,12 +59,7 @@ func loadConfig(filename string) error {
 }
 
 func isAllowedDatabase(database string) bool {
-	for _, db := range appConfig.AllowedDBs {
-		if db == database {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(appConfig.AllowedDBs, database)
 }
 
 func handleDynamicQuery(w http.ResponseWriter, r *http.Request) {

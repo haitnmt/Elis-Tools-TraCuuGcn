@@ -25,13 +25,14 @@ public class SearchService(IGcnQrService gcnQrService,
             return giayChungNhanInfo;
         }
         giayChungNhanInfo = await GetInDatabaseAsync(query, cancellationToken);
-        if (giayChungNhanInfo is null || string.IsNullOrWhiteSpace(giayChungNhanInfo.Serial))
+        var serial = giayChungNhanInfo?.Serial?.ChuanHoa();
+        if (giayChungNhanInfo is null || string.IsNullOrWhiteSpace(serial))
         {
             return new Result<GiayChungNhanInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
         }
         await fusionCache.SetAsync(cacheKey, 
             giayChungNhanInfo, 
-            tags: [giayChungNhanInfo.Serial], 
+            tags: [serial], 
             token: cancellationToken);
         return giayChungNhanInfo;
     }

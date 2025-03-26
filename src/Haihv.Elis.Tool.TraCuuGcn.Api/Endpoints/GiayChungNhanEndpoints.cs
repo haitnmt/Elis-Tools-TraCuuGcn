@@ -72,7 +72,7 @@ public static class GiayChungNhanEndpoints
                         maDinhDanh);
                         
                     // Ghi log vào ELIS Data
-                    logElisDataServices.WriteLogToElisDataAsync(serial,maDinhDanh, 
+                    logElisDataServices.WriteLogToElisDataAsync(serial,maDinhDanh, "XoaMaQr",
                         $"Xóa mã QR của Giấy chứng nhận có phát hành (Serial): {serial}", LogElisDataServices.LoaiTacVu.Xoa);
 
                     return Results.Ok("Xóa mã QR thành công!");

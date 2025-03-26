@@ -40,16 +40,41 @@ public sealed class TokenProvider(
 
 public static class TokenExtensions
 {
+    private static string? GetClaimValue(this HttpContext context, string claimType)
+        => context.User.Claims.FirstOrDefault(c => c.Type == claimType)?.Value;
+    private static string? GetClaimValue(this ClaimsPrincipal claimsPrincipal, string claimType)
+        => claimsPrincipal.Claims.FirstOrDefault(c => c.Type == claimType)?.Value;
     public static string? GetMaDinhDanh(this ClaimsPrincipal claimsPrincipal)
     {
         var id = claimsPrincipal.FindFirst("SoDinhDanh")?.Value;
         if (!string.IsNullOrWhiteSpace(id)) return id;
-        id = claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-        return string.IsNullOrWhiteSpace(id) ? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Name)?.Value : id;
+        id = claimsPrincipal.GetSamAccountName();
+        return string.IsNullOrWhiteSpace(id) ? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value : id;
     }
     public static string? GetHoVaTen(this ClaimsPrincipal claimsPrincipal) =>
         claimsPrincipal.FindFirst("HoVaTen")?.Value ?? claimsPrincipal.FindFirst(JwtRegisteredClaimNames.GivenName)?.Value;
-    
+
     public static string? GetIdentityType(this ClaimsPrincipal claimsPrincipal) =>
         claimsPrincipal.FindFirst(JwtRegisteredClaimNames.Typ)?.Value;
+    public static string GetUserPrincipalName(this HttpContext context)
+        => context.GetClaimValue("UserPrincipalName") ?? string.Empty;
+    public static string GetUserPrincipalName(this ClaimsPrincipal claimsPrincipal)
+        => claimsPrincipal.GetClaimValue("UserPrincipalName") ?? string.Empty;
+    public static string GetSamAccountName(this HttpContext context)
+    {
+        var samAccountName = context.GetClaimValue("SamAccountName");
+        if (!string.IsNullOrWhiteSpace(samAccountName)) return samAccountName;
+        var userPrincipalName = context.GetClaimValue("UserPrincipalName");
+        samAccountName = userPrincipalName?.Split('@')[0];
+        return samAccountName ?? string.Empty;
+    }
+    public static string GetSamAccountName(this ClaimsPrincipal claimsPrincipal)
+    {
+        var samAccountName = claimsPrincipal.GetClaimValue("SamAccountName");
+        if (!string.IsNullOrWhiteSpace(samAccountName)) return samAccountName;
+        var userPrincipalName = claimsPrincipal.GetClaimValue("UserPrincipalName");
+        samAccountName = userPrincipalName?.Split('@')[0];
+        return samAccountName ?? string.Empty;
+    }
+
 }

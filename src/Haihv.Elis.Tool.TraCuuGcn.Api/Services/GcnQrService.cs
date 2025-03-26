@@ -220,7 +220,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
 
             serial = serial.ToLower();
             await using var dbConnection = connectionSql.ElisConnectionString.GetConnection();
-            var serialLike = $"%|{serial}||%";
+            var serialLike = $"%|%{serial}%||%";
             var selectQuery = dbConnection.SqlBuilder(
                 $"""
                             SELECT DISTINCT 
