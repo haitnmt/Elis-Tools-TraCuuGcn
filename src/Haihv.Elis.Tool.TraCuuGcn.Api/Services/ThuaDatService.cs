@@ -7,87 +7,87 @@ using LanguageExt.Common;
 using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
-
-public class ThuaDatService(
-    IConnectionElisData connectionElisData,
-    ILogger logger,
-    IFusionCache fusionCache) : IThuaDatService
+namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services
 {
-    private record ThuaDatToBanDo(int MaDvhc, string SoTo, int TyLe, string SoThua, string DiaChi, string GhiChu);
-
-    /// <summary>
-    /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
-    /// </summary>
-    /// <param name="serial"> Serial của Giấy chứng nhận.</param>
-    /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
-    /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    public async Task<Result<List<ThuaDat>>> GetResultAsync(string serial = "",
-        CancellationToken cancellationToken = default)
+    public class ThuaDatService(
+        IConnectionElisData connectionElisData,
+        ILogger logger,
+        IFusionCache fusionCache) : IThuaDatService
     {
-        serial = serial.ChuanHoa() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(serial))
-        {
-            return new Result<List<ThuaDat>>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
-        }
-        var cacheKey = CacheSettings.KeyThuaDat(serial);
-        try
-        {
-            List<string> maGcn = [];
-            var thuaDats = await fusionCache.GetOrSetAsync(cacheKey,
-                async cancel =>
-                {
-                    var thuaDát = await GetThuaDatInDatabaseAsync(serial, cancel);
-                    maGcn = thuaDát.Select(x => x.MaGcn.ToString()).ToList();
-                    return thuaDát;
-                },
-                tags: maGcn,
-                token: cancellationToken);
-            return thuaDats.Count == 0 ? 
-                new Result<List<ThuaDat>>(new ValueIsNullException("Không tìm thấy thông tin thửa đất!")) : 
-                thuaDats;
-        }
-        catch (Exception exception)
-        {
-            return new Result<List<ThuaDat>>(exception);
-        }
-    }
+        private record ThuaDatToBanDo(int MaDvhc, string SoTo, int TyLe, string SoThua, string DiaChi, string GhiChu);
 
-    /// <summary>
-    /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận từ cơ sở dữ liệu.
-    /// </summary>
-    /// <param name="serial"> Serial của Giấy chứng nhận.</param>
-    /// <param name="cancellationToken"> Token hủy bỏ tác vụ không bắt buộc.</param>
-    /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    public async Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(string serial = "",
-        CancellationToken cancellationToken = default)
-    {
-        serial = serial.ChuanHoa() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(serial)) return [];
-        var connectionSqls = await connectionElisData.GetAllConnection(serial);
-
-        List<ThuaDat> thuaDats = [];
-        foreach (var connectionString in connectionSqls.Select(x => x.ElisConnectionString))
+        /// <summary>
+        /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
+        /// </summary>
+        /// <param name="serial"> Serial của Giấy chứng nhận.</param>
+        /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
+        /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
+        public async Task<Result<List<ThuaDat>>> GetResultAsync(string serial = "",
+            CancellationToken cancellationToken = default)
         {
-            thuaDats.AddRange(await GetThuaDatInDataBaseAsync(serial, connectionString,cancellationToken: cancellationToken));
+            serial = serial.ChuanHoa() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(serial))
+            {
+                return new Result<List<ThuaDat>>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
+            }
+            var cacheKey = CacheSettings.KeyThuaDat(serial);
+            try
+            {
+                List<string> maGcn = [];
+                var thuaDats = await fusionCache.GetOrSetAsync(cacheKey,
+                    async cancel =>
+                    {
+                        var thuaDát = await GetThuaDatInDatabaseAsync(serial, cancel);
+                        maGcn = thuaDát.Select(x => x.MaGcn.ToString()).ToList();
+                        return thuaDát;
+                    },
+                    tags: maGcn,
+                    token: cancellationToken);
+                return thuaDats.Count == 0 ? 
+                    new Result<List<ThuaDat>>(new ValueIsNullException("Không tìm thấy thông tin thửa đất!")) : 
+                    thuaDats;
+            }
+            catch (Exception exception)
+            {
+                return new Result<List<ThuaDat>>(exception);
+            }
         }
-        thuaDats = thuaDats.Distinct().ToList();
-        return thuaDats;
 
-    }
-
-    private async Task<List<ThuaDat>> GetThuaDatInDataBaseAsync(string serial, string connectionString,
-        CancellationToken cancellationToken = default)
-    {
-        serial = serial.ChuanHoa() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(serial)) return [];
-        serial = serial.ToLower();
-        List<ThuaDat> result = [];
-        try
+        /// <summary>
+        /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận từ cơ sở dữ liệu.
+        /// </summary>
+        /// <param name="serial"> Serial của Giấy chứng nhận.</param>
+        /// <param name="cancellationToken"> Token hủy bỏ tác vụ không bắt buộc.</param>
+        /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
+        public async Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(string serial = "",
+            CancellationToken cancellationToken = default)
         {
-            await using var dbConnection = connectionString.GetConnection();
-            var query = dbConnection.SqlBuilder(
-                $"""
+            serial = serial.ChuanHoa() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(serial)) return [];
+            var connectionSqls = await connectionElisData.GetAllConnection(serial);
+
+            List<ThuaDat> thuaDats = [];
+            foreach (var connectionString in connectionSqls.Select(x => x.ElisConnectionString))
+            {
+                thuaDats.AddRange(await GetThuaDatInDataBaseAsync(serial, connectionString,cancellationToken: cancellationToken));
+            }
+            thuaDats = thuaDats.Distinct().ToList();
+            return thuaDats;
+
+        }
+
+        private async Task<List<ThuaDat>> GetThuaDatInDataBaseAsync(string serial, string connectionString,
+            CancellationToken cancellationToken = default)
+        {
+            serial = serial.ChuanHoa() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(serial)) return [];
+            serial = serial.ToLower();
+            List<ThuaDat> result = [];
+            try
+            {
+                await using var dbConnection = connectionString.GetConnection();
+                var query = dbConnection.SqlBuilder(
+                    $"""
                  SELECT DISTINCT TBD.SoTo AS SoTo, 
                         TBD.TyLe AS TyLe,
                         TD.ThuaDatSo AS SoThua, 
@@ -103,117 +103,96 @@ public class ThuaDatService(
                      INNER JOIN GCNQSDD GCN ON DK.MaDangKy = GCN.MaDangKy
                  WHERE LOWER(LTRIM(RTRIM(GCN.SoSerial))) = {serial}
                  """);
-            var thuaDatToBanDos = (await query.QueryAsync(cancellationToken: cancellationToken))
-                .ToList();
-            var mucDichService = new MucDichAndHinhThucService(connectionString, logger);
-            var nguonGocService = new NguonGocService(connectionString, logger);
-            foreach (var thuaDatToBanDo in thuaDatToBanDos)
-            {
-                if (!int.TryParse(thuaDatToBanDo.maDvhc.ToString(), out int maDvhc)) return [];
-                string diaChi = thuaDatToBanDo.DiaChi;
-                diaChi =
-                    $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";
-                string soThua = thuaDatToBanDo.SoThua.ToString().Trim();
-                string toBanDo = thuaDatToBanDo.SoTo.ToString().Trim();
-                int.TryParse(thuaDatToBanDo.TyLe.ToString(), out int tyLe);
-                string ghiChu = thuaDatToBanDo.GhiChu?.ToString() ?? string.Empty;
-                var mucDichSuDung = await mucDichService.GetMucDichSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
-                var nguonGoc = await nguonGocService.GetNguonGocSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
-                if(result.Any(x => x.MaDvhc == maDvhc && x.ThuaDatSo == soThua && x.ToBanDo == toBanDo)) continue;
-                result.Add(new ThuaDat(
-                    thuaDatToBanDo.MaGcn,
-                    maDvhc,
-                    soThua,
-                    toBanDo,
-                    tyLe,
-                    diaChi.Trim().VietHoaDauChuoi(),
-                    $"{(thuaDatToBanDo.DienTichRieng + thuaDatToBanDo.DienTichChung).ToString("##.0")} m²",
-                    mucDichSuDung.Item1,
-                    mucDichSuDung.Item2,
-                    mucDichSuDung.Item3,
-                    nguonGoc,
-                    ghiChu.Trim().VietHoaDauChuoi()
-                ));
+                var thuaDatToBanDos = (await query.QueryAsync(cancellationToken: cancellationToken))
+                    .ToList();
+                var mucDichService = new MucDichAndHinhThucService(connectionString, logger);
+                var nguonGocService = new NguonGocService(connectionString, logger);
+                foreach (var thuaDatToBanDo in thuaDatToBanDos)
+                {
+                    if (!int.TryParse(thuaDatToBanDo.maDvhc.ToString(), out int maDvhc)) return [];
+                    string diaChi = thuaDatToBanDo.DiaChi;
+                    diaChi =
+                        $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";
+                    string soThua = thuaDatToBanDo.SoThua.ToString().Trim();
+                    string toBanDo = thuaDatToBanDo.SoTo.ToString().Trim();
+                    int.TryParse(thuaDatToBanDo.TyLe.ToString(), out int tyLe);
+                    string ghiChu = thuaDatToBanDo.GhiChu?.ToString() ?? string.Empty;
+                    var mucDichSuDung = await mucDichService.GetMucDichSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
+                    var nguonGoc = await nguonGocService.GetNguonGocSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
+                    if(result.Any(x => x.MaDvhc == maDvhc && x.ThuaDatSo == soThua && x.ToBanDo == toBanDo)) continue;
+                    result.Add(new ThuaDat(
+                        thuaDatToBanDo.MaGcn,
+                        maDvhc,
+                        soThua,
+                        toBanDo,
+                        tyLe,
+                        diaChi.Trim().VietHoaDauChuoi(),
+                        $"{(thuaDatToBanDo.DienTichRieng + thuaDatToBanDo.DienTichChung).ToString("##.0")} m²",
+                        mucDichSuDung.Item1,
+                        mucDichSuDung.Item2,
+                        mucDichSuDung.Item3,
+                        nguonGoc,
+                        ghiChu.Trim().VietHoaDauChuoi()
+                    ));
+                }
+
+                return result;
             }
+            catch (Exception e)
+            {
+                logger.Error(e, "Lỗi khi lấy thông tin Thửa đất theo Serial: {Serial}", serial);
+                throw;
+            }
+        }
 
-            return result;
-        }
-        catch (Exception e)
+        private async ValueTask<string> GetDiaChiByMaDvhcAsync(int maDvhc, string connectionString,
+            CancellationToken cancellationToken = default)
         {
-            logger.Error(e, "Lỗi khi lấy thông tin Thửa đất theo Serial: {Serial}", serial);
-            throw;
+            if (maDvhc <= 0) return string.Empty;
+            var cacheKey = CacheSettings.KeyDiaChiByMaDvhc(maDvhc);
+            try
+            {
+                var diaChi = await fusionCache.GetOrSetAsync(cacheKey,
+                    cancel => GetDiaChiByMaDvhcAsyncInDataAsync(maDvhc, connectionString, cancel),
+                    token: cancellationToken);
+                return diaChi;
+            }
+            catch (Exception exception)
+            {
+                logger.Error(exception, "Lỗi khi truy vấn dữ liệu Đơn vị hành chính từ cơ sở dữ liệu, {MaDVHC}", maDvhc);
+                return string.Empty;
+            }
         }
-    }
 
-    private async ValueTask<string> GetDiaChiByMaDvhcAsync(int maDvhc, string connectionString,
-        CancellationToken cancellationToken = default)
-    {
-        if (maDvhc <= 0) return string.Empty;
-        var cacheKey = CacheSettings.KeyDiaChiByMaDvhc(maDvhc);
-        try
+        private async Task<string> GetDiaChiByMaDvhcAsyncInDataAsync(int maDvhc, string connectionString,
+            CancellationToken cancellationToken = default)
         {
-            var diaChi = await fusionCache.GetOrSetAsync(cacheKey,
-                cancel => GetDiaChiByMaDvhcAsyncInDataAsync(maDvhc, connectionString, cancel),
-                token: cancellationToken);
-            return diaChi;
-        }
-        catch (Exception exception)
-        {
-            logger.Error(exception, "Lỗi khi truy vấn dữ liệu Đơn vị hành chính từ cơ sở dữ liệu, {MaDVHC}", maDvhc);
-            return string.Empty;
-        }
-    }
-
-    private async Task<string> GetDiaChiByMaDvhcAsyncInDataAsync(int maDvhc, string connectionString,
-        CancellationToken cancellationToken = default)
-    {
-        if (maDvhc <= 0) return string.Empty;
-        try
-        {
-            await using var dbConnection = connectionString.GetConnection();
-            var query = dbConnection.SqlBuilder(
-                $"""
+            if (maDvhc <= 0) return string.Empty;
+            try
+            {
+                await using var dbConnection = connectionString.GetConnection();
+                var query = dbConnection.SqlBuilder(
+                    $"""
                  SELECT DVHCXa.Ten AS TenXa, DVHCHuyen.Ten AS TenHuyen, DVHCTinh.Ten AS TenTinh
                  FROM   DVHC DVHCXa 
                      	INNER JOIN DVHC AS DVHCHuyen ON DVHCXa.MaHuyen = DVHCHuyen.MaHuyen AND DVHCHuyen.MaXa = 0
                      	INNER JOIN DVHC AS DVHCTinh ON DVHCXa.MaTinh = DVHCTinh.MaTinh AND DVHCTinh.MaHuyen = 0
                  WHERE DVHCXa.MaDVHC = {maDvhc}
                  """);
-            var diaChiData = await query.QuerySingleOrDefaultAsync<dynamic?>(cancellationToken: cancellationToken);
-            if (diaChiData is null) return string.Empty;
-            string tenXa = diaChiData.TenXa.ToString();
-            string tenHuyen = diaChiData.TenHuyen.ToString();
-            string tenTinh = diaChiData.TenTinh.ToString();
-            return $"{tenXa.ChuanHoaTenDonViHanhChinh()}, " +
-                   $"{tenHuyen.ChuanHoaTenDonViHanhChinh()}, " +
-                   $"{tenTinh.ChuanHoaTenDonViHanhChinh()}";
+                var diaChiData = await query.QuerySingleOrDefaultAsync<dynamic?>(cancellationToken: cancellationToken);
+                if (diaChiData is null) return string.Empty;
+                string tenXa = diaChiData.TenXa.ToString();
+                string tenHuyen = diaChiData.TenHuyen.ToString();
+                string tenTinh = diaChiData.TenTinh.ToString();
+                return $"{tenXa.ChuanHoaTenDonViHanhChinh()}, " +
+                       $"{tenHuyen.ChuanHoaTenDonViHanhChinh()}, " +
+                       $"{tenTinh.ChuanHoaTenDonViHanhChinh()}";
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Lỗi khi lấy thông tin Đơn vị hành chính theo Mã DVHC: {maDVHC}", maDvhc);
+                throw;
+            }
         }
-        catch (Exception e)
-        {
-            logger.Error(e, "Lỗi khi lấy thông tin Đơn vị hành chính theo Mã DVHC: {maDVHC}", maDvhc);
-            throw;
-        }
-    }
-}
-
-public static class ThuaDatExtension
-{
-    public static string ChuanHoaTenDonViHanhChinh(this string input, bool isLower = true)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-        var words = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return words.Length switch
-        {
-            0 => string.Empty,
-            1 => isLower ? char.ToLower(input[0]) + input[1..] : input,
-            _ =>
-                $"{(isLower ? char.ToLower(words[0][0]) : char.ToUpper(words[0][0])) + words[0][1..]} {string.Join(' ', words.Skip(1))}"
-        };
-    }
-
-    public static string VietHoaDauChuoi(this string input)
-    {
-        if (string.IsNullOrWhiteSpace(input)) return string.Empty;
-        return char.ToUpper(input[0]) + input[1..];
     }
 }

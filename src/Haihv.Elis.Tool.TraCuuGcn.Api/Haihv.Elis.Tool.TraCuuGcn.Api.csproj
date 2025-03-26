@@ -6,8 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.03.26.5</AssemblyVersion>
-        <FileVersion>2025.03.26.5</FileVersion>
+        <AssemblyVersion>2025.03.26.6</AssemblyVersion>
+        <FileVersion>2025.03.26.6</FileVersion>
         <NeutralLanguage>vi-VN</NeutralLanguage>
     </PropertyGroup>
 
@@ -19,10 +19,10 @@
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
         <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
         <PackageReference Include="Elastic.Serilog.Sinks" Version="8.12.3" />
         <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.6.1" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.7.0" />
         <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
         <PackageReference Include="Serilog.Extensions" Version="8.0.3" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />

@@ -5,8 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.03.26.1</AssemblyVersion>
-        <FileVersion>2025.03.26.1</FileVersion>
+        <AssemblyVersion>2025.03.26.2</AssemblyVersion>
+        <FileVersion>2025.03.26.2</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -19,7 +19,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.3" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
         <PackageReference Include="MudBlazor" Version="8.4.0" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
     </ItemGroup>
 
     <ItemGroup>

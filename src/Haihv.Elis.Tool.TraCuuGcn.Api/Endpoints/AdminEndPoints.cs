@@ -1,5 +1,5 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Microsoft.AspNetCore.Http.Extensions;
 using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
@@ -47,7 +47,7 @@ public static class AdminEndPoints
                 await fusionCache.RemoveByTagAsync(tag);
             }
             logger.Information("Xóa cache thành công: {Url}{MaDinhDanh}",
-                 url, maDinhDanh);
+                url, maDinhDanh);
             return Results.Ok("Xóa cache thành công");
         }
         catch (Exception e)
