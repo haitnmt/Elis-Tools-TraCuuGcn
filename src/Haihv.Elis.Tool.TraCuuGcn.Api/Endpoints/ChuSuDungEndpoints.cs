@@ -42,25 +42,25 @@ public static class ChuSuDungEndpoints
         var (ipAddress, _) = httpContext.GetIpInfo();
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Warning("Người dùng không được phép truy cập thông tin Chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}",
+            logger.Warning("Người dùng không được phép truy cập thông tin Chủ sử dụng: {Url}{MaDinhDanh}{ClientIp}",
                 url,
-                ipAddress,
-                maDinhDanh);
+                maDinhDanh,
+                ipAddress);
             return Results.Unauthorized();
         }
         var result = await chuSuDungService.GetResultAsync(serial);
         return await Task.FromResult(result.Match(
             chuSuDung =>
             {
-                logger.Information("Lấy thông tin chủ sử dụng thành công: {MaDinhDanh}{Url}{ClientIp}",
-                    maDinhDanh,
+                logger.Information("Lấy thông tin chủ sử dụng thành công: {Url}{MaDinhDanh}{ClientIp}",
                     url,
+                    maDinhDanh,
                     ipAddress);
                 if (chuSuDung.Count == 0)
                 {
-                    logger.Warning("Không tìm thấy thông tin chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}",
-                        maDinhDanh,
+                    logger.Warning("Không tìm thấy thông tin chủ sử dụng: {Url}{MaDinhDanh}{ClientIp}",
                         url,
+                        maDinhDanh,
                         ipAddress);
                     return Results.NotFound(new Response<List<ChuSuDungInfo>>("Không tìm thấy thông tin chủ sử dụng."));
                 }
@@ -75,9 +75,9 @@ public static class ChuSuDungEndpoints
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}",
-                    maDinhDanh,
+                logger.Error(ex, "Lỗi khi lấy thông tin chủ sử dụng: {Url}{MaDinhDanh}{ClientIp}",
                     url,
+                    maDinhDanh,
                     ipAddress);
                 return Results.BadRequest(new Response<ChuSuDungInfo>(ex.Message));
             }));

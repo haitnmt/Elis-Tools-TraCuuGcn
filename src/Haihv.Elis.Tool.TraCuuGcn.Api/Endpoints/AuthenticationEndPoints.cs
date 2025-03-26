@@ -60,17 +60,17 @@ public static class AuthenticationEndPoints
                     checkIpService.ClearLockAsync(ipAddress);
                 }
 
-                logger.Information("Xác thực chủ sử dụng thành công: {MaDinhDanh}{Url}{ClientIp}",
-                    authChuSuDung.SoDinhDanh,
+                logger.Information("Xác thực chủ sử dụng thành công: {Url}{MaDinhDanh}{ClientIp}",
                     url,
+                    authChuSuDung.SoDinhDanh,
                     ipAddress);
                 return Results.Ok(new Response<AccessToken>(token));
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi xác thực chủ sử dụng: {MaDinhDanh}{Url}{ClientIp}",
-                    authChuSuDung.SoDinhDanh,
+                logger.Error(ex, "Lỗi khi xác thực chủ sử dụng: {Url}{MaDinhDanh}{ClientIp}",
                     url,
+                    authChuSuDung.SoDinhDanh,
                     ipAddress);
                 if (isPrivate)
                 {

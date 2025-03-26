@@ -31,15 +31,13 @@ type QueryRequest struct {
 }
 
 type Response struct {
-	Status  string      `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Data    any    `json:"data,omitempty"`
 }
 
-var (
-	appConfig Config
-	dbPool    = make(map[string]*sql.DB)
-)
+var appConfig Config
+var dbPool = make(map[string]*sql.DB)
 
 func loadConfig(filename string) error {
 	cfg, err := ini.Load(filename)
