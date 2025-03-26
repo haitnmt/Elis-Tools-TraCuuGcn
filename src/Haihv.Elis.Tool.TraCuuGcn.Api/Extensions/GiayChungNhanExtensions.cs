@@ -9,9 +9,10 @@ public static class GiayChungNhanExtensions
         string connectionName, string? serial = null,
         CancellationToken cancellationToken = default)
     {
+        serial = serial.ChuanHoa();
         if (!string.IsNullOrWhiteSpace(serial))
         {
-            var cacheKey = CacheSettings.ElisConnectionName(serial.ChuanHoa());
+            var cacheKey = CacheSettings.ElisConnectionName(serial);
             await fusionCache.SetAsync(cacheKey,
                 connectionName,
                 tags: [serial],
