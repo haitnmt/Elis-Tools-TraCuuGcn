@@ -1,35 +1,31 @@
 ﻿name: WebApi Build and Push Docker Image
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  push:  # Automatically run on commit
+    branches:
+      - main  # Chỉ chạy trên nhánh chính
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out the code
-        uses: actions/checkout@v4.2.0
-
-      # Đọc phiên bản từ file .csproj của API
-      - name: Get version from API .csproj
-        id: get_version_api
+      - name: Check if Docker tag exists
+        id: check_tag
         run: |
           csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj)
           version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
           echo "API_VERSION_TAG=$version" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Check if Docker tag exists
-        id: check_tag
-        run: |
           if [[ $(docker manifest inspect haitnmt/tracuugcn-api:${{ env.API_VERSION_TAG }} 2>/dev/null) ]]; then
             echo "Tag already exists. Skipping build."
-            echo "BUILD=false" >> $GITHUB_ENV
-          else
-            echo "Tag does not exist. Proceeding with build."
-            echo "BUILD=true" >> $GITHUB_ENV
+            exit 0  # Hoàn thành action nếu tag đã tồn tại
           fi
+          echo "Tag does not exist. Proceeding with build."
+          echo "BUILD=true" >> $GITHUB_ENV
+
+      - name: Check out the code
+        if: env.BUILD == 'true'  # Không check out khi không cần build
+        uses: actions/checkout@v4.2.0
 
       - name: Set up .NET SDK
         if: env.BUILD == 'true'
