@@ -68,7 +68,8 @@ public static class TokenExtensions
         samAccountName = userPrincipalName?.Split('@')[0];
         return samAccountName ?? string.Empty;
     }
-    public static string GetSamAccountName(this ClaimsPrincipal claimsPrincipal)
+
+    private static string GetSamAccountName(this ClaimsPrincipal claimsPrincipal)
     {
         var samAccountName = claimsPrincipal.GetClaimValue("SamAccountName");
         if (!string.IsNullOrWhiteSpace(samAccountName)) return samAccountName;
