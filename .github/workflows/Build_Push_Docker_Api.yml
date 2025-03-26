@@ -19,13 +19,16 @@ jobs:
         run: |
           csprojContent=$(cat src/Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj)
           version=$(echo "$csprojContent" | grep -oP '(?<=<AssemblyVersion>)(.*?)(?=</AssemblyVersion>)')
-          echo "API_VERSION_TAG=$version" >> $GITHUB_ENV
+          echo "VERSION_TAG=$version" >> $GITHUB_ENV
         shell: bash
+
+      - name: Set image name
+        run: echo "IMAGE_NAME=haitnmt/tracuugcn-api" >> $GITHUB_ENV
 
       - name: Check if Docker tag exists
         id: check_tag
         run: |
-          if [[ $(docker manifest inspect haitnmt/tracuugcn-api:${{ env.API_VERSION_TAG }} 2>/dev/null) ]]; then
+          if [[ $(docker manifest inspect ${{ env.IMAGE_NAME }}:${{ env.VERSION_TAG }} 2>/dev/null) ]]; then
             echo "Tag already exists. Skipping build."
             echo "BUILD=false" >> $GITHUB_ENV
           else
@@ -57,7 +60,7 @@ jobs:
           context: ./src
           file: ./src/DockerfileApi  # Đường dẫn tới DockerFile
           push: true
-          tags: haitnmt/tracuugcn-api:${{ env.API_VERSION_TAG }}, haitnmt/tracuugcn-api:latest
+          tags: ${{ env.IMAGE_NAME }}:${{ env.VERSION_TAG }}, ${{ env.IMAGE_NAME }}:latest
 
       - name: Logout of Docker Hub
         if: env.BUILD == 'true'
