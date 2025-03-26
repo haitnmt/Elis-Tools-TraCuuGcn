@@ -1,43 +1,42 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Models;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http.Extensions;
 using OSGeo.OGR;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
 public static class GeoEndPoints
-{   
-    private const string UrlGetToaDoThua = "/geo/toaDoThua";
+{
     /// <summary>
     /// Định nghĩa endpoint để lấy thông tin chủ sử dụng.
     /// </summary>
     /// <param name="app">Ứng dụng web.</param>
     public static void MapGeoEndPoints(this WebApplication app)
     {
-        app.MapGet(UrlGetToaDoThua, GetToaDoThua)
+        app.MapGet("/geo/toaDoThua", GetToaDoThua)
             .WithName("GetToaDoThua")
             .RequireAuthorization();
     }
 
-    private static async Task<IResult> GetToaDoThua([FromQuery] string? serial,
-        HttpContext httpContext, 
-        ILogger logger, 
+    private static async Task<IResult> GetToaDoThua(
+        HttpContext httpContext,
+        ILogger logger,
         IAuthenticationService authenticationService,
         IGeoService geoService)
     {
-        if (string.IsNullOrWhiteSpace(serial)) 
+        var serial = httpContext.Request.Query["serial"].ToString();
+        if (string.IsNullOrWhiteSpace(serial))
             return Results.BadRequest("Thiếu thông tin số Serial của Giấy chứng nhận");
         // Lấy thông tin người dùng theo token từ HttpClient
         var user = httpContext.User;
         var maDinhDanh = await authenticationService.CheckAuthenticationAsync(serial, user);
+        var url = httpContext.Request.GetDisplayUrl();
         if (string.IsNullOrWhiteSpace(maDinhDanh))
         {
-            logger.Error("Người dùng không được phép truy cập thông tin Tọa độ thửa đất: {Serial}{Url}{MaDinhDanh}", 
-                serial, 
-                UrlGetToaDoThua, 
+            logger.Error("Người dùng không được phép truy cập thông tin Tọa độ thửa đất: {Url}{MaDinhDanh}",
+                url,
                 maDinhDanh);
             return Results.Unauthorized();
         }
@@ -45,9 +44,8 @@ public static class GeoEndPoints
         return result.Match(
             coordinates =>
             {
-                logger.Information("Lấy thông tin toạ độ thửa thành công {Serial}{Url}{MaDinhDanh}",  
-                    serial, 
-                    UrlGetToaDoThua, 
+                logger.Information("Lấy thông tin toạ độ thửa thành công {Url}{MaDinhDanh}",
+                    url,
                     maDinhDanh);
                 var geometry = new Geometry(wkbGeometryType.wkbPoint);
                 foreach (var coordinate in coordinates)
@@ -64,9 +62,8 @@ public static class GeoEndPoints
             },
             ex =>
             {
-                logger.Error(ex, "Lỗi khi lấy thông tin toạ độ thửa: {Serial}{Url}{MaDinhDanh}",  
-                    serial, 
-                    UrlGetToaDoThua, 
+                logger.Error(ex, "Lỗi khi lấy thông tin toạ độ thửa: {Url}{MaDinhDanh}",
+                    url,
                     maDinhDanh);
                 return Results.BadRequest(ex.Message);
             });

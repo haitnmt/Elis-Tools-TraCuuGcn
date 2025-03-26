@@ -1,7 +1,4 @@
-﻿using System.Text;
-using Microsoft.IdentityModel.Tokens;
-
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+﻿namespace Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 
 public sealed class JwtTokenSettings
 {

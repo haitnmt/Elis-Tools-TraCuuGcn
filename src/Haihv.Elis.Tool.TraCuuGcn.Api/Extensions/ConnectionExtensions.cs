@@ -1,7 +1,4 @@
-﻿using System.Data;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
-using InterpolatedSql.Dapper;
-using Microsoft.Data.SqlClient;
+﻿using Microsoft.Data.SqlClient;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 

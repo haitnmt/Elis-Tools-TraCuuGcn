@@ -1,7 +1,6 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
@@ -23,10 +22,10 @@ public static class AdminEndPoints
     private static async Task<IResult> DeleteCacheBySerial(HttpContext context,
         ILogger logger,
         IFusionCache fusionCache,
-        IConfiguration configuration,
-        [FromQuery] string? serial)
+        IConfiguration configuration)
     {
         var url = context.Request.GetDisplayUrl();
+        var serial = context.Request.Query["serial"].ToString();
         if (string.IsNullOrWhiteSpace(serial))
         {
             logger.Warning("Thiếu thông tin số Serial của GCN: {Url}", url);
@@ -36,21 +35,25 @@ public static class AdminEndPoints
         var isLdapUser = context.User.IsLdap();
         if (string.IsNullOrWhiteSpace(maDinhDanh) || !isLdapUser)
         {
-            logger.Warning("Người dùng không được phép xóa cache: {Url}{MaDinhDanh}", 
+            logger.Warning("Người dùng không được phép xóa cache: {Url}{MaDinhDanh}",
                 url, maDinhDanh);
             return Results.Unauthorized();
         }
         try
         {
-            await fusionCache.RemoveByTagAsync(serial.ChuanHoa());
-            logger.Information("Xóa cache thành công: {Url}{Serial}{MaDinhDanh}",
-                 url,serial, maDinhDanh);
+            var tag = serial.ChuanHoa();
+            if (!string.IsNullOrWhiteSpace(tag))
+            {
+                await fusionCache.RemoveByTagAsync(tag);
+            }
+            logger.Information("Xóa cache thành công: {Url}{MaDinhDanh}",
+                 url, maDinhDanh);
             return Results.Ok("Xóa cache thành công");
         }
         catch (Exception e)
         {
-            logger.Error(e, "Lỗi khi xóa cache: {Url}{Serial}{MaDinhDanh}",
-                url, serial, maDinhDanh);
+            logger.Error(e, "Lỗi khi xóa cache: {Url}{MaDinhDanh}",
+                url, maDinhDanh);
             return Results.BadRequest("Lỗi khi xóa cache");
         }
     }

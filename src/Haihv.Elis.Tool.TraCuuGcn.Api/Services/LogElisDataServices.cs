@@ -102,7 +102,8 @@ public sealed class LogElisDataServices(IConnectionElisData connectionElisData, 
         {
             await using var dbConnection = connectionSql.ElisConnectionString.GetConnection();
             var guid = Guid.CreateVersion7();
-            task ??= loaiTacVu.ToString();
+            task = (task ?? loaiTacVu.ToString()).Length > 200 ? 
+                (task ?? loaiTacVu.ToString())[..200] : task ?? loaiTacVu.ToString();
             var intLoaiTacVu = (int)loaiTacVu;
 
             var query = dbConnection.SqlBuilder($"""

@@ -118,13 +118,7 @@ app.UseHttpsRedirection();
 app.UseCors();
 
 // Use Middleware
-app.MapGiayChungNhanEndpoints();
-app.MapChuSuDungEndpoints();
-app.MapAuthenticationEndpoints();
-app.MapAppSettingsEndpoints();
-app.MapGeoEndPoints();
-app.MapSearchEndpoints();
-// app.MapAdminEndPoints();
+app.MapEndPoints();
 
 // Thêm Endpoint kiểm tra ứng dụng hoạt động
 app.MapGet("/health", () => Results.Ok("OK")).WithName("GetHealth");
