@@ -104,14 +104,14 @@ else
                                     </MudField>
                                 </MudItem>
                             }
-                            @*@if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
+                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
                             {
                                 <MudItem xs="12" md="6" xl="4">
                                     <MudField Label="Người ký" Variant="Variant.Text">
                                         @_giayChungNhanInfo.NguoiKy
                                     </MudField>
                                 </MudItem>
-                            }*@
+                            }
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.SoVaoSo))
                             {
                                 <MudItem xs="12" md="6" xl="4">
@@ -153,17 +153,14 @@ else
                                               Justify="Justify.SpaceBetween"
                                               AlignItems="AlignItems.Stretch"
                                               Class="mt-2">
-                                        @if (false)
-                                        {
-                                            <MudButton Color="Color.Primary"
-                                                       FullWidth="true"
-                                                       Disabled="@(!_permissionsCanUpdate ||
-                                                                   _giayChungNhanInfo.HasGiayChungNhan ||
-                                                                   true)"
-                                                       StartIcon="@Icons.Material.Filled.Update">
-                                                Cập nhật thông tin Giấy chứng nhận
-                                            </MudButton>
-                                        }
+                                        <MudButton Color="Color.Primary"
+                                                   FullWidth="true"
+                                                   Disabled="@(!_permissionsCanUpdate ||
+                                                               _giayChungNhanInfo.HasGiayChungNhan)"
+                                                   StartIcon="@Icons.Material.Filled.Update"
+                                                   OnClick="UpdateGiayChungNhanAsync">
+                                            Cập nhật thông tin Giấy chứng nhận
+                                        </MudButton>
                                         <MudButton Color="Color.Error"
                                                    FullWidth="true"
                                                    Disabled="!_permissionsCanUpdate"
@@ -473,6 +470,11 @@ else
         {
             StateHasChanged();
         }
+    }
+
+    private Task UpdateGiayChungNhanAsync()
+    {
+        throw new NotImplementedException();
     }
 
 }

@@ -36,6 +36,57 @@ public static class GiayChungNhanEndpoints
         mapGroup.MapDelete("/delete-qr", DeleteMaQr)
             .WithName("DeleteMaQr")
             .RequireAuthorization();
+        mapGroup.MapPost("/update-gcn", UpdateGiayChungNhan)
+            .WithName("UpdateGiayChungNhan")
+            .RequireAuthorization();
+    }
+
+    private static async Task<IResult> UpdateGiayChungNhan(HttpContext context,
+        ILogger logger, IFusionCache fusionCache,
+        IConfiguration configuration, IConnectionElisData connectionElisData,
+        ILogElisDataServices logElisDataServices,
+        IGiayChungNhanService giayChungNhanService)
+    {
+        var giayChungNhan = await context.Request.ReadFromJsonAsync<GiayChungNhan>();
+        if (giayChungNhan is null)
+        {
+            return Results.BadRequest("Dữ liệu không hợp lệ!");
+        }
+
+        var hasUpdatePermission = await HasUpdatePermission(context, logger, configuration, connectionElisData,
+            giayChungNhanService);
+        if (hasUpdatePermission.StatusCodes != StatusCodes.Status200OK)
+        {
+            return hasUpdatePermission.StatusCodes switch
+            {
+                StatusCodes.Status404NotFound => Results.NotFound(hasUpdatePermission.Message),
+                StatusCodes.Status401Unauthorized => Results.Unauthorized(),
+                _ => Results.BadRequest(hasUpdatePermission.Message)
+            };
+        }
+
+        var maDinhDanh = context.User.GetMaDinhDanh();
+        var url = context.Request.GetDisplayUrl();
+        var result = await giayChungNhanService.UpdateAsync(giayChungNhan);
+        return result.Match(
+            succ =>
+            {
+                if (!succ) return Results.BadRequest("Lỗi khi cập nhật Giấy chứng nhận: [Không xác định]");
+                logger.Information("Cập nhật Giấy chứng nhận thành công: {Url}{MaDinhDanh}",
+                    url,
+                    maDinhDanh);
+                // Ghi log vào ELIS Data
+                logElisDataServices.WriteLogToElisDataAsync(giayChungNhan.Serial, maDinhDanh, url,
+                    "Cập nhật thông tin Giấy chứng nhận");
+                return Results.Ok("Cập nhật Giấy chứng nhận thành công!");
+            },
+            ex =>
+            {
+                logger.Error(ex, "Lỗi khi cập nhật Giấy chứng nhận: {Url}{MaDinhDanh}",
+                    url,
+                    maDinhDanh);
+                return Results.BadRequest($"Lỗi khi cập nhật Giấy chứng nhận: [{ex.Message}]");
+            });
     }
 
     private static async Task<IResult> DeleteMaQr(HttpContext context,

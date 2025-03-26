@@ -1,0 +1,115 @@
+﻿@using Haihv.Elis.Tool.TraCuuGcn.Models
+<AuthorizeView>
+    <Authorized>
+        <MudDialog>
+            <TitleContent>
+                <MudStack Row="true" AlignItems="AlignItems.End">
+                    <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Rounded="true">
+                        <MudIcon Icon="@Icons.Material.Filled.Update"/>
+                    </MudAvatar>
+                    <MudText Typo="Typo.h6"
+                             Color="Color.Warning">
+                        Xác nhận cập nhật thông tin Giấy chứng nhận
+                    </MudText>
+                </MudStack>
+            </TitleContent>
+            <DialogContent>
+                <MudStack Row="true" AlignItems="AlignItems.Start">
+                    <MudText Typo="Typo.body2">Số phát hành (Serial) Giấy chứng nhận:</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Warning">@GiayChungNhan?.Serial</MudText>
+                </MudStack>
+                <MudTextField T="string"
+                              Value="@GiayChungNhan?.Serial"
+                              Margin="Margin.Dense"
+                              Variant="Variant.Text"
+                              Label="Số phát hành Giấy chứng nhận"
+                              HelperText="Nhập lại số phát hành (serial) để xác nhận cập nhật!"
+                              DebounceInterval="200" OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+            </DialogContent>
+            <DialogActions>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="() => MudDialog.Close()">
+                    Hủy bỏ
+                </MudButton>
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    StartIcon="@Icons.Material.Filled.Delete"
+                    Disabled="@(_processing || _disabledXoaQr)"
+                    OnClick="UpdateGiayChungNhan">
+                    @if (_processing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                        <MudText Class="ms-2">Đang cập nhật</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.button">Cập nhật</MudText>
+                    }
+                </MudButton>
+            </DialogActions>
+        </MudDialog>
+    </Authorized>
+</AuthorizeView>
+
+@inject ISnackbar SnackbarService
+@inject IHttpClientFactory HttpClientFactory
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public GiayChungNhan? GiayChungNhan { get; set; }
+    private const string UrlDeleteMaQr = "elis/delete-qr";
+    private bool _processing;
+    private string? _serial;
+    private bool _disabledXoaQr = true;
+    private HttpClient _httpClient = null!;
+
+    protected override void OnInitialized()
+    {
+        _httpClient = HttpClientFactory.CreateClient("Endpoint");
+    }
+    
+    private async Task UpdateGiayChungNhan()
+    {
+        if (string.IsNullOrWhiteSpace(_serial) || _serial != Serial)
+        {
+            SnackbarService.Add("Số phát hành không chính xác", Severity.Error);
+            return;
+        }
+        _processing = true;
+        var url = $"{UrlDeleteMaQr}?serial={_serial}";
+        try
+        {
+            var response = await _httpClient.DeleteAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                SnackbarService.Add("Xóa thành công", Severity.Success);
+                MudDialog.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                SnackbarService.Add($"Xóa không thành công: {await response.Content.ReadAsStringAsync()}", Severity.Error);
+            }
+            
+        }
+        catch (Exception e)
+        {
+            SnackbarService.Add($"Lỗi trong quá trình xóa", Severity.Error);
+            Console.WriteLine(e.Message);
+        }
+        finally
+        {
+            _processing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleIntervalElapsed(string value)
+    {
+        _disabledXoaQr = string.IsNullOrWhiteSpace(value) || value != Serial;
+        _serial = value;
+        StateHasChanged();
+    }
+}

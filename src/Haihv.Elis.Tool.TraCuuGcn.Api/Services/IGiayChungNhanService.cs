@@ -25,5 +25,12 @@ public interface IGiayChungNhanService
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
     Task<GiayChungNhan?> GetAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default);
-    
+
+    /// <summary>
+    /// Cập nhật thông tin Giấy chứng nhận.
+    /// </summary>
+    /// <param name="giayChungNhan">Thông tin Giấy chứng nhận cần cập nhật.</param>
+    /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
+    /// <returns>Kết quả cập nhật thông tin Giấy chứng nhận.</returns>
+    Task<Result<bool>> UpdateAsync(GiayChungNhan? giayChungNhan, CancellationToken cancellationToken = default);
 }
