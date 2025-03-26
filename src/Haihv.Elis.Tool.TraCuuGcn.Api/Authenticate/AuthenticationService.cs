@@ -57,6 +57,7 @@ public sealed class AuthenticationService(
         }
         if (string.IsNullOrWhiteSpace(maDinhDanh)) return null;
         serial = serial.ChuanHoa();
+        if (string.IsNullOrWhiteSpace(serial)) return null;
         var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(serial, maDinhDanh),
             token: cancellationToken);
         if (!string.IsNullOrWhiteSpace(tenChuSuDung) && CompareVietnameseStrings(tenChuSuDung, claimsPrincipal.GetHoVaTen()))
