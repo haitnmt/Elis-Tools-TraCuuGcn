@@ -1,6 +1,7 @@
 ﻿name: WebApp Build and Push docker image
-  on:
-    push:  # Automatically run on commit
+
+on:
+  push:  # Automatically run on commit
     branches:
       - main  # Chỉ chạy trên nhánh chính
 
