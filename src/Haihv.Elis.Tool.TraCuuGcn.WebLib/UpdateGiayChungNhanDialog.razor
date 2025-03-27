@@ -119,10 +119,14 @@
             SnackbarService.Add("Người ký và Số vào sổ không được để trống", Severity.Warning);
             return;
         }
-
-        if (_ngayKy < MinNgayKy)
+        
+        if (!_ngayKy.HasValue || !MinNgayKy.HasValue || _ngayKy.Value.Date < MinNgayKy.Value.Date)
         {
-            SnackbarService.Add($"Ngày ký không được nhỏ hơn ngày tạo Mã QR: {MinNgayKy.Value:dd/MM/yyyy}", Severity.Warning);
+            SnackbarService.Add(
+                MinNgayKy.HasValue ? 
+                    $"Ngày ký không được nhỏ hơn ngày tạo Mã QR: {MinNgayKy.Value:dd/MM/yyyy}" : 
+                    "Ngày ký không được để trống", 
+                Severity.Warning);
             return;
         }
         _processing = true;

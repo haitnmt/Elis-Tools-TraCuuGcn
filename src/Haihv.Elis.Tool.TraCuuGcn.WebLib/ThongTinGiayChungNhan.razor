@@ -490,15 +490,22 @@ else
             SnackbarService.Add("Không có thông tin Số phát hành (Serial)", Severity.Warning);
             return;
         }
-        var parameters = new DialogParameters<UpdateGiayChungNhanDialog> { { x => x.PhapLyGiayChungNhan, 
-            new PhapLyGiayChungNhan
+
+        var parameters = new DialogParameters<UpdateGiayChungNhanDialog>
+        {
             {
-                MaGcn = _giayChungNhanInfo.MaGcnElis,
-                Serial = _giayChungNhanInfo.Serial,
-                NgayKy = _giayChungNhanInfo.NgayKy,
-                NguoiKy = _giayChungNhanInfo.NguoiKy,
-                SoVaoSo = _giayChungNhanInfo.SoVaoSo
-            } }, { x => x.MinNgayKy, _giayChungNhanInfo.KhoiTaoQr } };
+                x => x.PhapLyGiayChungNhan,
+                new PhapLyGiayChungNhan
+                {
+                    MaGcn = _giayChungNhanInfo.MaGcnElis,
+                    Serial = _giayChungNhanInfo.Serial,
+                    NgayKy = _giayChungNhanInfo.NgayKy,
+                    NguoiKy = _giayChungNhanInfo.NguoiKy,
+                    SoVaoSo = _giayChungNhanInfo.SoVaoSo
+                }
+            },
+            { x => x.MinNgayKy, _giayChungNhanInfo.KhoiTaoQr is null ? null : _giayChungNhanInfo.KhoiTaoQr!.Value.Date }
+        };
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
