@@ -14,3 +14,12 @@ public record GiayChungNhan(
     string MaDonViInGCN,
     string MaVach
 );
+
+public class PhapLyGiayChungNhan
+{
+    public long MaGcn { get; init; }
+    public string? Serial { get; init; }
+    public DateTime? NgayKy { get; set; }
+    public string? NguoiKy { get; set; }
+    public string? SoVaoSo { get; set; }
+}

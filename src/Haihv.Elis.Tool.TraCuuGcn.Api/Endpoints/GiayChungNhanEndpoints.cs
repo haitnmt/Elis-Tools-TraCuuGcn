@@ -47,14 +47,14 @@ public static class GiayChungNhanEndpoints
         ILogElisDataServices logElisDataServices,
         IGiayChungNhanService giayChungNhanService)
     {
-        var giayChungNhan = await context.Request.ReadFromJsonAsync<GiayChungNhan>();
-        if (giayChungNhan is null)
+        var phapLyGiayChungNhan = await context.Request.ReadFromJsonAsync<PhapLyGiayChungNhan>();
+        if (string.IsNullOrWhiteSpace(phapLyGiayChungNhan?.Serial))
         {
             return Results.BadRequest("Dữ liệu không hợp lệ!");
         }
 
         var hasUpdatePermission = await HasUpdatePermission(context, logger, configuration, connectionElisData,
-            giayChungNhanService);
+            giayChungNhanService, phapLyGiayChungNhan.Serial);
         if (hasUpdatePermission.StatusCodes != StatusCodes.Status200OK)
         {
             return hasUpdatePermission.StatusCodes switch
@@ -67,7 +67,7 @@ public static class GiayChungNhanEndpoints
 
         var maDinhDanh = context.User.GetMaDinhDanh();
         var url = context.Request.GetDisplayUrl();
-        var result = await giayChungNhanService.UpdateAsync(giayChungNhan);
+        var result = await giayChungNhanService.UpdateAsync(phapLyGiayChungNhan);
         return result.Match(
             succ =>
             {
@@ -75,9 +75,16 @@ public static class GiayChungNhanEndpoints
                 logger.Information("Cập nhật Giấy chứng nhận thành công: {Url}{MaDinhDanh}",
                     url,
                     maDinhDanh);
+                var message = $"""
+                               Cập nhật thông tin Giấy chứng nhận: Serial {phapLyGiayChungNhan.Serial} |
+                               Ngày ký: {phapLyGiayChungNhan.NgayKy:dd/MM/yyyy} |
+                               Người ký: {phapLyGiayChungNhan.NguoiKy} |
+                               Số vào sổ: {phapLyGiayChungNhan.SoVaoSo}
+                               """;
+                // Loại bỏ khoảng trắng và xuống dòng
+                message = message.Replace("\n", string.Empty).Replace("\r", string.Empty);
                 // Ghi log vào ELIS Data
-                logElisDataServices.WriteLogToElisDataAsync(giayChungNhan.Serial, maDinhDanh, url,
-                    "Cập nhật thông tin Giấy chứng nhận");
+                logElisDataServices.WriteLogToElisDataAsync(phapLyGiayChungNhan.Serial, maDinhDanh, url, message);
                 return Results.Ok("Cập nhật Giấy chứng nhận thành công!");
             },
             ex =>
@@ -107,6 +114,7 @@ public static class GiayChungNhanEndpoints
                 _ => Results.BadRequest(hasUpdatePermission.Message)
             };
         }
+
         var maDinhDanh = context.User.GetMaDinhDanh();
         var result = await gcnQrService.DeleteMaQrAsync(serial);
         var url = context.Request.GetDisplayUrl();
@@ -120,7 +128,8 @@ public static class GiayChungNhanEndpoints
                         maDinhDanh);
                     // Ghi log vào ELIS Data
                     logElisDataServices.WriteLogToElisDataAsync(serial, maDinhDanh, url,
-                        $"Xóa mã QR của Giấy chứng nhận có phát hành (Serial): {serial}", LogElisDataServices.LoaiTacVu.Xoa);
+                        $"Xóa mã QR của Giấy chứng nhận có phát hành (Serial): {serial}",
+                        LogElisDataServices.LoaiTacVu.Xoa);
 
                     return Results.Ok("Xóa mã QR thành công!");
                 }
@@ -161,13 +170,13 @@ public static class GiayChungNhanEndpoints
         ILogger logger,
         IConfiguration configuration,
         IConnectionElisData connectionElisData,
-        IGiayChungNhanService giayChungNhanService)
+        IGiayChungNhanService giayChungNhanService, string? serial = null)
     {
         // Lấy thông tin số MaDinhDanh từ HttpContext
         var maDinhDanh = context.User.GetMaDinhDanh();
         // Lấy thông tin URL hiện tại
         var url = context.Request.GetDisplayUrl();
-        var serial = context.Request.Query["serial"].ToString();
+        serial ??= context.Request.Query["serial"].ToString();
         if (string.IsNullOrWhiteSpace(serial))
         {
             logger.Warning("Thiếu thông tin số Serial của Giấy chứng nhận: {Url}{MaDinhDanh}", url, maDinhDanh);
@@ -202,8 +211,8 @@ public static class GiayChungNhanEndpoints
         if (giayChungNhan is null || giayChungNhan.NgayKy <= new DateTime(1990, 1, 1))
             return (StatusCodes.Status200OK, string.Empty);
 
-        logger.Warning("Giấy chứng nhận đã ký không được xoá: {Url}{MaDinhDanh}", url, maDinhDanh);
-        return (StatusCodes.Status400BadRequest, "Giấy chứng nhận đã ký không được xoá!");
+        logger.Warning("Giấy chứng nhận đã ký: {Url}{MaDinhDanh}", url, maDinhDanh);
+        return (StatusCodes.Status400BadRequest, "Giấy chứng nhận đã ký!");
     }
 
     /// <summary>
@@ -363,6 +372,7 @@ public static class GiayChungNhanEndpoints
                 url, maDinhDanh);
             return Results.Unauthorized();
         }
+
         try
         {
             await fusionCache.RemoveByTagAsync(serial);

@@ -33,15 +33,9 @@ public class ThuaDatService(
         var cacheKey = CacheSettings.KeyThuaDat(serial);
         try
         {
-            List<string> maGcn = [];
             var thuaDats = await fusionCache.GetOrSetAsync(cacheKey,
-                async cancel =>
-                {
-                    var thuaDát = await GetThuaDatInDatabaseAsync(serial, cancel);
-                    maGcn = thuaDát.Select(x => x.MaGcn.ToString()).ToList();
-                    return thuaDát;
-                },
-                tags: maGcn,
+                await GetThuaDatInDatabaseAsync(serial, cancellationToken),
+                tags: [serial],
                 token: cancellationToken);
             return thuaDats.Count == 0 ? 
                 new Result<List<ThuaDat>>(new ValueIsNullException("Không tìm thấy thông tin thửa đất!")) : 
@@ -123,7 +117,7 @@ public class ThuaDatService(
                 result.Add(new ThuaDat(
                     thuaDatToBanDo.MaGcn,
                     maDvhc,
-                    soThua,
+                    soThua.Replace(".", string.Empty).Replace(",", string.Empty),
                     toBanDo,
                     tyLe,
                     diaChi.Trim().VietHoaDauChuoi(),

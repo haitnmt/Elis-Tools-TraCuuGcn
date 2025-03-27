@@ -10,6 +10,7 @@ public interface ILogElisDataServices
     /// </summary>
     /// <param name="serial">
     /// Số serial của GCN.
+    /// Để tìm thông tin kết nối dữ liệu
     /// </param>
     /// <param name="performer">
     /// Tên người thực hiện thao tác.

@@ -127,12 +127,12 @@ public sealed class GiayChungNhanService(
         return null;
     }
     
-    public async Task<Result<bool>> UpdateAsync(GiayChungNhan? giayChungNhan, CancellationToken cancellationToken = default)
+    public async Task<Result<bool>> UpdateAsync(PhapLyGiayChungNhan? phapLyGiayChungNhan, CancellationToken cancellationToken = default)
     {
-        if (giayChungNhan is null) 
-            return new Result<bool>(new ArgumentNullException(nameof(giayChungNhan), "Không tìm thấy thông tin Giấy chứng nhận!"));
-        var serial = giayChungNhan.Serial.ChuanHoa();
-        if (string.IsNullOrWhiteSpace(serial) || giayChungNhan.MaGcn <= 0)
+        if (phapLyGiayChungNhan is null) 
+            return new Result<bool>(new ArgumentNullException(nameof(phapLyGiayChungNhan), "Không tìm thấy thông tin Giấy chứng nhận!"));
+        var serial = phapLyGiayChungNhan.Serial.ChuanHoa();
+        if (string.IsNullOrWhiteSpace(serial) || phapLyGiayChungNhan.MaGcn <= 0)
             return new Result<bool>(new NullReferenceException("Không tìm thấy thông tin Serial hoặc Mã GCN!"));
         try
         {
@@ -143,15 +143,15 @@ public sealed class GiayChungNhanService(
             var query = dbConnection.SqlBuilder(
                 $"""
                       UPDATE GCNQSDD
-                      SET NgayKy = {giayChungNhan.NgayKy},
-                          NguoiKy = {giayChungNhan.NguoiKy},
-                          SoVaoSo = {giayChungNhan.SoVaoSo},
+                      SET NgayKy = {phapLyGiayChungNhan.NgayKy},
+                          NguoiKy = {phapLyGiayChungNhan.NguoiKy},
+                          SoVaoSo = {phapLyGiayChungNhan.SoVaoSo}
                       WHERE UPPER(SoSerial) = {serial}
                  """);
             var count = await query.ExecuteAsync(cancellationToken: cancellationToken);
             if (count <= 0) 
                 return new Result<bool>(new NullReferenceException("Không có Giấy chứng nhận nào được cập nhật!")); 
-            _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), giayChungNhan,
+            _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), phapLyGiayChungNhan,
                 tags: [serial],
                 token: cancellationToken).AsTask();
             return true;

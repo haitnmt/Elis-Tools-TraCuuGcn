@@ -29,8 +29,8 @@ public interface IGiayChungNhanService
     /// <summary>
     /// Cập nhật thông tin Giấy chứng nhận.
     /// </summary>
-    /// <param name="giayChungNhan">Thông tin Giấy chứng nhận cần cập nhật.</param>
+    /// <param name="phapLyGiayChungNhan">Thông tin Giấy chứng nhận cần cập nhật.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả cập nhật thông tin Giấy chứng nhận.</returns>
-    Task<Result<bool>> UpdateAsync(GiayChungNhan? giayChungNhan, CancellationToken cancellationToken = default);
+    Task<Result<bool>> UpdateAsync(PhapLyGiayChungNhan? phapLyGiayChungNhan, CancellationToken cancellationToken = default);
 }

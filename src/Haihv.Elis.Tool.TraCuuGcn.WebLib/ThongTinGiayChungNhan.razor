@@ -156,24 +156,36 @@ else
                                         <MudButton Color="Color.Primary"
                                                    FullWidth="true"
                                                    Disabled="@(!_permissionsCanUpdate ||
-                                                               _giayChungNhanInfo.HasGiayChungNhan)"
+                                                               !_giayChungNhanInfo.HasGiayChungNhan)"
                                                    StartIcon="@Icons.Material.Filled.Update"
                                                    OnClick="UpdateGiayChungNhanAsync">
-                                            Cập nhật thông tin Giấy chứng nhận
+                                            Cập nhật thông tin
                                         </MudButton>
                                         <MudButton Color="Color.Error"
                                                    FullWidth="true"
                                                    Disabled="!_permissionsCanUpdate"
                                                    StartIcon="@Icons.Material.Filled.Delete"
                                                    OnClick="XoaQrAsync">
-                                            Xóa thông tin Mã QR
+                                            Xóa Mã QR
                                         </MudButton>
                                     </MudStack>
-                                    @if (!_permissionsCanUpdate && !string.IsNullOrWhiteSpace(_permissionsStatus))
+                                    @if (_permissionsCanUpdate)
                                     {
-                                        <MudAlert Severity="Severity.Warning">
-                                            @_permissionsStatus
-                                        </MudAlert>
+                                        @if (!_giayChungNhanInfo.HasGiayChungNhan)
+                                        {
+                                            <MudAlert Severity="Severity.Warning">
+                                                Không tìm thấy thông tin thửa đất!
+                                            </MudAlert>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        @if (!string.IsNullOrWhiteSpace(_permissionsStatus))
+                                        {
+                                            <MudAlert Severity="Severity.Warning">
+                                                @_permissionsStatus
+                                            </MudAlert>
+                                        }
                                     }
                                 }
                             </Authorized>
@@ -249,7 +261,7 @@ else
 @inject IAuthService AuthService
 @inject IHttpClientFactory HttpClientFactory
 @inject IDialogService DialogService
-
+@inject ISnackbar SnackbarService
 @code {
 
     private HttpClient _httpClient = null!;
@@ -414,11 +426,9 @@ else
     {
         if (!_isLdapUser || _giayChungNhanInfo is null || !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
         {
-            _visibleUpdate = false;
-            StateHasChanged();
             return;
         }
-
+        _visibleUpdate = false;
         _processingGetPermissionsCanUpdate = true;
         StateHasChanged();
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
@@ -458,11 +468,12 @@ else
         var parameters = new DialogParameters<XoaQrDialog> { { x => x.Serial, Serial! } };
         var options = new DialogOptions
         {
-            CloseOnEscapeKey = true
+            CloseOnEscapeKey = true,
+            CloseButton = true
         };
         var xoaQReference = await DialogService.ShowAsync<XoaQrDialog>(null, parameters, options);
         var result = await xoaQReference.Result;
-        if (!result?.Canceled ?? false)
+        if (result is not null && !result.Canceled)
         {
             await RefreshData();
         }
@@ -472,9 +483,38 @@ else
         }
     }
 
-    private Task UpdateGiayChungNhanAsync()
+    private async Task UpdateGiayChungNhanAsync()
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial))
+        {
+            SnackbarService.Add("Không có thông tin Số phát hành (Serial)", Severity.Warning);
+            return;
+        }
+        var parameters = new DialogParameters<UpdateGiayChungNhanDialog> { { x => x.PhapLyGiayChungNhan, 
+            new PhapLyGiayChungNhan
+            {
+                MaGcn = _giayChungNhanInfo.MaGcnElis,
+                Serial = _giayChungNhanInfo.Serial,
+                NgayKy = _giayChungNhanInfo.NgayKy,
+                NguoiKy = _giayChungNhanInfo.NguoiKy,
+                SoVaoSo = _giayChungNhanInfo.SoVaoSo
+            } }, { x => x.MinNgayKy, _giayChungNhanInfo.KhoiTaoQr } };
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            CloseButton = true,
+            FullWidth = true
+        };
+        var dialogReference = await DialogService.ShowAsync<UpdateGiayChungNhanDialog>(null, parameters, options);
+        var result = await dialogReference.Result;
+        if (result is not null && !result.Canceled)
+        {
+            await RefreshData();
+        }
+        else
+        {
+            StateHasChanged();
+        }
     }
 
 }

@@ -1,4 +1,5 @@
-﻿@using Haihv.Elis.Tool.TraCuuGcn.Models
+﻿@using System.Net.Http.Json
+@using Haihv.Elis.Tool.TraCuuGcn.Models
 <AuthorizeView>
     <Authorized>
         <MudDialog>
@@ -9,47 +10,77 @@
                     </MudAvatar>
                     <MudText Typo="Typo.h6"
                              Color="Color.Warning">
-                        Xác nhận cập nhật thông tin Giấy chứng nhận
+                        Cập nhật Giấy chứng nhận
                     </MudText>
                 </MudStack>
             </TitleContent>
             <DialogContent>
-                <MudStack Row="true" AlignItems="AlignItems.Start">
-                    <MudText Typo="Typo.body2">Số phát hành (Serial) Giấy chứng nhận:</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Warning">@GiayChungNhan?.Serial</MudText>
+                <MudPaper Class="mx-n2 pa-2" Outlined="true">
+                    <MudField Label="Số phát hành (Serial) Giấy chứng nhận">
+                        @PhapLyGiayChungNhan?.Serial
+                    </MudField>
+                    <MudDatePicker @ref="_datePicker"
+                                   @bind-Date="@_ngayKy"
+                                   DateFormat="dd/MM/yyyy"
+                                   Margin="Margin.Dense"
+                                   Variant="Variant.Text"
+                                   MinDate="MinNgayKy"
+                                   MaxDate="DateTime.Today"
+                                   Editable="true"
+                                   Mask="@(new DateMask("dd/MM/yyyy"))"
+                                   Required="true"
+                                   Label="Ngày ký"
+                                   AutoClose="true"
+                                   RequiredError="Ngày ký không được để trống"
+                                   HelperText="Ngày ký Giấy chứng nhận">
+                        <PickerActions Context="pickerActionsContext">
+                            <MudButton Color="Color.Primary" OnClick="() => _datePicker.GoToDate(DateTime.Today)">Hôm nay</MudButton>
+                        </PickerActions>
+                    </MudDatePicker>
+                    <MudTextField T="string"
+                                  @bind-Value="@_nguoiKy"
+                                  Margin="Margin.Dense"
+                                  Variant="Variant.Text"
+                                  Label="Người ký"
+                                  Required="true"
+                                  RequiredError="Người ký không được để trống"
+                                  HelperText="Người ký Giấy chứng nhận"/>
+                    <MudTextField T="string"
+                                  @bind-Value="@_soVaoSo"
+                                  Margin="Margin.Dense"
+                                  Variant="Variant.Text"
+                                  Label="Số vào sổ"
+                                  Required="true"
+                                  RequiredError="Số vào sổ không được để trống"
+                                  HelperText="Số vào sổ Giấy chứng nhận"/>
+                </MudPaper>
+                
+                <MudStack Class="mt-2" Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Baseline">
+                    <MudTextField T="string"
+                                  @bind-Value="@_serial"
+                                  Margin="Margin.Dense"
+                                  Variant="Variant.Text"
+                                  HelperText="Nhập lại số phát hành (serial) để xác nhận cập nhật!"
+                                  DebounceInterval="200" OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
+                    <MudButton
+                        Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        Size="Size.Small"
+                        StartIcon="@Icons.Material.Filled.Delete"
+                        Disabled="@(_processing || _disabledUpdateButton)"
+                        OnClick="UpdateGiayChungNhan">
+                        @if (_processing)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
+                            <MudText Class="ms-2">Đang cập nhật</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.button">Cập nhật</MudText>
+                        }
+                    </MudButton>
                 </MudStack>
-                <MudTextField T="string"
-                              Value="@GiayChungNhan?.Serial"
-                              Margin="Margin.Dense"
-                              Variant="Variant.Text"
-                              Label="Số phát hành Giấy chứng nhận"
-                              HelperText="Nhập lại số phát hành (serial) để xác nhận cập nhật!"
-                              DebounceInterval="200" OnDebounceIntervalElapsed="HandleIntervalElapsed"/>
             </DialogContent>
-            <DialogActions>
-                <MudButton Variant="Variant.Text"
-                           Color="Color.Secondary"
-                           StartIcon="@Icons.Material.Filled.Cancel"
-                           OnClick="() => MudDialog.Close()">
-                    Hủy bỏ
-                </MudButton>
-                <MudButton
-                    Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    StartIcon="@Icons.Material.Filled.Delete"
-                    Disabled="@(_processing || _disabledXoaQr)"
-                    OnClick="UpdateGiayChungNhan">
-                    @if (_processing)
-                    {
-                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true"/>
-                        <MudText Class="ms-2">Đang cập nhật</MudText>
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.button">Cập nhật</MudText>
-                    }
-                </MudButton>
-            </DialogActions>
         </MudDialog>
     </Authorized>
 </AuthorizeView>
@@ -59,12 +90,17 @@
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public GiayChungNhan? GiayChungNhan { get; set; }
-    private const string UrlDeleteMaQr = "elis/delete-qr";
+    [Parameter] public DateTime? MinNgayKy { get; set; }
+    [Parameter] public PhapLyGiayChungNhan? PhapLyGiayChungNhan { get; set; }
+    private const string UrlUpdateGiayChungNhan = "elis/update-gcn";
+    private string? _nguoiKy;
+    private DateTime? _ngayKy = DateTime.Now;
+    private string? _soVaoSo;
     private bool _processing;
     private string? _serial;
-    private bool _disabledXoaQr = true;
+    private bool _disabledUpdateButton = true;
     private HttpClient _httpClient = null!;
+    private MudDatePicker _datePicker = null!;
 
     protected override void OnInitialized()
     {
@@ -73,31 +109,43 @@
     
     private async Task UpdateGiayChungNhan()
     {
-        if (string.IsNullOrWhiteSpace(_serial) || _serial != Serial)
+        if (string.IsNullOrWhiteSpace(_serial) || _serial != PhapLyGiayChungNhan?.Serial)
         {
             SnackbarService.Add("Số phát hành không chính xác", Severity.Error);
             return;
         }
+        if (string.IsNullOrWhiteSpace(_nguoiKy) || string.IsNullOrWhiteSpace(_soVaoSo))
+        {
+            SnackbarService.Add("Người ký và Số vào sổ không được để trống", Severity.Warning);
+            return;
+        }
+
+        if (_ngayKy < MinNgayKy)
+        {
+            SnackbarService.Add($"Ngày ký không được nhỏ hơn ngày tạo Mã QR: {MinNgayKy.Value:dd/MM/yyyy}", Severity.Warning);
+            return;
+        }
         _processing = true;
-        var url = $"{UrlDeleteMaQr}?serial={_serial}";
         try
         {
-            var response = await _httpClient.DeleteAsync(url);
+            PhapLyGiayChungNhan.NgayKy = _ngayKy;
+            PhapLyGiayChungNhan.NguoiKy = _nguoiKy;
+            PhapLyGiayChungNhan.SoVaoSo = _soVaoSo;
+            var response = await _httpClient.PostAsJsonAsync(UrlUpdateGiayChungNhan, PhapLyGiayChungNhan);
             if (response.IsSuccessStatusCode)
             {
-                SnackbarService.Add("Xóa thành công", Severity.Success);
+                SnackbarService.Add("Cập nhật Giấy chứng nhận thành công", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
             else
             {
-                SnackbarService.Add($"Xóa không thành công: {await response.Content.ReadAsStringAsync()}", Severity.Error);
+                SnackbarService.Add($"Cập nhật Giấy chứng nhận không thành công: {await response.Content.ReadAsStringAsync()}", Severity.Error);
             }
             
         }
         catch (Exception e)
         {
-            SnackbarService.Add($"Lỗi trong quá trình xóa", Severity.Error);
-            Console.WriteLine(e.Message);
+            SnackbarService.Add($"Lỗi trong quá trình cập nhật Giấy chứng nhận: {e.Message}", Severity.Error);
         }
         finally
         {
@@ -108,7 +156,7 @@
 
     private void HandleIntervalElapsed(string value)
     {
-        _disabledXoaQr = string.IsNullOrWhiteSpace(value) || value != Serial;
+        _disabledUpdateButton = string.IsNullOrWhiteSpace(value) || value != PhapLyGiayChungNhan?.Serial;
         _serial = value;
         StateHasChanged();
     }
