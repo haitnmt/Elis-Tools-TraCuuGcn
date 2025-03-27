@@ -509,8 +509,7 @@ else
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
-            CloseButton = true,
-            FullWidth = true
+            CloseButton = true
         };
         var dialogReference = await DialogService.ShowAsync<UpdateGiayChungNhanDialog>(null, parameters, options);
         var result = await dialogReference.Result;
