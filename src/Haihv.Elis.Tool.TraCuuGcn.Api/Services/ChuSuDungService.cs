@@ -288,17 +288,7 @@ public sealed class ChuSuDungService(
         quanHe = string.IsNullOrWhiteSpace(quanHe)
             ? $"{(chuSuDungData.MaDoiTuong == 16 ? $"{(chuSuDungData.GioiTinh2 == 1 ? "chồng" : "vợ")}" : "")}"
             : quanHe;
-        var ten = chuSuDungData.MaDoiTuong switch
-        {
-            16 => chuSuDungData.GioiTinh2 switch
-            {
-                1 => $"Ông {chuSuDungData.Ten2}",
-                0 => $"Bà {chuSuDungData.Ten2}",
-                _ => chuSuDungData.Ten2
-            },
-            _ => chuSuDungData.Ten2
-        };
-        ten = quanHe is "chồng" or "vợ" ? $"Và {quanHe}: {ten}" : $"{quanHe}: {ten}";
+        var ten = quanHe is "chồng" or "vợ" ? $"Và {quanHe} {chuSuDungData.Ten2}" : $"{quanHe} {chuSuDungData.Ten2}";
         var giayTo = chuSuDungData.MaDoiTuong switch
         {
             16 => chuSuDungData.LoaiSdd2 switch
