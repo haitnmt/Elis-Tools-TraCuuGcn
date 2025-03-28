@@ -301,7 +301,8 @@ else
         if (_isLdapUser != IsLdapUser)
         {
             _isLdapUser = IsLdapUser;
-            await GetGetPermissionsCanUpdate();
+            if (_dataLoaded)
+                await GetGetPermissionsCanUpdate();
         }
 
         if (string.IsNullOrWhiteSpace(Query) || Query == _query) return;
@@ -424,11 +425,24 @@ else
 
     private async Task GetGetPermissionsCanUpdate()
     {
-        if (!_isLdapUser || _giayChungNhanInfo is null || !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
+        _visibleUpdate = false;
+        if (!_isLdapUser)
+        {
+            _permissionsCanUpdate = false;
+            return;
+        }
+        if (_giayChungNhanInfo is null || 
+            !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
         {
             return;
         }
-        _visibleUpdate = false;
+        if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
+        {
+            Console.WriteLine($"Giấy chứng nhận đã ký không có quyền cập nhật thông tin: {_giayChungNhanInfo.NgayKy:dd/MM/yyyy}");
+            SnackbarService.Add("Giấy chứng nhận đã ký không có quyền cập nhật thông tin", Severity.Warning);
+            return;
+        }
+        _permissionsStatus = null;
         _processingGetPermissionsCanUpdate = true;
         StateHasChanged();
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
@@ -437,19 +451,27 @@ else
             var response = await _httpClient.GetAsync(url);
             _permissionsCanUpdate = response.IsSuccessStatusCode;
             _permissionsStatus = (await response.Content.ReadAsStringAsync()).TrimStart('\"').TrimEnd('\n', '\"');
-            if (string.IsNullOrWhiteSpace(_permissionsStatus))
-                _permissionsStatus = "Không có quyền cập nhật thông tin Giấy chứng nhận";
+            if (!_permissionsCanUpdate)
+            {
+                if (string.IsNullOrWhiteSpace(_permissionsStatus))
+                {
+                    _permissionsStatus = "Không có quyền cập nhật thông tin Giấy chứng nhận";
+                }
+                Console.WriteLine(_permissionsStatus);
+                SnackbarService.Add(_permissionsStatus, Severity.Warning);
+            }
+            _visibleUpdate = _permissionsCanUpdate;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             _permissionsCanUpdate = false;
             _permissionsStatus = "Lỗi khi kiểm tra quyền cập nhật thông tin Giấy chứng nhận";
+            SnackbarService.Add("Lỗi khi kiểm tra quyền cập nhật thông tin Giấy chứng nhận", Severity.Error);
         }
         finally
         {
             _processingGetPermissionsCanUpdate = false;
-            _visibleUpdate = true;
             StateHasChanged();
         }
     }
