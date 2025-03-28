@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Caching.StackExchangeRedis;
+﻿using System.Text.Json;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion;
 using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
@@ -47,6 +49,5 @@ public static class HybridCachingExtensions
                 redis.GetDatabase().KeyDelete(key);
             }
         }
-        
     }
 }

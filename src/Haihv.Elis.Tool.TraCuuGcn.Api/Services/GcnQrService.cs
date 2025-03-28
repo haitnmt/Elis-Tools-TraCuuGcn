@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Text.Json;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
@@ -173,7 +174,8 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Tên đơn vị nếu tìm thấy, ngược lại trả về null.</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
-    public async Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default)
+    public async Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(maDonVi)) return null;
         try
@@ -182,15 +184,51 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             {
                 await using var dbConnection = connectionString.GetConnection();
                 var query = dbConnection.SqlBuilder($"SELECT Ten FROM DonViInGCN WHERE MaDinhDanh = {maDonVi}");
-                return await query.QueryFirstOrDefaultAsync<string?>(cancellationToken: cancellationToken);
+                var tenDonVi = await query.QueryFirstOrDefaultAsync<string?>(cancellationToken: cancellationToken);
+                if (!string.IsNullOrWhiteSpace(tenDonVi)) return tenDonVi;
             }
+            // Nếu không tìm thấy trong cơ sở dữ liệu, lấy từ file
+            return await GetTenDonViFromFile(maDonVi, cancellationToken);
         }
         catch (Exception exception)
         {
             logger.Error(exception, "Lỗi khi lấy thông tin Tên đơn vị: {MaDonVi}", maDonVi);
         }
+        
         return null;
     }
+    
+    /// <summary>
+    /// Lấy thông tin tên đơn vị từ file.
+    /// </summary>
+    /// <returns>
+    /// Tên đơn vị nếu tìm thấy, ngược lại trả về null.
+    /// </returns>
+    private async Task<string?> GetTenDonViFromFile(string maDonVi, CancellationToken cancellationToken = default)
+    {
+        var filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "donViInGcn.json");
+        try
+        {
+            var jsonString = await File.ReadAllTextAsync(filePath, cancellationToken);
+            var donViInGcn = JsonSerializer.Deserialize<List<ModelDonViInGcn>>(jsonString) ?? [];
+            foreach (var item in donViInGcn)
+            {
+                var cacheKey = CacheSettings.KeyDonViInGcn(item.MaDinhDanh);
+                _ = fusionCache.GetOrSetAsync(cacheKey, item.TenDonVi, token: cancellationToken).AsTask();
+            }
+            return donViInGcn.FirstOrDefault(x => x.MaDinhDanh == maDonVi)?.TenDonVi;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            logger.Error(e, "Lỗi khi lấy thông tin Tên đơn vị từ file: {FilePath}{MaDonVi}",
+                filePath,
+                maDonVi);
+        }
+        return null;
+    }
+    
+    private record ModelDonViInGcn(string MaDinhDanh, string TenDonVi);
     /// <summary>
     /// Xóa thông tin Mã QR khỏi CSDL
     /// </summary>
