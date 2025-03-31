@@ -96,14 +96,6 @@ else
                                     @_giayChungNhanInfo.MaGiayChungNhan
                                 </MudField>
                             </MudItem>
-                            @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
-                            {
-                                <MudItem xs="12" md="6" xl="4">
-                                    <MudField Label="Ngày ký" Variant="Variant.Text">
-                                        @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
-                                    </MudField>
-                                </MudItem>
-                            }
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
                             {
                                 <MudItem xs="12" md="6" xl="4">
@@ -111,6 +103,14 @@ else
                                         @_giayChungNhanInfo.NguoiKy
                                     </MudField>
                                 </MudItem>
+                                @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
+                                {
+                                    <MudItem xs="12" md="6" xl="4">
+                                        <MudField Label="Ngày ký" Variant="Variant.Text">
+                                            @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
+                                        </MudField>
+                                    </MudItem>
+                                }
                             }
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.SoVaoSo))
                             {
@@ -119,6 +119,16 @@ else
                                         @_giayChungNhanInfo.SoVaoSo
                                     </MudField>
                                 </MudItem>
+                                @if(IsLdapUser && 
+                                    _giayChungNhanInfo.NgayVaoSo.HasValue && 
+                                    _giayChungNhanInfo.NgayVaoSo.Value > new DateTime(1993, 1, 1))
+                                {
+                                    <MudItem xs="12" md="6" xl="4">
+                                        <MudField Label="Ngày vào sổ" Variant="Variant.Text">
+                                            @_giayChungNhanInfo.NgayVaoSo?.ToString("dd/MM/yyyy")
+                                        </MudField>
+                                    </MudItem>
+                                }
                             }
                         </MudGrid>
                     </MudPaper>
@@ -523,7 +533,7 @@ else
                     Serial = _giayChungNhanInfo.Serial,
                     NgayKy = _giayChungNhanInfo.NgayKy,
                     NguoiKy = _giayChungNhanInfo.NguoiKy,
-                    SoVaoSo = _giayChungNhanInfo.SoVaoSo
+                    SoVaoSo = _giayChungNhanInfo.SoVaoSo,
                 }
             },
             { x => x.MinNgayKy, _giayChungNhanInfo.KhoiTaoQr is null ? null : _giayChungNhanInfo.KhoiTaoQr!.Value.Date }

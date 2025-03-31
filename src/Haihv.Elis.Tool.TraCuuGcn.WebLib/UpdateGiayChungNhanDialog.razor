@@ -20,36 +20,69 @@
                     <MudField Label="Số phát hành (Serial) Giấy chứng nhận">
                         @PhapLyGiayChungNhan?.Serial
                     </MudField>
-                    <MudDatePicker @ref="_datePicker"
-                                   @bind-Date="@_ngayKy"
-                                   DateFormat="dd/MM/yyyy"
-                                   Margin="Margin.Dense"
-                                   Variant="Variant.Text"
-                                   MinDate="MinNgayKy"
-                                   MaxDate="DateTime.Today"
-                                   ShowToolbar="false"
-                                   Culture="@GetVietnameseCulture()"
-                                   Editable="true"
-                                   Mask="@(new DateMask("dd/MM/yyyy"))"
-                                   Required="true"
-                                   Label="Ngày ký"
-                                   AutoClose="true"
-                                   RequiredError="Ngày ký không được để trống"
-                                   HelperText="Ngày ký Giấy chứng nhận">
-                        <PickerActions Context="pickerActionsContext">
-                            @if (MinNgayKy.HasValue)
-                            {
-                                <MudButton Color="Color.Default"
-                                           OnClick="() => _datePicker.GoToDate(MinNgayKy.Value.Date)">
-                                    Ngày in Giấy chứng nhận
+                    <MudStack Row="true">
+                        <MudDatePicker @ref="_ngayKyPicker"
+                                       @bind-Date="@_ngayKy"
+                                       DateFormat="dd/MM/yyyy"
+                                       Margin="Margin.Dense"
+                                       Variant="Variant.Text"
+                                       MinDate="MinNgayKy"
+                                       MaxDate="DateTime.Today"
+                                       ShowToolbar="false"
+                                       Culture="@GetVietnameseCulture()"
+                                       Editable="true"
+                                       Mask="@(new DateMask("dd/MM/yyyy"))"
+                                       Required="true"
+                                       Label="Ngày ký"
+                                       AutoClose="true"
+                                       RequiredError="Ngày ký không được để trống"
+                                       HelperText="Ngày ký Giấy chứng nhận">
+                            <PickerActions Context="pickerActionsContext">
+                                @if (MinNgayKy.HasValue)
+                                {
+                                    <MudButton Color="Color.Default"
+                                               OnClick="() => _ngayKyPicker.GoToDate(MinNgayKy.Value.Date)">
+                                        Ngày in Giấy chứng nhận
+                                    </MudButton>
+                                }
+                                <MudButton Color="Color.Primary"
+                                           OnClick="() => _ngayKyPicker.GoToDate(DateTime.Today)">
+                                    Hôm nay
                                 </MudButton>
-                            }
-                            <MudButton Color="Color.Primary"
-                                       OnClick="() => _datePicker.GoToDate(DateTime.Today)">
-                                Hôm nay
-                            </MudButton>
-                        </PickerActions>
-                    </MudDatePicker>
+                            </PickerActions>
+                        </MudDatePicker>
+                        <MudDatePicker @ref="_ngayVaoSoPicker"
+                                       @bind-Date="@_ngayVaoSo"
+                                       DateFormat="dd/MM/yyyy"
+                                       Margin="Margin.Dense"
+                                       Variant="Variant.Text"
+                                       MinDate="MinNgayKy"
+                                       MaxDate="DateTime.Today"
+                                       ShowToolbar="false"
+                                       Culture="@GetVietnameseCulture()"
+                                       Editable="true"
+                                       Mask="@(new DateMask("dd/MM/yyyy"))"
+                                       Required="true"
+                                       Label="Ngày vào sổ"
+                                       AutoClose="true"
+                                       RequiredError="Ngày vào sổ không được để trống"
+                                       HelperText="Ngày vào sổ Giấy chứng nhận">
+                            <PickerActions Context="pickerActionsContext">
+                                @if (MinNgayKy.HasValue && _ngayKy.HasValue)
+                                {
+                                    <MudButton Color="Color.Default"
+                                               OnClick="() => _ngayVaoSoPicker.GoToDate(_ngayKy.Value)">
+                                        Theo ngày ký Giấy chứng nhận
+                                    </MudButton>
+                                }
+                                <MudButton Color="Color.Primary"
+                                           OnClick="() => _ngayVaoSoPicker.GoToDate(DateTime.Today)">
+                                    Hôm nay
+                                </MudButton>
+                            </PickerActions>
+                        </MudDatePicker>
+                    </MudStack>
+                    
                     <MudTextField T="string"
                                   @bind-Value="@_nguoiKy"
                                   Margin="Margin.Dense"
@@ -108,18 +141,46 @@
     private const string UrlUpdateGiayChungNhan = "elis/update-gcn";
     private string? _nguoiKy;
     private DateTime? _ngayKy = DateTime.Now;
+    private DateTime? _ngayVaoSo = DateTime.Now;
     private string? _soVaoSo;
     private bool _processing;
     private string? _serial;
     private bool _disabledUpdateButton = true;
     private HttpClient _httpClient = null!;
-    private MudDatePicker _datePicker = null!;
+    private MudDatePicker _ngayKyPicker = null!;
+    private MudDatePicker _ngayVaoSoPicker = null!;
 
     protected override void OnInitialized()
     {
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
     }
-    
+
+    protected override void OnParametersSet()
+    {
+        if (PhapLyGiayChungNhan != null && PhapLyGiayChungNhan.Serial != _serial)
+        {
+            if (PhapLyGiayChungNhan.NgayKy.HasValue && PhapLyGiayChungNhan.NgayKy.Value > DateTime.MinValue)
+            {
+                _ngayKy = PhapLyGiayChungNhan.NgayKy;
+            }
+            _nguoiKy = PhapLyGiayChungNhan.NguoiKy;
+            _soVaoSo = PhapLyGiayChungNhan.SoVaoSo;
+            if (PhapLyGiayChungNhan.NgayVaoSo.HasValue && PhapLyGiayChungNhan.NgayVaoSo.Value > DateTime.MinValue)
+            {
+                _ngayVaoSo = PhapLyGiayChungNhan.NgayVaoSo;
+            }
+        }
+        else
+        {
+            _ngayKy = DateTime.Now;
+            _nguoiKy = string.Empty;
+            _soVaoSo = string.Empty;
+            _ngayVaoSo = DateTime.Now;
+        }
+        base.OnParametersSet();
+        
+    }
+
     private static CultureInfo GetVietnameseCulture()
     {
         var culture = new CultureInfo("vi-VN");
@@ -186,6 +247,7 @@
             PhapLyGiayChungNhan.NgayKy = _ngayKy;
             PhapLyGiayChungNhan.NguoiKy = _nguoiKy;
             PhapLyGiayChungNhan.SoVaoSo = _soVaoSo;
+            PhapLyGiayChungNhan.NgayVaoSo = _ngayVaoSo;
             var response = await _httpClient.PostAsJsonAsync(UrlUpdateGiayChungNhan, PhapLyGiayChungNhan);
             if (response.IsSuccessStatusCode)
             {

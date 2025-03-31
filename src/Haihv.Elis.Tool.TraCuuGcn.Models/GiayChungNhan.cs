@@ -10,6 +10,7 @@ public record GiayChungNhan(
     DateTime NgayKy,
     string NguoiKy,
     string SoVaoSo,
+    DateTime NgayVaoSo,
     string MaHoSoDVC,
     string MaDonViInGCN,
     string MaVach
@@ -22,4 +23,5 @@ public class PhapLyGiayChungNhan
     public DateTime? NgayKy { get; set; }
     public string? NguoiKy { get; set; }
     public string? SoVaoSo { get; set; }
+    public DateTime? NgayVaoSo { get; set; }
 }

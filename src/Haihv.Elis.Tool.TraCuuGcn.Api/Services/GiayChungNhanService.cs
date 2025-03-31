@@ -95,6 +95,7 @@ public sealed class GiayChungNhanService(
                                  END AS NgayKy, 
                                  NguoiKy, 
                                  SoVaoSo,
+                                 NgayVaoSo,
                                  MaHoSoDVC,
                                  MaDonViInGCN,
                                  MaVach
@@ -145,7 +146,8 @@ public sealed class GiayChungNhanService(
                       UPDATE GCNQSDD
                       SET NgayKy = {phapLyGiayChungNhan.NgayKy},
                           NguoiKy = {phapLyGiayChungNhan.NguoiKy},
-                          SoVaoSo = {phapLyGiayChungNhan.SoVaoSo}
+                          SoVaoSo = {phapLyGiayChungNhan.SoVaoSo},
+                          NgayVaoSo = {phapLyGiayChungNhan.NgayVaoSo}
                       WHERE UPPER(SoSerial) = {serial}
                  """);
             var count = await query.ExecuteAsync(cancellationToken: cancellationToken);
