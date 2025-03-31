@@ -1,7 +1,7 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using LanguageExt.Common;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -32,7 +32,7 @@ public class GeoService(
     IConnectionElisData connectionElisData,
     IThuaDatService thuaDatService,
     ILogger logger,
-    IFusionCache fusionCache) : IGeoService
+    HybridCache hybridCache) : IGeoService
 {
 
     private readonly string _apiSdeUrl = connectionElisData.ApiSdeUrl();
@@ -58,10 +58,10 @@ public class GeoService(
         if (string.IsNullOrWhiteSpace(serial)) return [];
         try
         {
-            return await fusionCache.GetOrSetAsync(CacheSettings.KeyToaDoThua(serial),
-                cancel => GetPointFromApiSdeAsync(serial, cancel), 
+            return await hybridCache.GetOrCreateAsync(CacheSettings.KeyToaDoThua(serial),
+                async cancel => await GetPointFromApiSdeAsync(serial, cancel), 
                 tags: [serial],
-                token: cancellationToken);
+                cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {

@@ -1,4 +1,4 @@
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
@@ -29,7 +29,7 @@ public interface ICheckIpService
     Task ClearLockAsync(string ipAddress);
 }
 
-public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
+public sealed class CheckIpService(HybridCache hybridCache) : ICheckIpService
 {
     private const string Key = "CheckIp";
     private const int SecondStep = 300;
@@ -46,7 +46,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     public async Task<(int Count, long ExprSecond)> CheckLockAsync(string ipAddress)
     {
         if (string.IsNullOrWhiteSpace(ipAddress)) return (0, 0);
-        var lockInfo = await fusionCache.GetOrDefaultAsync(LockKey(ipAddress), new LockInfo());
+        var lockInfo = await hybridCache.GetOrCreateAsync(LockKey(ipAddress), _ => ValueTask.FromResult<LockInfo?>(null));
         return lockInfo is null ? (0,0L) :
             // Tính thời gian lock còn lại theo giây (làm tròn kiểu long)
             (lockInfo.Count, (long) Math.Ceiling((lockInfo.ExprTime - DateTime.Now).TotalSeconds));
@@ -61,7 +61,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     public async Task SetLockAsync(string ipAddress)
     {
         if (string.IsNullOrWhiteSpace(ipAddress)) return;
-        var lockInfo = await fusionCache.GetOrDefaultAsync<LockInfo>(LockKey(ipAddress));
+        var lockInfo = await hybridCache.GetOrCreateAsync(LockKey(ipAddress), _ => ValueTask.FromResult<LockInfo?>(null));
         double expSecond = 0;
         const int totalSecond1Day = 86400;
         if (lockInfo is null)
@@ -86,7 +86,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
             }
         }
         lockInfo.ExprTime = DateTime.Now.AddSeconds(expSecond);
-        await fusionCache.SetAsync(LockKey(ipAddress), lockInfo);
+        await hybridCache.SetAsync(LockKey(ipAddress), lockInfo);
     }
     
     /// <summary>
@@ -98,7 +98,7 @@ public sealed class CheckIpService(IFusionCache fusionCache) : ICheckIpService
     public async Task ClearLockAsync(string ipAddress)
     {
         if (string.IsNullOrWhiteSpace(ipAddress)) return;
-        await fusionCache.RemoveAsync(LockKey(ipAddress));
+        await hybridCache.RemoveAsync(LockKey(ipAddress));
     }
     
     private sealed class LockInfo(int count, DateTime exprTime)

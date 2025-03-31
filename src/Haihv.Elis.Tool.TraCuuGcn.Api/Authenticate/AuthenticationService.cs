@@ -8,8 +8,8 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using LanguageExt;
 using LanguageExt.Common;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Net.Http.Headers;
-using ZiggyCreatures.Caching.Fusion;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 
@@ -36,7 +36,7 @@ public interface IAuthenticationService
 
 public sealed class AuthenticationService(
     IChuSuDungService chuSuDungService,
-    IFusionCache fusionCache,
+    HybridCache hybridCache,
     TokenProvider tokenProvider) : IAuthenticationService
 {
     /// <summary>
@@ -59,8 +59,9 @@ public sealed class AuthenticationService(
         if (string.IsNullOrWhiteSpace(maDinhDanh)) return null;
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return null;
-        var tenChuSuDung = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.KeyAuthentication(serial, maDinhDanh),
-            token: cancellationToken);
+        var tenChuSuDung = await hybridCache.GetOrCreateAsync(CacheSettings.KeyAuthentication(serial, maDinhDanh),
+            _ => ValueTask.FromResult<string?>(null), 
+            cancellationToken: cancellationToken);
         if (!string.IsNullOrWhiteSpace(tenChuSuDung) && CompareVietnameseStrings(tenChuSuDung, claimsPrincipal.GetHoVaTen()))
         {
             return maDinhDanh;

@@ -4,7 +4,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
 using LanguageExt;
 using LanguageExt.Common;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -12,7 +12,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 public class ThuaDatService(
     IConnectionElisData connectionElisData,
     ILogger logger,
-    IFusionCache fusionCache) : IThuaDatService
+    HybridCache hybridCache) : IThuaDatService
 {
     private record ThuaDatToBanDo(int MaDvhc, string SoTo, int TyLe, string SoThua, string DiaChi, string GhiChu);
 
@@ -33,10 +33,10 @@ public class ThuaDatService(
         var cacheKey = CacheSettings.KeyThuaDat(serial);
         try
         {
-            var thuaDats = await fusionCache.GetOrSetAsync(cacheKey,
-                await GetThuaDatInDatabaseAsync(serial, cancellationToken),
+            var thuaDats = await hybridCache.GetOrCreateAsync(cacheKey,
+                async cancel => await GetThuaDatInDatabaseAsync(serial, cancel),
                 tags: [serial],
-                token: cancellationToken);
+                cancellationToken: cancellationToken);
             return thuaDats.Count == 0 ? 
                 new Result<List<ThuaDat>>(new ValueIsNullException("Không tìm thấy thông tin thửa đất!")) : 
                 thuaDats;
@@ -146,9 +146,9 @@ public class ThuaDatService(
         var cacheKey = CacheSettings.KeyDiaChiByMaDvhc(maDvhc);
         try
         {
-            var diaChi = await fusionCache.GetOrSetAsync(cacheKey,
-                cancel => GetDiaChiByMaDvhcAsyncInDataAsync(maDvhc, connectionString, cancel),
-                token: cancellationToken);
+            var diaChi = await hybridCache.GetOrCreateAsync(cacheKey,
+                async cancel => await GetDiaChiByMaDvhcAsyncInDataAsync(maDvhc, connectionString, cancel),
+                cancellationToken: cancellationToken);
             return diaChi;
         }
         catch (Exception exception)

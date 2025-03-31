@@ -3,8 +3,9 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using InterpolatedSql.Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.Memory;
-using ZiggyCreatures.Caching.Fusion;
+using static System.Threading.Tasks.ValueTask;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -91,7 +92,7 @@ public sealed partial class ConnectionElisData(
     IConfiguration configuration,
     ILogger logger,
     IMemoryCache memoryCache,
-    IFusionCache fusionCache) : IConnectionElisData
+    HybridCache hybridCache) : IConnectionElisData
 {
     private const string SectionName = "ElisSql";
     private const string SectionData = "Databases";
@@ -163,17 +164,21 @@ public sealed partial class ConnectionElisData(
     {
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return ConnectionElis;
-        var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
+        var connectionName =
+            await hybridCache.GetOrCreateAsync(CacheSettings.ElisConnectionName(serial),
+                _ => FromResult<string?>(null));
         return string.IsNullOrWhiteSpace(connectionName)
             ? ConnectionElis
             : ConnectionElis.Where(x => x.Name == connectionName).ToList();
     }
-    
+
     public async ValueTask<ConnectionSql?> GetConnectionAsync(string? serial)
     {
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return null;
-        var connectionName = await fusionCache.GetOrDefaultAsync<string>(CacheSettings.ElisConnectionName(serial));
+        var connectionName =
+            await hybridCache.GetOrCreateAsync(CacheSettings.ElisConnectionName(serial),
+                _ => FromResult<string?>(null));
         return string.IsNullOrWhiteSpace(connectionName)
             ? null
             : ConnectionElis.FirstOrDefault(x => x.Name == connectionName);
@@ -254,14 +259,18 @@ public sealed partial class ConnectionElisData(
             var dynamicList = (await query.QueryAsync(cancellationToken: cancellationToken)).ToList();
             foreach (var dynamic in dynamicList)
             {
+                var serials = new List<string>();
                 var serial = GetSerialFromAuditLog(dynamic.OldValue);
                 if (!string.IsNullOrWhiteSpace(serial))
                 {
-                    await fusionCache.RemoveByTagAsync(serial, token: cancellationToken);
+                    serials.Add(serial);
                 }
                 serial = GetSerialFromAuditLog(dynamic.NewValue);
-                if (string.IsNullOrWhiteSpace(serial)) continue;
-                await fusionCache.RemoveByTagAsync(serial, token: cancellationToken);
+                if (!string.IsNullOrWhiteSpace(serial)) 
+                {
+                    serials.Add(serial);
+                }
+                await hybridCache.RemoveByTagAsync(serials, cancellationToken: cancellationToken);
             }
         }
     }

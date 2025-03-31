@@ -1,7 +1,7 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Microsoft.AspNetCore.Http.Extensions;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
 
@@ -21,7 +21,7 @@ public static class AdminEndPoints
 
     private static async Task<IResult> DeleteCacheBySerial(HttpContext context,
         ILogger logger,
-        IFusionCache fusionCache,
+        HybridCache hybridCache,
         IConfiguration configuration)
     {
         var url = context.Request.GetDisplayUrl();
@@ -44,7 +44,7 @@ public static class AdminEndPoints
             var tag = serial.ChuanHoa();
             if (!string.IsNullOrWhiteSpace(tag))
             {
-                await fusionCache.RemoveByTagAsync(tag);
+                await hybridCache.RemoveByTagAsync(tag);
             }
             logger.Information("Xóa cache thành công: {Url}{MaDinhDanh}",
                 url, maDinhDanh);

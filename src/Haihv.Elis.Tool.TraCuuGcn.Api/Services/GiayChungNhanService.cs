@@ -4,7 +4,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
 using LanguageExt;
 using LanguageExt.Common;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -12,7 +12,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 public sealed class GiayChungNhanService(
     IConnectionElisData connectionElisData,
     ILogger logger,
-    IFusionCache fusionCache) :
+    HybridCache hybridCache) :
     IGiayChungNhanService
 {
     /// <summary>
@@ -33,7 +33,7 @@ public sealed class GiayChungNhanService(
         {
             var cacheKey = CacheSettings.KeyGiayChungNhan(!string.IsNullOrWhiteSpace(serial) ? serial : CacheSettings.KeySerial(maVach.ToString()));
             List<string> tags = [];
-            return await fusionCache.GetOrSetAsync(cacheKey,
+            return await hybridCache.GetOrCreateAsync(cacheKey,
                        async cancel =>
                        {
                            var giayChungNhan = await GetAsync(serial, maVach, cancel);
@@ -46,7 +46,7 @@ public sealed class GiayChungNhanService(
                            return giayChungNhan;
                        },
                        tags: tags,
-                       token: cancellationToken) ?? 
+                       cancellationToken: cancellationToken) ?? 
                    new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
         }
         catch (Exception e)
@@ -73,8 +73,9 @@ public sealed class GiayChungNhanService(
         try
         {
             var giayChungNhan = string.IsNullOrWhiteSpace(serial) ? null : 
-                await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial),
-                    token: cancellationToken);
+                await hybridCache.GetOrCreateAsync(CacheSettings.KeyGiayChungNhan(serial),
+                    _ => ValueTask.FromResult<GiayChungNhan?>(null),
+                    cancellationToken: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
             var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var (connectionName, _, elisConnectionString, _, _) in connectionElis)
@@ -108,13 +109,14 @@ public sealed class GiayChungNhanService(
                 if (giayChungNhan is null) continue;
                 serial = giayChungNhan.Serial.ChuanHoa();
                 if (string.IsNullOrWhiteSpace(serial)) continue;
-                _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), giayChungNhan,
-                    tags: [serial],
-                    token: cancellationToken).AsTask();
-                _ = fusionCache.SetAsync(CacheSettings.KeySerial(giayChungNhan.MaVach), serial,
-                    tags: [serial],
-                    token: cancellationToken).AsTask();
-                _ = fusionCache.SetCacheConnectionName(connectionName, serial, cancellationToken);
+                List<string> tags = [serial];
+                _ = hybridCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), giayChungNhan,
+                    tags: tags,
+                    cancellationToken: cancellationToken).AsTask();
+                _ = hybridCache.SetAsync(CacheSettings.KeySerial(giayChungNhan.MaVach), serial,
+                    tags: tags,
+                    cancellationToken: cancellationToken).AsTask();
+                _ = hybridCache.SetCacheConnectionName(connectionName, serial, cancellationToken);
                 return giayChungNhan;
             }
         
@@ -153,9 +155,9 @@ public sealed class GiayChungNhanService(
             var count = await query.ExecuteAsync(cancellationToken: cancellationToken);
             if (count <= 0) 
                 return new Result<bool>(new NullReferenceException("Không có Giấy chứng nhận nào được cập nhật!")); 
-            _ = fusionCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), phapLyGiayChungNhan,
+            _ = hybridCache.SetAsync(CacheSettings.KeyGiayChungNhan(serial), phapLyGiayChungNhan,
                 tags: [serial],
-                token: cancellationToken).AsTask();
+                cancellationToken: cancellationToken).AsTask();
             return true;
         }
         catch (Exception e)

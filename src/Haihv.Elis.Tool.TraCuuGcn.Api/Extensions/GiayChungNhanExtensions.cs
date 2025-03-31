@@ -1,11 +1,12 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
+
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
 public static class GiayChungNhanExtensions
 {
-    public static async Task SetCacheConnectionName(this IFusionCache fusionCache, 
+    public static async Task SetCacheConnectionName(this HybridCache hybridCache, 
         string connectionName, string? serial = null,
         CancellationToken cancellationToken = default)
     {
@@ -13,10 +14,10 @@ public static class GiayChungNhanExtensions
         if (!string.IsNullOrWhiteSpace(serial))
         {
             var cacheKey = CacheSettings.ElisConnectionName(serial);
-            await fusionCache.SetAsync(cacheKey,
+            await hybridCache.SetAsync(cacheKey,
                 connectionName,
                 tags: [serial],
-                token: cancellationToken);
+                cancellationToken: cancellationToken);
         }
     }
 }

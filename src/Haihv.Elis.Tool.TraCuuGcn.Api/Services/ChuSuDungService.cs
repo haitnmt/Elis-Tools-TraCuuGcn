@@ -4,8 +4,8 @@ using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
 using LanguageExt;
 using LanguageExt.Common;
+using Microsoft.Extensions.Caching.Hybrid;
 using Newtonsoft.Json;
-using ZiggyCreatures.Caching.Fusion;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -13,7 +13,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 public sealed class ChuSuDungService(
     IConnectionElisData connectionElisData,
     ILogger logger,
-    IFusionCache fusionCache) : IChuSuDungService
+    HybridCache hybridCache) : IChuSuDungService
 {
     #region Xác thực chủ sử dụng
 
@@ -33,11 +33,11 @@ public sealed class ChuSuDungService(
         var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
         try
         {
-            var tenChuSuDung = await fusionCache.GetOrSetAsync(cacheKey,
+            var tenChuSuDung = await hybridCache.GetOrCreateAsync(cacheKey,
                 
                 cancel => GetTenChuSuDungInDataAsync(serial, soDinhDanh, cancel),
                 tags:[serial],
-                token: cancellationToken);
+                cancellationToken: cancellationToken);
             return string.IsNullOrWhiteSpace(tenChuSuDung) ? 
                 new Result<AuthChuSuDung>(new ValueIsNullException("Không tìm thấy chủ sử dụng!")) : 
                 new AuthChuSuDung(serial, soDinhDanh, tenChuSuDung);
@@ -58,7 +58,7 @@ public sealed class ChuSuDungService(
     /// <returns>
     /// Tên chủ sử dụng hoặc null nếu không tìm thấy.
     /// </returns>
-    private async Task<string?> GetTenChuSuDungInDataAsync(
+    private async ValueTask<string?> GetTenChuSuDungInDataAsync(
         string? serial = null,
         string? soDinhDanh = null,
         CancellationToken cancellationToken = default)
@@ -138,7 +138,7 @@ public sealed class ChuSuDungService(
                     string hoVaTen = chuSuDungData.HoVaTen.ToString();
                     if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(hoVaTen)) continue;
                     var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
-                    await fusionCache.SetAsync(cacheKey, hoVaTen, tags: [serial], token: cancellationToken);
+                    await hybridCache.SetAsync(cacheKey, hoVaTen, tags: [serial], cancellationToken: cancellationToken);
                 }
             }
         }
@@ -165,16 +165,16 @@ public sealed class ChuSuDungService(
         if (string.IsNullOrWhiteSpace(serial))
             return new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
         var cacheKey = CacheSettings.KeyChuSuDung(serial);
-        var chuSuDungs = await fusionCache.GetOrSetAsync(cacheKey,
+        var chuSuDungs = await hybridCache.GetOrCreateAsync(cacheKey,
             cancel => GetAsync(serial, cancel),
             tags: [serial],
-            token: cancellationToken);
+            cancellationToken: cancellationToken);
         return chuSuDungs.Count > 0 ? 
             chuSuDungs : 
             new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
     }
     
-    public async Task<List<ChuSuDungInfo>> GetAsync(
+    public async ValueTask<List<ChuSuDungInfo>> GetAsync(
         string? serial = null, CancellationToken cancellationToken = default)
     {
         List<ChuSuDungInfo> chuSuDungInfos = [];
@@ -321,9 +321,9 @@ public sealed class ChuSuDungService(
         var cacheKey = CacheSettings.KeyQuocTich(maQuocTich);
         try
         {
-            var quocTich = await fusionCache.GetOrSet(cacheKey,
+            var quocTich = await hybridCache.GetOrCreateAsync(cacheKey,
                 cancel => GetQuocTichInJsonAsync(null, maQuocTich, cancel),
-                token: cancellationToken);
+                cancellationToken: cancellationToken);
             return quocTich;
         }
         catch (Exception exception)

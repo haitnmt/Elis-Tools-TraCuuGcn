@@ -3,7 +3,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Http.Extensions;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
@@ -42,7 +42,7 @@ public static class GiayChungNhanEndpoints
     }
 
     private static async Task<IResult> UpdateGiayChungNhan(HttpContext context,
-        ILogger logger, IFusionCache fusionCache,
+        ILogger logger, HybridCache hybridCache,
         IConfiguration configuration, IConnectionElisData connectionElisData,
         ILogElisDataServices logElisDataServices,
         IGiayChungNhanService giayChungNhanService)
@@ -97,7 +97,7 @@ public static class GiayChungNhanEndpoints
     }
 
     private static async Task<IResult> DeleteMaQr(HttpContext context,
-        ILogger logger, IFusionCache fusionCache, IConfiguration configuration,
+        ILogger logger, IConfiguration configuration,
         IConnectionElisData connectionElisData, ILogElisDataServices logElisDataServices,
         IGiayChungNhanService giayChungNhanService,
         IGcnQrService gcnQrService)
@@ -149,7 +149,7 @@ public static class GiayChungNhanEndpoints
     }
 
     private static async Task<IResult> GetHasUpdatePermission(HttpContext context,
-        ILogger logger, IFusionCache fusionCache, IConfiguration configuration,
+        ILogger logger, IConfiguration configuration,
         IConnectionElisData connectionElisData, IGiayChungNhanService giayChungNhanService)
     {
         var result = await HasUpdatePermission(context,
@@ -351,7 +351,7 @@ public static class GiayChungNhanEndpoints
 
     private static async Task<IResult> DeleteCache(HttpContext context,
         ILogger logger,
-        IFusionCache fusionCache,
+        HybridCache hybridCache,
         IConfiguration configuration,
         IConnectionElisData connectionElisData,
         IGiayChungNhanService giayChungNhanService)
@@ -375,7 +375,7 @@ public static class GiayChungNhanEndpoints
 
         try
         {
-            await fusionCache.RemoveByTagAsync(serial);
+            await hybridCache.RemoveByTagAsync(serial);
             logger.Information("Xóa cache thành công: {Url}{MaDinhDanh}",
                 url, maDinhDanh);
             return Results.Ok("Xóa cache thành công");

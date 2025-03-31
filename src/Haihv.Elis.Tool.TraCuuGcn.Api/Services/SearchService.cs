@@ -4,13 +4,13 @@ using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
 using LanguageExt;
 using LanguageExt.Common;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
 public class SearchService(IGcnQrService gcnQrService,
     IGiayChungNhanService giayChungNhanService,
-    ILogger logger, IFusionCache fusionCache) : ISearchService
+    ILogger logger, HybridCache hybridCache) : ISearchService
 {
     public async Task<Result<GiayChungNhanInfo>> GetResultAsync(string? query, CancellationToken cancellationToken = default)
     {
@@ -19,8 +19,9 @@ public class SearchService(IGcnQrService gcnQrService,
             return new Result<GiayChungNhanInfo>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
         }
         var cacheKey = CacheSettings.KeySearch(query);
-        var giayChungNhanInfo = await fusionCache.GetOrDefaultAsync<GiayChungNhanInfo>(cacheKey, 
-            token: cancellationToken);
+        var giayChungNhanInfo = await hybridCache.GetOrCreateAsync(cacheKey, 
+            _ => ValueTask.FromResult<GiayChungNhanInfo?>(null),
+            cancellationToken: cancellationToken);
         if (giayChungNhanInfo is not null)
         {
             return giayChungNhanInfo;
@@ -31,10 +32,10 @@ public class SearchService(IGcnQrService gcnQrService,
         {
             return new Result<GiayChungNhanInfo>(new ValueIsNullException("Không tìm thấy thông tin!"));
         }
-        await fusionCache.SetAsync(cacheKey, 
+        await hybridCache.SetAsync(cacheKey, 
             giayChungNhanInfo, 
             tags: [serial], 
-            token: cancellationToken);
+            cancellationToken: cancellationToken);
         return giayChungNhanInfo;
     }
 

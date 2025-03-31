@@ -7,7 +7,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Models.Extensions;
 using InterpolatedSql.Dapper;
 using LanguageExt;
 using LanguageExt.Common;
-using ZiggyCreatures.Caching.Fusion;
+using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -43,7 +43,7 @@ public interface IGcnQrService
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Tên đơn vị nếu tìm thấy, ngược lại trả về null.</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
-    Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default);
+    ValueTask<string?> GetTenDonViInDataBaseAsync(string? maDonVi, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Xóa thông tin Mã QR khỏi CSDL
@@ -60,7 +60,8 @@ public interface IGcnQrService
     Task<Result<bool>> DeleteMaQrAsync(string? serial = null, CancellationToken cancellationToken = default);
 }
 
-public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger logger, IFusionCache fusionCache) : IGcnQrService
+public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayChungNhanService giayChungNhanService,
+    ILogger logger, HybridCache hybridCache) : IGcnQrService
 {
     private readonly List<ConnectionSql> _connectionElis = connectionElisData.ConnectionElis;
 
@@ -104,8 +105,9 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
         try
         {
             var maQrInfo = string.IsNullOrWhiteSpace(serial) ? null :
-                await fusionCache.GetOrDefaultAsync<MaQrInfo>(CacheSettings.KeyMaQr(serial), 
-                    token: cancellationToken);
+                await hybridCache.GetOrCreateAsync(CacheSettings.KeyMaQr(serial), 
+                    _ => ValueTask.FromResult<MaQrInfo?>(null),
+            cancellationToken: cancellationToken);
             if (maQrInfo is not null) return maQrInfo;
             var connectionElis = await connectionElisData.GetAllConnection(serial);
             hashQr = hashQr?.Trim().ToLower();
@@ -130,23 +132,21 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 maQrInfo = maQr.ToMaQr();
                 if (!string.IsNullOrWhiteSpace(maQrInfo.MaDonVi))
                 {
-                    maQrInfo.TenDonVi = await fusionCache.GetOrSetAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
+                    maQrInfo.TenDonVi = await hybridCache.GetOrCreateAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
                         cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
-                        token: cancellationToken);
+                        cancellationToken: cancellationToken);
                 }
                 maQrInfo.MaQrId = qrInData.Id;
                 maQrInfo.MaGcnElis = qrInData.MaGcn;
                 maQrInfo.HieuLuc = qrInData.HieuLuc.ToString() != "0";
                 serial = maQrInfo.SerialNumber?.ChuanHoa();
                 if (string.IsNullOrWhiteSpace(serial)) return maQrInfo;
-                _ = fusionCache.SetAsync(CacheSettings.KeyMaQr(serial), maQrInfo,
-                    TimeSpan.FromDays(1), 
+                _ = hybridCache.SetAsync(CacheSettings.KeyMaQr(serial), maQrInfo,
                     tags: [maQrInfo.MaGcnElis.ToString()],
-                    token: cancellationToken).AsTask();
-                _ = fusionCache.SetAsync(CacheSettings.ElisConnectionName(serial), connection.Name,
-                    TimeSpan.FromDays(1),
+                    cancellationToken: cancellationToken).AsTask();
+                _ = hybridCache.SetAsync(CacheSettings.ElisConnectionName(serial), connection.Name,
                     tags: [maQrInfo.MaGcnElis.ToString()],
-                    token: cancellationToken).AsTask();
+                    cancellationToken: cancellationToken).AsTask();
                 return maQrInfo;
             }
             if (string.IsNullOrWhiteSpace(maQr)) return null;
@@ -154,9 +154,9 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             maQrInfo.MaGcnElis = 0;
             if (!string.IsNullOrWhiteSpace(maQrInfo.MaDonVi))
             {
-                maQrInfo.TenDonVi = await fusionCache.GetOrSetAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
+                maQrInfo.TenDonVi = await hybridCache.GetOrCreateAsync(CacheSettings.KeyDonViInGcn(maQrInfo.MaDonVi),
                     cancel => GetTenDonViInDataBaseAsync(maQrInfo.MaDonVi, cancel),
-                    token: cancellationToken);
+                    cancellationToken: cancellationToken);
             }
             return maQrInfo;
         }
@@ -174,7 +174,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
     /// <param name="cancellationToken">Token để hủy bỏ thao tác không đồng bộ.</param>
     /// <returns>Tên đơn vị nếu tìm thấy, ngược lại trả về null.</returns>
     /// <exception cref="Exception">Ném ra ngoại lệ nếu có lỗi xảy ra trong quá trình truy vấn cơ sở dữ liệu.</exception>
-    public async Task<string?> GetTenDonViInDataBaseAsync(string? maDonVi,
+    public async ValueTask<string?> GetTenDonViInDataBaseAsync(string? maDonVi,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(maDonVi)) return null;
@@ -214,7 +214,9 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             foreach (var item in donViInGcn)
             {
                 var cacheKey = CacheSettings.KeyDonViInGcn(item.MaDinhDanh);
-                _ = fusionCache.GetOrSetAsync(cacheKey, item.TenDonVi, token: cancellationToken).AsTask();
+                _ = hybridCache.GetOrCreateAsync(cacheKey, 
+                    _ => ValueTask.FromResult(item.TenDonVi), 
+                    cancellationToken: cancellationToken).AsTask();
             }
             return donViInGcn.FirstOrDefault(x => x.MaDinhDanh == maDonVi)?.TenDonVi;
         }
@@ -270,8 +272,9 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
             var qrInfos = (await selectQuery.QueryAsync<QrInfo>(cancellationToken: cancellationToken)).ToList();
             if (qrInfos.Count == 0)
             {
-                var giayChungNhan = await fusionCache.GetOrDefaultAsync<GiayChungNhan>(CacheSettings.KeyGiayChungNhan(serial), 
-                    token: cancellationToken);
+                var giayChungNhan = await hybridCache.GetOrCreateAsync(CacheSettings.KeyGiayChungNhan(serial), 
+                    async cancel => await giayChungNhanService.GetAsync(serial: serial, cancellationToken: cancel),
+                    cancellationToken: cancellationToken);
                 if (giayChungNhan is not null)
                     qrInfos = [new QrInfo(Guid.Empty, giayChungNhan.MaGcn)];
             }
@@ -311,7 +314,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, ILogger
                 return new Result<bool>(new ArgumentNullException(nameof(serial)));
             }
             // Xóa cache
-            _ = fusionCache.RemoveByTagAsync(serial, token: cancellationToken).AsTask();
+            _ = hybridCache.RemoveByTagAsync(serial, cancellationToken: cancellationToken).AsTask();
             logger.Information("Xóa thông tin Mã QR thành công: {Serial}", serial);
             return true;
         } 
