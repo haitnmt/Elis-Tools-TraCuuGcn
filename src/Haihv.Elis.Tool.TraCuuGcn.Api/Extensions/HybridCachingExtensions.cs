@@ -8,9 +8,6 @@ public static class HybridCachingExtensions
     public static void AddCache(this IServiceCollection services, string? redisConnectionString = null)
     {
         const string instanceName = "TraCuuGcn:";
-        //Add MemoryCache
-        services.AddMemoryCache();
-        //Add RedisCache
         // Clear redis cache when application start
         if (!string.IsNullOrWhiteSpace(redisConnectionString))
         {
