@@ -30,7 +30,7 @@ public interface IChuSuDungService
     /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    ValueTask<List<ChuSuDungInfo>> GetAsync(string? serial = null, CancellationToken cancellationToken = default);
+    Task<List<ChuSuDungInfo>> GetAsync(string? serial = null, CancellationToken cancellationToken = default);
     
     /// <summary>
     /// Lưu thông tin chủ sử dụng vào cache.

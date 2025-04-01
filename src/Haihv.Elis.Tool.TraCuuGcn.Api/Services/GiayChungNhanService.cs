@@ -26,12 +26,14 @@ public sealed class GiayChungNhanService(
     public async Task<Result<GiayChungNhan>> GetResultAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default)
     {
-        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial) && maVach <= 0)
             return new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
         try
         {
-            var cacheKey = CacheSettings.KeyGiayChungNhan(!string.IsNullOrWhiteSpace(serial) ? serial : CacheSettings.KeySerial(maVach.ToString()));
+            serial = string.IsNullOrWhiteSpace(serial) ? CacheSettings.KeySerial(maVach.ToString()) : serial.ChuanHoa();
+            if (string.IsNullOrWhiteSpace(serial))
+                return new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
+            var cacheKey = CacheSettings.KeyGiayChungNhan(serial);
             List<string> tags = [];
             return await hybridCache.GetOrCreateAsync(cacheKey,
                        async cancel =>
@@ -67,7 +69,7 @@ public sealed class GiayChungNhanService(
     public async Task<GiayChungNhan?> GetAsync(string? serial = null, long maVach = 0,
         CancellationToken cancellationToken = default)
     {
-        serial = serial.ChuanHoaLowerCase();
+        serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial) && maVach <= 0) return null;
         var maVachString = maVach > 0 ? maVach.ToString("0000000000000") : "-111";
         try
@@ -80,6 +82,7 @@ public sealed class GiayChungNhanService(
             var connectionElis = await connectionElisData.GetAllConnection(serial);
             foreach (var (connectionName, _, elisConnectionString, _, _) in connectionElis)
             {
+                var serialLowerCase = serial.ChuanHoaLowerCase();
                 await using var dbConnection = elisConnectionString.GetConnection();
                 var query = dbConnection.SqlBuilder(
                     $"""
@@ -102,7 +105,7 @@ public sealed class GiayChungNhanService(
                                  MaVach
                           FROM GCNQSDD
                           WHERE 
-                              (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(LTRIM(RTRIM(SoSerial))) = {serial})) OR 
+                              (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(LTRIM(RTRIM(SoSerial))) = {serialLowerCase})) OR 
                               (MaVach = {maVachString})
                      """);
                 giayChungNhan = await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);

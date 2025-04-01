@@ -166,7 +166,7 @@ public sealed class ChuSuDungService(
             return new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
         var cacheKey = CacheSettings.KeyChuSuDung(serial);
         var chuSuDungs = await hybridCache.GetOrCreateAsync(cacheKey,
-            cancel => GetAsync(serial, cancel),
+            async cancel => await GetAsync(serial, cancel),
             tags: [serial],
             cancellationToken: cancellationToken);
         return chuSuDungs.Count > 0 ? 
@@ -174,7 +174,7 @@ public sealed class ChuSuDungService(
             new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
     }
     
-    public async ValueTask<List<ChuSuDungInfo>> GetAsync(
+    public async Task<List<ChuSuDungInfo>> GetAsync(
         string? serial = null, CancellationToken cancellationToken = default)
     {
         List<ChuSuDungInfo> chuSuDungInfos = [];
@@ -182,42 +182,43 @@ public sealed class ChuSuDungService(
         if (string.IsNullOrWhiteSpace(serial)) return chuSuDungInfos;
         try
         {
-            serial = serial.ChuanHoa();
-            var connectionElis = await connectionElisData.GetAllConnection(serial);
-            foreach (var connection in connectionElis)
+            var connection = await connectionElisData.GetConnectionAsync(serial);
+            if (connection is null) return chuSuDungInfos;
+            await using var dbConnection = connection.ElisConnectionString.GetConnection();
+            var query = dbConnection.SqlBuilder(
+                $"""
+                 SELECT DISTINCT CSD.MaDoiTuong AS MaDoiTuong,
+                                 CSD.Ten1 AS Ten, 
+                                 CSD.SoDinhDanh1 AS SoDinhDanh, 
+                                 CSD.loaiSDD1 AS LoaiSdd,
+                                 CSD.GioiTinh1 AS GioiTinh, 
+                                 CSD.DiaChi1 AS DiaChi,
+                                 CSD.MaQuocTich1 AS MaQuocTich,
+                                 CSD.Ten2 AS Ten2,
+                                 CSD.SoDinhDanh2 AS SoDinhDanh2,
+                                 CSD.loaiSDD2 AS LoaiSdd2,
+                                 CSD.GioiTinh2 AS GioiTinh2,
+                                 CSD.QuanHe AS QuanHe,
+                                 CSD.DiaChi2 AS DiaChi2,
+                                 CSD.MaQuocTich2 AS MaQuocTich2
+                                       
+                       FROM ChuSuDung CSD
+                            INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
+                       WHERE (GCN.SoSerial IS NOT NULL AND LEN(GCN.SoSerial) > 0 AND UPPER(GCN.SoSerial) = {serial})
+                 """);
+            var chuSuDungDatas = (await query.QueryAsync<ChuSuDungData>(cancellationToken: cancellationToken)).ToList();
+            if (chuSuDungDatas.Count == 0) return chuSuDungInfos;
+            foreach (var chuSuDungData in chuSuDungDatas)
             {
-                await using var dbConnection = connection.ElisConnectionString.GetConnection();
-                var query = dbConnection.SqlBuilder(
-                    $"""
-                     SELECT DISTINCT CSD.MaDoiTuong AS MaDoiTuong,
-                                     CSD.Ten1 AS Ten, 
-                                     CSD.SoDinhDanh1 AS SoDinhDanh, 
-                                     CSD.loaiSDD1 AS LoaiSdd,
-                                     CSD.GioiTinh1 AS GioiTinh, 
-                                     CSD.DiaChi1 AS DiaChi,
-                                     CSD.MaQuocTich1 AS MaQuocTich,
-                                     CSD.Ten2 AS Ten2,
-                                     CSD.SoDinhDanh2 AS SoDinhDanh2,
-                                     CSD.loaiSDD2 AS LoaiSdd2,
-                                     CSD.GioiTinh2 AS GioiTinh2,
-                                     CSD.QuanHe AS QuanHe,
-                                     CSD.DiaChi2 AS DiaChi2,
-                                     CSD.MaQuocTich2 AS MaQuocTich2
-                                           
-                           FROM ChuSuDung CSD
-                                INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                           WHERE (GCN.SoSerial IS NOT NULL AND LEN(GCN.SoSerial) > 0 AND UPPER(GCN.SoSerial) = {serial})
-                     """);
-                var chuSuDungDatas = (await query.QueryAsync<ChuSuDungData>(cancellationToken: cancellationToken)).ToList();
-                if (chuSuDungDatas.Count == 0) continue;
-                foreach (var chuSuDungData in chuSuDungDatas)
-                {
-                    var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
-                    if (chuSuDung is null) continue;
-                    var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
-                    chuSuDungInfos.Add(new ChuSuDungInfo(chuSuDung, chuSuDungQuanHe));
-                }
+                var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
+                if (chuSuDung is null) continue;
+                var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
+                chuSuDungInfos.Add(new ChuSuDungInfo(chuSuDung, chuSuDungQuanHe));
             }
+
+            if (chuSuDungInfos.Count <= 0) return chuSuDungInfos;
+            var cacheKey = CacheSettings.KeyChuSuDung(serial);
+            _ = hybridCache.SetAsync(cacheKey, chuSuDungInfos, tags: [serial], cancellationToken: cancellationToken).AsTask();
         }
         catch (Exception exception)
         {

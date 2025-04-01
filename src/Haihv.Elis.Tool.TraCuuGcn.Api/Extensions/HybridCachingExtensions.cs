@@ -43,6 +43,5 @@ public static class HybridCachingExtensions
                     LocalCacheExpiration = TimeSpan.FromMinutes(5)
                 };
             });
-
     }
 }
