@@ -70,6 +70,9 @@ builder.Services.AddSingleton<IGiayChungNhanService, GiayChungNhanService>();
 builder.Services.AddSingleton<IChuSuDungService, ChuSuDungService>();
 // Add ThuaDatService
 builder.Services.AddSingleton<IThuaDatService, ThuaDatService>();
+// Add HttpClient for SDE API
+builder.Services.AddHttpClient("SdeApi");
+
 // Add GeoService
 builder.Services.AddSingleton<IGeoService, GeoService>();
 

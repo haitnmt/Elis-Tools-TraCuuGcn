@@ -275,6 +275,8 @@ else
 @code {
 
     private HttpClient _httpClient = null!;
+
+    // Parameters
     [Parameter] public string? Query { get; set; }
     [Parameter] public string? Error { get; set; }
     [Parameter] public bool IsLdapUser { get; set; }
@@ -285,52 +287,81 @@ else
     [Parameter] public EventCallback<bool> HasGiayChungNhanChanged { get; set; }
     [Parameter] public EventCallback<bool> RefreshDataChanged { get; set; }
 
+    // Constants
     private const string Url = "/elis/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
     private const string UrlClearCache = "/elis/delete-cache";
     private const string UrlGetPermissionsCanUpdate = "elis/permissions/can-update";
+
+    // State variables
     private string? _query;
     private GiayChungNhanInfo? _giayChungNhanInfo;
     private List<ThuaDatPublic> _thuaDatPublic = [];
     private string? _error;
+    private string? _errorLoadThuaDat;
     private bool _dataLoaded;
     private bool _thuaDatLoaded = true;
     private bool _permissionsCanUpdate;
     private string? _permissionsStatus;
     private bool _visibleUpdate;
     private bool _isLdapUser;
+    private bool _processingGetPermissionsCanUpdate;
 
+    /// <summary>
+    /// Khởi tạo component
+    /// </summary>
     protected override void OnInitialized()
     {
+        // Khởi tạo HttpClient từ factory
         _httpClient = HttpClientFactory.CreateClient("Endpoint");
         base.OnInitialized();
     }
 
+    /// <summary>
+    /// Xử lý khi tham số thay đổi
+    /// </summary>
     protected override async Task OnParametersSetAsync()
     {
+        // Kiểm tra thay đổi trạng thái người dùng LDAP
         if (_isLdapUser != IsLdapUser)
         {
             _isLdapUser = IsLdapUser;
+
+            // Nếu đã tải dữ liệu, kiểm tra lại quyền
             if (_dataLoaded)
                 await GetGetPermissionsCanUpdate();
         }
 
-        if (string.IsNullOrWhiteSpace(Query) || Query == _query) return;
-        _query = Query;
-        await LoadDataAsync();
+        // Kiểm tra thay đổi query tìm kiếm
+        if (!string.IsNullOrWhiteSpace(Query) && Query != _query)
+        {
+            _query = Query;
+            await LoadDataAsync();
+        }
     }
 
+    /// <summary>
+    /// Xóa cache thông tin GCN theo serial
+    /// </summary>
+    /// <param name="serial">Số serial của GCN</param>
+    /// <returns>True nếu xóa thành công, False nếu có lỗi</returns>
     private async Task<bool> ClearCache(string serial)
     {
         var url = $"{UrlClearCache}?serial={serial}";
         try
         {
+            // Gọi API xóa cache
             var responseMessage = await _httpClient.DeleteAsync(url);
-            Console.WriteLine(await responseMessage.Content.ReadAsStringAsync());
+
+            // Log kết quả
+            var responseContent = await responseMessage.Content.ReadAsStringAsync();
+            Console.WriteLine(responseContent);
+
             return responseMessage.IsSuccessStatusCode;
         }
         catch (Exception e)
         {
+            // Log lỗi
             Console.WriteLine(e.Message);
             return false;
         }
@@ -338,26 +369,34 @@ else
 
     private async Task LoadDataAsync()
     {
+        // Kiểm tra query có giá trị không
         if (string.IsNullOrWhiteSpace(_query))
         {
             return;
         }
 
+        // Reset trạng thái
         _error = null;
         _dataLoaded = false;
         StateHasChanged();
         await DonViChanged.InvokeAsync(string.Empty);
         _giayChungNhanInfo = null;
+
+        // Tạo URL và gọi API
         var url = $"{Url}?query={_query}";
         try
         {
+            // Lấy thông tin GCN
             var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
+
+            // Kiểm tra kết quả
             if (response?.Value == null)
             {
                 _error = response?.ErrorMsg ?? "Không có thông tin Giấy chứng nhận";
                 return;
             }
 
+            // Lưu kết quả
             _giayChungNhanInfo = response.Value;
         }
         catch (Exception e)
@@ -367,16 +406,23 @@ else
         }
         finally
         {
+            // Cập nhật trạng thái
             _dataLoaded = true;
             StateHasChanged();
+
+            // Xử lý kết quả
             if (_giayChungNhanInfo != null)
             {
+                // Nếu Serial thay đổi, cập nhật thông tin liên quan
                 if (Serial != _giayChungNhanInfo.Serial)
                 {
                     Serial = _giayChungNhanInfo.Serial;
-                    // Kiểm tra thông tin Xác thực
+
+                    // Kiểm tra thông tin xác thực
                     if (!await AuthService.CheckAuthorBySerialElis(Serial))
                         await AuthService.Logout();
+
+                    // Cập nhật các thông tin liên quan
                     await SerialChanged.InvokeAsync(Serial);
                     await GetGetPermissionsCanUpdate();
                     await LoadThuaDatAsync();
@@ -384,39 +430,46 @@ else
                     await HasGiayChungNhanChanged.InvokeAsync(_giayChungNhanInfo.HasGiayChungNhan);
                 }
 
+                // Cập nhật thông tin đơn vị
                 await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
             }
             else
             {
+                // Nếu không có thông tin GCN, reset Serial
                 Serial = null;
                 await SerialChanged.InvokeAsync(Serial);
             }
         }
     }
 
-    private string? _errorLoadThuaDat;
-
     private async Task LoadThuaDatAsync()
     {
-        _thuaDatPublic = [];
-        _errorLoadThuaDat = null;
+        // Nếu không có Serial hoặc đã có GCN, không cần tải thông tin thửa đất
         if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || _giayChungNhanInfo.HasGiayChungNhan)
         {
             return;
         }
 
+        // Reset dữ liệu
+        _thuaDatPublic = [];
+        _errorLoadThuaDat = null;
         _thuaDatLoaded = false;
         StateHasChanged();
+
         var url = $"{UrlThuaDat}?serial={_giayChungNhanInfo.Serial}";
         try
         {
+            // Tải thông tin thửa đất
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
+
+            // Kiểm tra kết quả
             if (response?.Value == null || response.Value.Count == 0)
             {
                 _errorLoadThuaDat = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
                 return;
             }
 
+            // Lưu kết quả
             _thuaDatPublic = response.Value;
         }
         catch (Exception e)
@@ -431,36 +484,50 @@ else
         }
     }
 
-    private bool _processingGetPermissionsCanUpdate;
-
     private async Task GetGetPermissionsCanUpdate()
     {
+        // Reset trạng thái
         _visibleUpdate = false;
+
+        // Kiểm tra điều kiện tiên quyết
         if (!_isLdapUser)
         {
             _permissionsCanUpdate = false;
             return;
         }
-        if (_giayChungNhanInfo is null || 
+
+        // Kiểm tra thông tin GCN
+        if (_giayChungNhanInfo is null ||
             !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
         {
             return;
         }
+
+        // Kiểm tra ngày ký
         if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
         {
-            Console.WriteLine($"Giấy chứng nhận đã ký không có quyền cập nhật thông tin: {_giayChungNhanInfo.NgayKy:dd/MM/yyyy}");
+            var message = $"Giấy chứng nhận đã ký không có quyền cập nhật thông tin: {_giayChungNhanInfo.NgayKy:dd/MM/yyyy}";
+            Console.WriteLine(message);
             SnackbarService.Add("Giấy chứng nhận đã ký không có quyền cập nhật thông tin", Severity.Warning);
             return;
         }
+
+        // Chuẩn bị kiểm tra quyền
         _permissionsStatus = null;
         _processingGetPermissionsCanUpdate = true;
         StateHasChanged();
+
         var url = $"{UrlGetPermissionsCanUpdate}?serial={Serial}";
         try
         {
+            // Gọi API kiểm tra quyền
             var response = await _httpClient.GetAsync(url);
             _permissionsCanUpdate = response.IsSuccessStatusCode;
+
+            // Xử lý phản hồi
             _permissionsStatus = (await response.Content.ReadAsStringAsync()).TrimStart('\"').TrimEnd('\n', '\"');
+
+            // Hiển thị thông báo nếu không có quyền
             if (!_permissionsCanUpdate)
             {
                 if (string.IsNullOrWhiteSpace(_permissionsStatus))
@@ -470,10 +537,13 @@ else
                 Console.WriteLine(_permissionsStatus);
                 SnackbarService.Add(_permissionsStatus, Severity.Warning);
             }
+
+            // Cập nhật trạng thái hiển thị
             _visibleUpdate = _permissionsCanUpdate;
         }
         catch (Exception e)
         {
+            // Xử lý lỗi
             Console.WriteLine(e);
             _permissionsCanUpdate = false;
             _permissionsStatus = "Lỗi khi kiểm tra quyền cập nhật thông tin Giấy chứng nhận";
@@ -481,76 +551,114 @@ else
         }
         finally
         {
+            // Kết thúc xử lý
             _processingGetPermissionsCanUpdate = false;
             StateHasChanged();
         }
     }
 
+    /// <summary>
+    /// Làm mới dữ liệu bằng cách xóa cache và thông báo cho component cha
+    /// </summary>
     private async Task RefreshData()
     {
         if (!string.IsNullOrWhiteSpace(Serial))
         {
-            await ClearCache(Serial);
+            // Xóa cache
+            var success = await ClearCache(Serial);
+
+            // Thông báo cho component cha để làm mới dữ liệu
             await RefreshDataChanged.InvokeAsync(true);
+
+            // Hiển thị thông báo kết quả (có thể bổ sung)
+            if (!success)
+            {
+                SnackbarService.Add("Có lỗi khi làm mới dữ liệu", Severity.Warning);
+            }
         }
     }
 
+    /// <summary>
+    /// Hiển thị dialog xóa mã QR và xử lý kết quả
+    /// </summary>
     private async Task XoaQrAsync()
     {
+        // Tạo tham số cho dialog
         var parameters = new DialogParameters<XoaQrDialog> { { x => x.Serial, Serial! } };
+
+        // Cấu hình tùy chọn dialog
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
             CloseButton = true
         };
+
+        // Hiển thị dialog
         var xoaQReference = await DialogService.ShowAsync<XoaQrDialog>(null, parameters, options);
+
+        // Xử lý kết quả
         var result = await xoaQReference.Result;
         if (result is not null && !result.Canceled)
         {
+            // Nếu xác nhận xóa, làm mới dữ liệu
             await RefreshData();
         }
         else
         {
+            // Nếu hủy, cập nhật UI
             StateHasChanged();
         }
     }
 
+    /// <summary>
+    /// Hiển thị dialog cập nhật thông tin GCN và xử lý kết quả
+    /// </summary>
     private async Task UpdateGiayChungNhanAsync()
     {
+        // Kiểm tra thông tin Serial
         if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial))
         {
             SnackbarService.Add("Không có thông tin Số phát hành (Serial)", Severity.Warning);
             return;
         }
 
+        // Tạo đối tượng pháp lý GCN để truyền vào dialog
+        var phapLyGiayChungNhan = new PhapLyGiayChungNhan
+        {
+            MaGcn = _giayChungNhanInfo.MaGcnElis,
+            Serial = _giayChungNhanInfo.Serial,
+            NgayKy = _giayChungNhanInfo.NgayKy,
+            NguoiKy = _giayChungNhanInfo.NguoiKy,
+            SoVaoSo = _giayChungNhanInfo.SoVaoSo,
+        };
+
+        // Tạo tham số cho dialog
         var parameters = new DialogParameters<UpdateGiayChungNhanDialog>
         {
-            {
-                x => x.PhapLyGiayChungNhan,
-                new PhapLyGiayChungNhan
-                {
-                    MaGcn = _giayChungNhanInfo.MaGcnElis,
-                    Serial = _giayChungNhanInfo.Serial,
-                    NgayKy = _giayChungNhanInfo.NgayKy,
-                    NguoiKy = _giayChungNhanInfo.NguoiKy,
-                    SoVaoSo = _giayChungNhanInfo.SoVaoSo,
-                }
-            },
+            { x => x.PhapLyGiayChungNhan, phapLyGiayChungNhan },
             { x => x.MinNgayKy, _giayChungNhanInfo.KhoiTaoQr is null ? null : _giayChungNhanInfo.KhoiTaoQr!.Value.Date }
         };
+
+        // Cấu hình tùy chọn dialog
         var options = new DialogOptions
         {
             CloseOnEscapeKey = true,
             CloseButton = true
         };
+
+        // Hiển thị dialog
         var dialogReference = await DialogService.ShowAsync<UpdateGiayChungNhanDialog>(null, parameters, options);
+
+        // Xử lý kết quả
         var result = await dialogReference.Result;
         if (result is not null && !result.Canceled)
         {
+            // Nếu xác nhận cập nhật, làm mới dữ liệu
             await RefreshData();
         }
         else
         {
+            // Nếu hủy, cập nhật UI
             StateHasChanged();
         }
     }

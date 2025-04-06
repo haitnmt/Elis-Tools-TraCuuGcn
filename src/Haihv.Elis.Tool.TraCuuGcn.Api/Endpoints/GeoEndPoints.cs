@@ -47,11 +47,24 @@ public static class GeoEndPoints
                 logger.Information("Lấy thông tin toạ độ thửa thành công {Url}{MaDinhDanh}",
                     url,
                     maDinhDanh);
-                var geometry = new Geometry(wkbGeometryType.wkbPoint);
-                foreach (var coordinate in coordinates)
+                // Tạo geometry phù hợp với số lượng điểm
+                Geometry geometry;
+                if (coordinates.Count == 1)
                 {
-                    geometry.AddPoint(coordinate.X, coordinate.Y, 0);
+                    // Nếu chỉ có một điểm, sử dụng wkbPoint
+                    geometry = new Geometry(wkbGeometryType.wkbPoint);
+                    geometry.AddPoint(coordinates[0].X, coordinates[0].Y, 0);
                 }
+                else
+                {
+                    // Nếu có nhiều điểm, sử dụng wkbMultiPoint
+                    geometry = new Geometry(wkbGeometryType.wkbMultiPoint);
+                    foreach (var coordinate in coordinates)
+                    {
+                        geometry.AddPoint(coordinate.X, coordinate.Y, 0);
+                    }
+                }
+
                 return Results.Ok(new
                 {
                     thuaDats = new FeatureCollectionModel(),
