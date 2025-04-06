@@ -100,7 +100,7 @@ public static class GiayChungNhanEndpoints
                     logElisDataServices.WriteLogToElisDataAsync(phapLyGiayChungNhan.Serial, maDinhDanh, url, message);
 
                     // Xóa cache liên quan
-                    _ = hybridCache.RemoveByTagAsync(phapLyGiayChungNhan.Serial);
+                    _ = hybridCache.RemoveByTagAsync(phapLyGiayChungNhan.Serial).AsTask();
 
                     return Results.Ok("Cập nhật Giấy chứng nhận thành công!");
                 },
