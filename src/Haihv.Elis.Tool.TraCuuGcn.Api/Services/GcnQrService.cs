@@ -109,7 +109,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayCh
                     _ => ValueTask.FromResult<MaQrInfo?>(null),
             cancellationToken: cancellationToken);
             if (maQrInfo is not null) return maQrInfo;
-            var connectionElis = await connectionElisData.GetAllConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
             hashQr = hashQr?.Trim().ToLower();
             maQr = maQr?.ChuanHoa();
             foreach (var connection in connectionElis)

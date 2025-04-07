@@ -15,5 +15,6 @@ public static class EndPoints
         app.MapAppSettingsEndpoints();
         app.MapGeoEndPoints();
         app.MapSearchEndpoints();
+        app.MapTaiSanEndpoints();
     }
 }

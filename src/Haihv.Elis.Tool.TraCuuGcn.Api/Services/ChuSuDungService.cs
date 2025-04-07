@@ -68,7 +68,7 @@ public sealed class ChuSuDungService(
         try
         {
             serial = serial.ChuanHoa();
-            var connectionElis = await connectionElisData.GetAllConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -114,7 +114,7 @@ public sealed class ChuSuDungService(
         {
             serial = serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial)) return;
-            var connectionElis = await connectionElisData.GetAllConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
             foreach (var connection in connectionElis)
             {
                 await using var dbConnection = connection.ElisConnectionString.GetConnection();
@@ -187,7 +187,9 @@ public sealed class ChuSuDungService(
             await using var dbConnection = connection.ElisConnectionString.GetConnection();
             var query = dbConnection.SqlBuilder(
                 $"""
-                 SELECT DISTINCT CSD.MaDoiTuong AS MaDoiTuong,
+                 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+                 SELECT DISTINCT CSD.MaChuSuDung AS MaChuSuDung,
+                                 CSD.MaDoiTuong AS MaDoiTuong,
                                  CSD.Ten1 AS Ten, 
                                  CSD.SoDinhDanh1 AS SoDinhDanh, 
                                  CSD.loaiSDD1 AS LoaiSdd,
@@ -213,7 +215,10 @@ public sealed class ChuSuDungService(
                 var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
                 if (chuSuDung is null) continue;
                 var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
-                chuSuDungInfos.Add(new ChuSuDungInfo(chuSuDung, chuSuDungQuanHe));
+                chuSuDungInfos.Add(new ChuSuDungInfo(
+                    chuSuDungData.MaChuSuDung, 
+                    chuSuDung, 
+                    chuSuDungQuanHe));
             }
 
             if (chuSuDungInfos.Count <= 0) return chuSuDungInfos;
@@ -229,6 +234,7 @@ public sealed class ChuSuDungService(
     }
 
     private record ChuSuDungData(
+        long MaChuSuDung,
         int MaDoiTuong,
         string Ten,
         string SoDinhDanh,

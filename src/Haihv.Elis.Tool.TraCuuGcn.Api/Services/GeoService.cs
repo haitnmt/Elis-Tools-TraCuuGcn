@@ -106,7 +106,7 @@ public class GeoService : IGeoService
 
     private async Task<List<Coordinates>> GetPointFromApiSdeAsync(string serial, CancellationToken cancellationToken = default)
     {
-        var connectionSqls = await _connectionElisData.GetAllConnection(serial);
+        var connectionSqls = await _connectionElisData.GetAllConnectionAsync(serial);
         if (connectionSqls.Count == 0) return [];
 
         var thuaDats = await _thuaDatService.GetThuaDatInDatabaseAsync(serial, cancellationToken);
@@ -122,7 +122,7 @@ public class GeoService : IGeoService
         // Xử lý song song cho mỗi thửa đất
         var thuaDatTasks = thuaDats.Select(async thuaDat =>
         {
-            var (_, maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) = thuaDat;
+            var (_, _, maDvhc, thuaDatSo, toBanDo, tyLe, _, _, _, _, _, _, _) = thuaDat;
             var soTo = toBanDo.Trim().ToLower();
             var soThua = thuaDatSo.Trim().ToLower();
 

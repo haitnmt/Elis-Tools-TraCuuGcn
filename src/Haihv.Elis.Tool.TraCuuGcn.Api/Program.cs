@@ -70,6 +70,8 @@ builder.Services.AddSingleton<IGiayChungNhanService, GiayChungNhanService>();
 builder.Services.AddSingleton<IChuSuDungService, ChuSuDungService>();
 // Add ThuaDatService
 builder.Services.AddSingleton<IThuaDatService, ThuaDatService>();
+// Add TaiSanService
+builder.Services.AddSingleton<ITaiSanService, TaiSanService>();
 // Add HttpClient for SDE API
 builder.Services.AddHttpClient("SdeApi");
 

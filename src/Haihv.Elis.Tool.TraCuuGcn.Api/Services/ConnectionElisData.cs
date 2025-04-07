@@ -43,7 +43,7 @@ public interface IConnectionElisData
     /// </summary>
     /// <param name="serial"> Serial của GCNQSDD.</param>
     /// <returns>Danh sách chuỗi kết nối.</returns>
-    ValueTask<List<ConnectionSql>> GetAllConnection(string? serial = null);
+    ValueTask<List<ConnectionSql>> GetAllConnectionAsync(string? serial = null);
     /// <summary>
     /// Lấy kết nối CSDL dựa trên serial.
     /// </summary>
@@ -160,7 +160,7 @@ public sealed partial class ConnectionElisData(
         return result;
     }
 
-    public async ValueTask<List<ConnectionSql>> GetAllConnection(string? serial)
+    public async ValueTask<List<ConnectionSql>> GetAllConnectionAsync(string? serial)
     {
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) return ConnectionElis;

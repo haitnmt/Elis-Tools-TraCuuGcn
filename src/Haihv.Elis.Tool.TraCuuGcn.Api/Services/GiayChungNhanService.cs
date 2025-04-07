@@ -79,7 +79,7 @@ public sealed class GiayChungNhanService(
                     _ => ValueTask.FromResult<GiayChungNhan?>(null),
                     cancellationToken: cancellationToken);
             if (giayChungNhan is not null) return giayChungNhan;
-            var connectionElis = await connectionElisData.GetAllConnection(serial);
+            var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
             foreach (var (connectionName, _, elisConnectionString, _, _) in connectionElis)
             {
                 var serialLowerCase = serial.ChuanHoaLowerCase();

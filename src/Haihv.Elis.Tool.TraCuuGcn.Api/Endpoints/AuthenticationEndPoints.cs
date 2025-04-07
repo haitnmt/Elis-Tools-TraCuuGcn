@@ -3,7 +3,6 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.AspNetCore.Mvc;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
@@ -23,7 +22,6 @@ public static class AuthenticationEndPoints
     /// <summary>
     /// Xử lý yêu cầu xác thực chủ sử dụng.
     /// </summary>
-    /// <param name="authChuSuDung">Thông tin xác thực chủ sử dụng.</param>
     /// <param name="logger">Logger để ghi log.</param>
     /// <param name="authenticationService">Dịch vụ xác thực.</param>
     /// <param name="checkIpService">
@@ -34,13 +32,15 @@ public static class AuthenticationEndPoints
     /// </param>
     /// <returns>Kết quả xác thực dưới dạng <see cref="IResult"/>.</returns>
     private static async Task<IResult> PostAuthChuSuDungAsync(
-        [FromBody] AuthChuSuDung authChuSuDung,
         ILogger logger,
         IAuthenticationService authenticationService,
         ICheckIpService checkIpService,
         HttpContext httpContext)
     {
-        if (string.IsNullOrWhiteSpace(authChuSuDung.SoDinhDanh) || string.IsNullOrWhiteSpace(authChuSuDung.HoVaTen))
+        var authChuSuDung = await httpContext.Request.ReadFromJsonAsync<AuthChuSuDung>();
+        if (authChuSuDung is null ||
+            string.IsNullOrWhiteSpace(authChuSuDung.SoDinhDanh) || 
+            string.IsNullOrWhiteSpace(authChuSuDung.HoVaTen))
         {
             return Results.BadRequest(new Response<AccessToken>("Số định danh và Họ tên không được để trống!"));
         }

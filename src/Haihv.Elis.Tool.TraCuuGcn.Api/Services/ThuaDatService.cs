@@ -5,6 +5,7 @@ using InterpolatedSql.Dapper;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Caching.Hybrid;
+using Exception = System.Exception;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -14,8 +15,6 @@ public class ThuaDatService(
     ILogger logger,
     HybridCache hybridCache) : IThuaDatService
 {
-    private record ThuaDatToBanDo(int MaDvhc, string SoTo, int TyLe, string SoThua, string DiaChi, string GhiChu);
-
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
     /// </summary>
@@ -46,6 +45,34 @@ public class ThuaDatService(
             return new Result<List<ThuaDat>>(exception);
         }
     }
+    /// <summary>
+    /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận.
+    /// </summary>
+    /// <param name="serial"> Serial của Giấy chứng nhận.</param>
+    /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
+    /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
+    public async Task<List<ThuaDat>> GetAsync(string serial = "", CancellationToken cancellationToken = default)
+    {
+        serial = serial.ChuanHoa() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(serial))
+        {
+            return [];
+        }
+        var cacheKey = CacheSettings.KeyThuaDat(serial);
+        try
+        {
+            var thuaDats = await hybridCache.GetOrCreateAsync(cacheKey,
+                async cancel => await GetThuaDatInDatabaseAsync(serial, cancel),
+                tags: [serial],
+                cancellationToken: cancellationToken);
+            return thuaDats;
+        }
+        catch (Exception exception)
+        {
+            logger.Error(exception, "Lỗi khi lấy thông tin Thửa đất theo Serial: {Serial}", serial);
+            return [];
+        }
+    }
 
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận từ cơ sở dữ liệu.
@@ -58,7 +85,7 @@ public class ThuaDatService(
     {
         serial = serial.ChuanHoa() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(serial)) return [];
-        var connectionSqls = await connectionElisData.GetAllConnection(serial);
+        var connectionSqls = await connectionElisData.GetAllConnectionAsync(serial);
 
         List<ThuaDat> thuaDats = [];
         foreach (var connectionString in connectionSqls.Select(x => x.ElisConnectionString))
@@ -82,8 +109,10 @@ public class ThuaDatService(
             await using var dbConnection = connectionString.GetConnection();
             var query = dbConnection.SqlBuilder(
                 $"""
+                 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
                  SELECT DISTINCT TBD.SoTo AS SoTo, 
                         TBD.TyLe AS TyLe,
+                        TD.MaThuaDat AS MaThuaDat,
                         TD.ThuaDatSo AS SoThua, 
                         TBD.MaDVHC AS maDvhc,
                         TD.DiaChi AS DiaChi,
@@ -104,6 +133,7 @@ public class ThuaDatService(
             foreach (var thuaDatToBanDo in thuaDatToBanDos)
             {
                 if (!int.TryParse(thuaDatToBanDo.maDvhc.ToString(), out int maDvhc)) return [];
+                if (!long.TryParse(thuaDatToBanDo.MaThuaDat.ToString(), out long maThuaDat)) return [];
                 string diaChi = thuaDatToBanDo.DiaChi;
                 diaChi =
                     $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";
@@ -115,6 +145,7 @@ public class ThuaDatService(
                 var nguonGoc = await nguonGocService.GetNguonGocSuDungAsync(thuaDatToBanDo.MaGcn, cancellationToken);
                 if(result.Any(x => x.MaDvhc == maDvhc && x.ThuaDatSo == soThua && x.ToBanDo == toBanDo)) continue;
                 result.Add(new ThuaDat(
+                    maThuaDat,
                     thuaDatToBanDo.MaGcn,
                     maDvhc,
                     soThua.Replace(".", string.Empty).Replace(",", string.Empty),
@@ -167,6 +198,7 @@ public class ThuaDatService(
             await using var dbConnection = connectionString.GetConnection();
             var query = dbConnection.SqlBuilder(
                 $"""
+                 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
                  SELECT DVHCXa.Ten AS TenXa, DVHCHuyen.Ten AS TenHuyen, DVHCTinh.Ten AS TenTinh
                  FROM   DVHC DVHCXa 
                      	INNER JOIN DVHC AS DVHCHuyen ON DVHCXa.MaHuyen = DVHCHuyen.MaHuyen AND DVHCHuyen.MaXa = 0
