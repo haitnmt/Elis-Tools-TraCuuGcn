@@ -7,5 +7,5 @@ public interface ITaiSanService
 {
     Task<List<TaiSan>> GetTaiSanInDataBaseAsync(string? serial, List<long> dsMaThuaDat, List<long> dsMaChuSuDung);
     Task<Result<List<TaiSan>>> GetTaiSanAsync(string? serial, List<long> dsMaThuaDat, List<long> dsMaChuSuDung);
-    Task SetCacheAsync(string? serial, List<long> dsMaThuaDat, List<long> dsMaChuSuDung);
+    Task SetCacheAsync(string? serial, IThuaDatService thuaDatService, IChuSuDungService chuSuDungService);
 }

@@ -93,8 +93,8 @@ public class TaiSanService(
         try
         {
             var sqlConnectionString = connectionSqls.ElisConnectionString;
-            var maThuaDatString = string.Join(",", dsMaThuaDat.Select(x => x.ToString()));
-            var maChuSuDungString = string.Join(",", dsMaChuSuDung.Select(x => x.ToString()));
+            string.Join(",", dsMaThuaDat.Select(x => x.ToString()));
+            string.Join(",", dsMaChuSuDung.Select(x => x.ToString()));
             await using var dbConnection = sqlConnectionString.GetConnection();
             var query = dbConnection.SqlBuilder(
                 $"""
@@ -120,11 +120,11 @@ public class TaiSanService(
                  FROM TS_TaiSan TS 
                  WHERE (TS.idTaiSan IN (SELECT idTaiSan 
                      FROM TS_ChuSuDung_TaiSan 
-                     WHERE idChuSuDung IN ({maChuSuDungString})))
+                     WHERE idChuSuDung IN {dsMaChuSuDung}))
                    AND (TS.idTaiSan IN (
                        SELECT idTaiSan
                        FROM TS_ThuaDat_TaiSan
-                       WHERE idThuaDat IN ({maThuaDatString})))
+                       WHERE idThuaDat IN {dsMaThuaDat}))
                  """);
             var dsTaiSanInData = await query.QueryAsync<TaiSanData>();
             List<TaiSan> result = [];
@@ -180,6 +180,13 @@ public class TaiSanService(
         }
     }
     
+    /// <summary>
+    /// Lấy thông tin tài sản từ cơ sở dữ liệu hoặc cache.
+    /// </summary>
+    /// <param name="serial">Số serial của giấy chứng nhận.</param>
+    /// <param name="dsMaThuaDat">Danh sách mã thửa đất.</param>
+    /// <param name="dsMaChuSuDung">Danh sách mã chủ sử dụng.</param>
+    /// <returns>Kết quả chứa danh sách tài sản hoặc lỗi nếu không tìm thấy.</returns>
     public async Task<Result<List<TaiSan>>> GetTaiSanAsync(string? serial, List<long> dsMaThuaDat, List<long> dsMaChuSuDung)
     {
         serial = serial.ChuanHoa();
@@ -194,12 +201,34 @@ public class TaiSanService(
             new Result<List<TaiSan>>(results);
     }
     
-    public async Task SetCacheAsync(string? serial, List<long> dsMaThuaDat, List<long> dsMaChuSuDung)
+
+    /// <summary>
+    /// Lưu thông tin tài sản vào cache.
+    /// </summary>
+    /// <param name="serial">Số serial của giấy chứng nhận.</param>
+    /// <param name="dsMaThuaDat">Danh sách mã thửa đất.</param>
+    /// <param name="dsMaChuSuDung">Danh sách mã chủ sử dụng.</param>
+    private async Task SetCacheAsync(string? serial, List<long> dsMaThuaDat, List<long> dsMaChuSuDung)
     {
         serial = serial.ChuanHoa();
         if (serial is null || dsMaThuaDat.Count == 0 || dsMaChuSuDung.Count == 0) return;
         await hybridCache.SetAsync(CacheSettings.KeyTaiSan(serial),
             await GetTaiSanInDataBaseAsync(serial, dsMaThuaDat, dsMaChuSuDung),
             tags: [serial]);
+    }
+    
+    /// <summary>
+    /// Lưu thông tin tài sản vào cache
+    /// </summary>
+    /// <param name="serial">Số serial</param>
+    /// <param name="thuaDatService">IService để lấy danh sách mã thửa đất</param>
+    /// <param name="chuSuDungService">IService để lấy danh sách mã chủ sử dụng</param>
+    public async Task SetCacheAsync(string? serial, IThuaDatService thuaDatService, IChuSuDungService chuSuDungService)
+    {
+        serial = serial.ChuanHoa();
+        if (serial is null) return;
+        var dsMaThuaDat = await thuaDatService.GetMaThuaDatAsync(serial);
+        var dsMaChuSuDung = await chuSuDungService.GetMaChuSuDungAsync(serial);
+        await SetCacheAsync(serial, dsMaThuaDat, dsMaChuSuDung);
     }
 }

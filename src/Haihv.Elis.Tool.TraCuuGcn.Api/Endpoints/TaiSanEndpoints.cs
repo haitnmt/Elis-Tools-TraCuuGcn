@@ -54,33 +54,29 @@ public static class TaiSanEndpoints
                 ipAddress);
             return Results.Unauthorized();
         }
-
-        // Lấy danh sách thửa đất theo Serial 
-        var dsThuaDat = await thuaDatService.GetAsync(serial);
-        if (dsThuaDat.Count == 0)
+        
+        // Lấy danh sách mã thửa đất
+        var dsMaThuaDatTask = thuaDatService.GetMaThuaDatAsync(serial);
+        var dsMaChuSuDungTask = chuSuDungService.GetMaChuSuDungAsync(serial);
+        var dsMaThuaDat = await dsMaThuaDatTask;
+        if (dsMaThuaDat.Count == 0)
         {
             logger.Warning("Không tìm thấy thông tin thửa đất: {Url}{MaDinhDanh}{ClientIp}",
                 url,
                 maDinhDanh,
                 ipAddress);
-            return Results.NotFound(new Response<List<ThuaDat>>("Không tìm thấy thông tin thửa đất."));
+            return Results.NotFound(new Response<List<TaiSan>>("Không tìm thấy thông tin thửa đất."));
         }
-        
-        // Lấy danh sách mã thửa đất
-        var dsMaThuaDat = dsThuaDat.Select(x => x.MaThuaDat).ToList();
-        
-        // Lấy danh sách chủ sử dụng theo Serial
-        var dsChuSuDung = await chuSuDungService.GetAsync(serial);
-        if (dsChuSuDung.Count == 0)
+        var dsMaChuSuDung = await dsMaChuSuDungTask;
+        if (dsMaChuSuDung.Count == 0)
         {
             logger.Warning("Không tìm thấy thông tin chủ sử dụng: {Url}{MaDinhDanh}{ClientIp}",
                 url,
                 maDinhDanh,
                 ipAddress);
-            return Results.NotFound(new Response<List<ChuSuDung>>("Không tìm thấy thông tin chủ sử dụng."));
+            return Results.NotFound(new Response<List<TaiSan>>("Không tìm thấy thông tin chủ sử dụng."));
         }
-        var dsMaChuSuDung = dsChuSuDung.Select(x => x.MaChuSuDung).ToList();
-
+        
         var result = await taiSanService.GetTaiSanAsync(serial, dsMaThuaDat, dsMaChuSuDung);
 
         return await Task.FromResult(result.Match(

@@ -147,7 +147,17 @@ public sealed class ChuSuDungService(
             logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {Serial}", serial);
         }
     }
-    
+
+    public async Task<List<long>> GetMaChuSuDungAsync(string? serial = null, CancellationToken cancellationToken = default)
+    {
+        // Lấy danh sách chủ sử dụng theo Serial
+        var dsChuSuDung = await GetAsync(serial, cancellationToken);
+
+        // Trả về danh sách các mã chủ sử dụng
+        return dsChuSuDung.Select(x => x.MaChuSuDung).ToList();
+
+    }
+
     #endregion
 
     #region Lấy thông tin chủ sử dụng

@@ -16,15 +16,17 @@ public static class SearchEndpoints
 
     private static async Task<IResult> GetSearchResultAsync(
         ISearchService searchService,
+        IThuaDatService thuaDatService,
         IChuSuDungService chuSuDungService,
+        ITaiSanService taiSanService,
         IGeoService geoService,
         ILogger logger,
         HttpContext httpContext)
     {
         var query = httpContext.Request.Query["query"].ToString();
-        var result = await searchService.GetResultAsync(query);
         var ipAddress = httpContext.GetIpAddress();
         var url = httpContext.Request.GetDisplayUrl();
+        var result = await searchService.GetResultAsync(query);
         return await Task.FromResult(result.Match(
             info =>
             {
@@ -42,6 +44,7 @@ public static class SearchEndpoints
                 }
                 _ = chuSuDungService.SetCacheAuthChuSuDungAsync(serial);
                 _ = chuSuDungService.GetAsync(serial);
+                _ = taiSanService.SetCacheAsync(serial, thuaDatService, chuSuDungService);
                 // Lưu thông tin toạ độ thửa đất để lưu vào cache
                 _ = geoService.GetAsync(serial);
                 return Results.Ok(new Response<GiayChungNhanInfo>(info));

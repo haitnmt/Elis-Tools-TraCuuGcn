@@ -74,6 +74,15 @@ public class ThuaDatService(
         }
     }
 
+    public async Task<List<long>> GetMaThuaDatAsync(string serial, CancellationToken cancellationToken = default)
+    {
+        // Lấy danh sách thửa đất theo Serial 
+        var dsThuaDat = await GetAsync(serial, cancellationToken);
+        
+        // Trả về danh sách mã thửa đất
+         return dsThuaDat.Select(x => x.MaThuaDat).ToList();
+    }
+
     /// <summary>
     /// Lấy thông tin Thửa đất theo Serial của Giấy chứng nhận từ cơ sở dữ liệu.
     /// </summary>
