@@ -27,7 +27,6 @@ builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<JwtAuthorizationHandler>();
 builder.Services.AddAuthorizationCore();
 
 // Tải cấu hình từ Blazor Server
@@ -45,10 +44,10 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 {
         throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
+
 builder.Services.AddHttpClient(
         "Endpoint",
-        opt => opt.BaseAddress = validUri)
-        .AddHttpMessageHandler<JwtAuthorizationHandler>();
+        opt => opt.BaseAddress = validUri);
 // Đăng ký httpClient để gọi Auth API
 if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
 {

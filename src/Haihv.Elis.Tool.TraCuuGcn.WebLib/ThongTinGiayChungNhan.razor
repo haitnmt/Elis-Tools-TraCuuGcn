@@ -269,12 +269,11 @@ else
 }
 
 @inject IAuthService AuthService
-@inject IHttpClientFactory HttpClientFactory
 @inject IDialogService DialogService
 @inject ISnackbar SnackbarService
 @code {
 
-    private HttpClient _httpClient = null!;
+    private HttpClient? _httpClient;
 
     // Parameters
     [Parameter] public string? Query { get; set; }
@@ -306,16 +305,6 @@ else
     private bool _visibleUpdate;
     private bool _isLdapUser;
     private bool _processingGetPermissionsCanUpdate;
-
-    /// <summary>
-    /// Khởi tạo component
-    /// </summary>
-    protected override void OnInitialized()
-    {
-        // Khởi tạo HttpClient từ factory
-        _httpClient = HttpClientFactory.CreateClient("Endpoint");
-        base.OnInitialized();
-    }
 
     /// <summary>
     /// Xử lý khi tham số thay đổi
@@ -350,6 +339,8 @@ else
         var url = $"{UrlClearCache}?serial={serial}";
         try
         {
+            // Khởi tạo client HTTP
+            _httpClient ??= await AuthService.CreateHttpClient();
             // Gọi API xóa cache
             var responseMessage = await _httpClient.DeleteAsync(url);
 
@@ -358,6 +349,7 @@ else
             Console.WriteLine(responseContent);
 
             return responseMessage.IsSuccessStatusCode;
+
         }
         catch (Exception e)
         {
@@ -386,6 +378,9 @@ else
         var url = $"{Url}?query={_query}";
         try
         {
+            // Khởi tạo client HTTP 
+            _httpClient ??= await AuthService.CreateHttpClient();
+            
             // Lấy thông tin GCN
             var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
 
@@ -459,6 +454,8 @@ else
         var url = $"{UrlThuaDat}?serial={_giayChungNhanInfo.Serial}";
         try
         {
+            // Khởi tạo client HTTP 
+            _httpClient ??= await AuthService.CreateHttpClient();
             // Tải thông tin thửa đất
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
 
@@ -468,7 +465,6 @@ else
                 _errorLoadThuaDat = response?.ErrorMsg ?? "Không có thông tin Thửa đất";
                 return;
             }
-
             // Lưu kết quả
             _thuaDatPublic = response.Value;
         }
@@ -521,11 +517,14 @@ else
         try
         {
             // Gọi API kiểm tra quyền
-            var response = await _httpClient.GetAsync(url);
-            _permissionsCanUpdate = response.IsSuccessStatusCode;
+            if (_httpClient != null)
+            {
+                var response = await _httpClient.GetAsync(url);
+                _permissionsCanUpdate = response.IsSuccessStatusCode;
 
-            // Xử lý phản hồi
-            _permissionsStatus = (await response.Content.ReadAsStringAsync()).TrimStart('\"').TrimEnd('\n', '\"');
+                // Xử lý phản hồi
+                _permissionsStatus = (await response.Content.ReadAsStringAsync()).TrimStart('\"').TrimEnd('\n', '\"');
+            }
 
             // Hiển thị thông báo nếu không có quyền
             if (!_permissionsCanUpdate)

@@ -36,7 +36,6 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<JwtAuthorizationHandler>();
 builder.Services.AddAuthorizationCore();
 
 builder.AddAppSettingsServices();
@@ -52,10 +51,8 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 }
 
 builder.Services.AddHttpClient(
-        "Endpoint",
-        opt => opt.BaseAddress = validUri)
-    .AddHttpMessageHandler<JwtAuthorizationHandler>();
-
+    "Endpoint",
+    opt => opt.BaseAddress = validUri);
 var authEndpoint = builder.Configuration["AuthEndpoint"];
 if (string.IsNullOrWhiteSpace(authEndpoint))
 {

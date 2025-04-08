@@ -75,7 +75,6 @@
 }
 
 @inject IAuthService AuthService
-@inject IHttpClientFactory HttpClientFactory
 
 @code {
     [Parameter] public string? Serial { get; set; }
@@ -109,7 +108,7 @@
         _isLoading = true;
         StateHasChanged();
         _chuSuDungInfos = [];
-        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        _httpClient ??= await AuthService.CreateHttpClient();
         var url = $"{UrlGetThongTinChuSuDung}?serial={_serial}";
         try
         {

@@ -17,6 +17,8 @@ public interface IAuthService
     Task SetSerialElis(string? serial);
     Task<bool> IsLdapUser();
     Task Logout();
+    Task<string?> GetAuthenToken();
+    Task<HttpClient> CreateHttpClient();
 }
 
 public class AuthService(
@@ -142,6 +144,19 @@ public class AuthService(
         await localStorage.RemoveItemAsync(RefreshTokenKey);
         await localStorage.RemoveItemAsync(MaDinhDanhKey);
         _jwtAuthStateProvider.NotifyUserChanged(JwtAuthStateProvider.AnonymousUser);
+    }
+
+    public async Task<string?> GetAuthenToken()
+    {
+        return await localStorage.GetItemAsync<string>(AuthenTokenKey);
+    }
+
+    public async Task<HttpClient> CreateHttpClient()
+    {
+        var token = await GetAuthenToken();
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", token);
+        return _httpClient;
     }
 }
 

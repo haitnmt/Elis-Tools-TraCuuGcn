@@ -112,7 +112,7 @@
     }
 }
 
-@inject IHttpClientFactory HttpClientFactory
+@inject IAuthService AuthService
 
 @code {
     [Parameter] public bool HasGiayChungNhan { get; set; }
@@ -148,7 +148,7 @@
         _isLoading = true;
         StateHasChanged();
         _taiSans = [];
-        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        _httpClient ??= await AuthService.CreateHttpClient();
         var url = $"{UrlGetThongTinTaiSan}?serial={_serial}";
         try
         {
