@@ -55,6 +55,17 @@
                                     </MudStack>
                                 </MudAlert>
                             </NotAuthorized>
+                            <Authorized>
+                                @if (!string.IsNullOrWhiteSpace(_serial) && _hasGiayChungNhan && _countTaiSan > 3)
+                                {
+                                    <MudStack>
+                                        <ThongTinChuSuDung Serial="@_serial"
+                                                           HasGiayChungNhan="_hasGiayChungNhan"/>
+                                        <ThongTinThuaDat Serial="@_serial"
+                                                         HasGiayChungNhan="_hasGiayChungNhan"/>
+                                    </MudStack>
+                                }
+                            </Authorized>
                         </AuthorizeView>
                     }
                 }
@@ -65,14 +76,24 @@
                 @if (_hasGiayChungNhan && !string.IsNullOrWhiteSpace(_serial))
                 {
                     <MudItem xs="12" md="6" lg="4">
-                        <MudStack>
-                            <ThongTinChuSuDung Serial="@_serial"
-                                               HasGiayChungNhan="_hasGiayChungNhan"/>
-                            <ThongTinThuaDat Serial="@_serial"
-                                             HasGiayChungNhan="_hasGiayChungNhan"/>
+                        @if (_countTaiSan > 3)
+                        {
                             <ThongTinTaiSan Serial="@_serial"
-                                           HasGiayChungNhan="_hasGiayChungNhan"/>
-                        </MudStack>
+                                            HasGiayChungNhan="_hasGiayChungNhan"
+                                            CountChanged="CountChanged"/>
+                        }
+                        else
+                        {
+                            <MudStack>
+                                <ThongTinChuSuDung Serial="@_serial"
+                                                   HasGiayChungNhan="_hasGiayChungNhan"/>
+                                <ThongTinThuaDat Serial="@_serial"
+                                                 HasGiayChungNhan="_hasGiayChungNhan"/>
+                                <ThongTinTaiSan Serial="@_serial"
+                                                HasGiayChungNhan="_hasGiayChungNhan"
+                                                CountChanged="CountChanged"/>
+                            </MudStack>
+                        }
                     </MudItem>
                     <MudItem xs="12" md="6" lg="4">
                         <ThuaDatLocation Serial="@_serial"
@@ -98,6 +119,7 @@
     private string? _donVi;
     private bool _isAuthenticated;
     private bool _isLdapUser;
+    private int _countTaiSan;
 
     protected override void OnInitialized()
     {
@@ -147,9 +169,9 @@
     {
         if (string.Equals(_searchQuery, searchQuery, StringComparison.Ordinal)) return;
         _hasGiayChungNhan = false;
-        _searchQuery = searchQuery;
-        if (string.IsNullOrWhiteSpace(searchQuery)) return;
         _serial = null;
+        _donVi = null;  
+        _searchQuery = searchQuery;
         StateHasChanged();
     }
 
@@ -177,5 +199,13 @@
         SearchBarResultChanged(searchQuery);
         return Task.CompletedTask;
     }
-    
+
+    private void CountChanged(int countTaiSan)
+    {
+        if (_countTaiSan == countTaiSan) return;
+        _countTaiSan = countTaiSan;
+        var hasChanged = (_countTaiSan > 3 && countTaiSan <= 3) || (_countTaiSan <= 3 && countTaiSan > 3);
+        if (hasChanged)
+            StateHasChanged();
+    }
 }

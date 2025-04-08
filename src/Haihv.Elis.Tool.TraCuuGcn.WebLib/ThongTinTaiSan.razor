@@ -117,6 +117,7 @@
 @code {
     [Parameter] public bool HasGiayChungNhan { get; set; }
     [Parameter] public string? Serial { get; set; }
+    [Parameter] public EventCallback<int> CountChanged { get; set; }
 
     private HttpClient? _httpClient;
     private const string UrlGetThongTinTaiSan = "/elis/taisan";
@@ -127,7 +128,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (!HasGiayChungNhan || (Serial == _serial && _taiSans.Count > 0)) return;
+        if (!HasGiayChungNhan || Serial == _serial) return;
         _serial = Serial;
         if (string.IsNullOrWhiteSpace(_serial))
         {
@@ -155,21 +156,24 @@
             if (response?.Value is { Count: > 0 })
             {
                 _taiSans = response.Value;
+                await CountChanged.InvokeAsync(_taiSans.Count);
             }
             else
             {
-                // Chỉ ghi log lỗi vào console, không hiển thị lỗi trên UI
-                Console.WriteLine(response?.ErrorMsg ?? "Không có thông tin tài sản");
+                await CountChanged.InvokeAsync(0);
             }
         }
         catch (Exception e)
         {
+            await CountChanged.InvokeAsync(0);
             // Chỉ ghi log lỗi vào console, không hiển thị lỗi trên UI
             Console.WriteLine($"Lỗi khi tải thông tin tài sản: {e.Message}");
         }
-
-        _isLoading = false;
-        StateHasChanged();
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 
 }
