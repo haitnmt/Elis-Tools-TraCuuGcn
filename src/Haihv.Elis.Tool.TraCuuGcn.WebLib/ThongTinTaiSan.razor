@@ -1,15 +1,175 @@
+@using System.Net.Http.Json
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+
 @if (HasGiayChungNhan)
 {
-    <MudCard>
-        <MudCardContent>
-            <MudText Typo="Typo.h6">Thông tin tài sản gắn liền với đất</MudText>
-            <MudDivider/>
-            <MudAlert Severity="Severity.Warning">
-                Đang thực hiện
-            </MudAlert>
-        </MudCardContent>
-    </MudCard>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+    }
+    else if (_taiSans.Count > 0)
+    {
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Thông tin tài sản gắn liền với đất</MudText>
+                <AuthorizeView>
+                    <Authorized>
+                        <MudExpansionPanels MultiExpansion="true">
+                            @foreach (var (taiSan, index) in _taiSans.Select((value, i) => (value, i + 1)))
+                            {
+                                <MudExpansionPanel Expanded="@(index == 1)"
+                                                   Text="@(_taiSans.Count > 1 ? $"Tên tài sản thứ {index}: {taiSan.TenTaiSan}" : $"Tên tài sản: {taiSan.TenTaiSan}")">
+                                    <MudGrid Spacing="2">
+                                        @if (taiSan.DienTichXayDung > 0)
+                                        {
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Diện tích xây dựng" Variant="Variant.Text">
+                                                    @taiSan.DienTichXayDung m²
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (taiSan.DienTichSan > 0)
+                                        {
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Diện tích sàn" Variant="Variant.Text">
+                                                    @taiSan.DienTichSan m²
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.SoTang))
+                                        {
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Số tầng" Variant="Variant.Text">
+                                                    @taiSan.SoTang
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.CapHang) || !string.IsNullOrWhiteSpace(taiSan.NamHoanThanhXayDung))
+                                        {
+                                            <MudFlexBreak/>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.CapHang))
+                                        {
+                                            <MudItem xs="6" lg="6">
+                                                <MudField Label="Cấp hạng" Variant="Variant.Text">
+                                                    @taiSan.CapHang
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.NamHoanThanhXayDung))
+                                        {
+                                            <MudItem xs="6" lg="6">
+                                                <MudField Label="Năm hoàn thành" Variant="Variant.Text">
+                                                    @taiSan.NamHoanThanhXayDung
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.KetCau))
+                                        {
+                                            <MudItem xs="12">
+                                                <MudField Label="Kết cấu" Variant="Variant.Text">
+                                                    @taiSan.KetCau
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.HinhThucSoHuu))
+                                        {
+                                            <MudItem xs="12">
+                                                <MudField Label="Hình thức sở hữu" Variant="Variant.Text">
+                                                    @taiSan.HinhThucSoHuu
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.ThoiHanSoHuu))
+                                        {
+                                            <MudItem xs="12">
+                                                <MudField Label="Thời hạn sở hữu" Variant="Variant.Text">
+                                                    @taiSan.ThoiHanSoHuu
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(taiSan.GhiChu))
+                                        {
+                                            <MudItem xs="12">
+                                                <MudField Label="Ghi chú" Variant="Variant.Text">
+                                                    @taiSan.GhiChu
+                                                </MudField>
+                                            </MudItem>
+                                        }
+                                    </MudGrid>
+                                </MudExpansionPanel>
+                            }
+                        </MudExpansionPanels>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudAlert Severity="Severity.Error">
+                            Bạn không có quyền truy cập
+                        </MudAlert>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </MudCardContent>
+        </MudCard>
+    }
 }
+
+@inject IHttpClientFactory HttpClientFactory
+
 @code {
     [Parameter] public bool HasGiayChungNhan { get; set; }
+    [Parameter] public string? Serial { get; set; }
+
+    private HttpClient? _httpClient;
+    private const string UrlGetThongTinTaiSan = "/elis/taisan";
+    private List<TaiSan> _taiSans = [];
+    private string? _error = string.Empty;
+    private string? _serial;
+    private bool _isLoading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!HasGiayChungNhan || (Serial == _serial && _taiSans.Count > 0)) return;
+        _serial = Serial;
+        if (string.IsNullOrWhiteSpace(_serial))
+        {
+            HasGiayChungNhan = false;
+            StateHasChanged();
+        }
+        else
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_serial)) return;
+        _error = null;
+        _isLoading = true;
+        StateHasChanged();
+        _taiSans = [];
+        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        var url = $"{UrlGetThongTinTaiSan}?serial={_serial}";
+        try
+        {
+            var response = await _httpClient.GetFromJsonAsync<Response<List<TaiSan>>>(url);
+            if (response?.Value is { Count: > 0 })
+            {
+                _taiSans = response.Value;
+            }
+            else
+            {
+                // Chỉ ghi log lỗi vào console, không hiển thị lỗi trên UI
+                Console.WriteLine(response?.ErrorMsg ?? "Không có thông tin tài sản");
+            }
+        }
+        catch (Exception e)
+        {
+            // Chỉ ghi log lỗi vào console, không hiển thị lỗi trên UI
+            Console.WriteLine($"Lỗi khi tải thông tin tài sản: {e.Message}");
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
 }

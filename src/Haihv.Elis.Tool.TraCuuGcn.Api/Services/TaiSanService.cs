@@ -93,8 +93,6 @@ public class TaiSanService(
         try
         {
             var sqlConnectionString = connectionSqls.ElisConnectionString;
-            string.Join(",", dsMaThuaDat.Select(x => x.ToString()));
-            string.Join(",", dsMaChuSuDung.Select(x => x.ToString()));
             await using var dbConnection = sqlConnectionString.GetConnection();
             var query = dbConnection.SqlBuilder(
                 $"""
@@ -118,13 +116,10 @@ public class TaiSanService(
                         TS.hHinhThucSoHuu AS HHinhThucSoHuu,
                         TS.hThoiHanSoHuu AS HThoiHanSoHuu
                  FROM TS_TaiSan TS 
-                 WHERE (TS.idTaiSan IN (SELECT idTaiSan 
-                     FROM TS_ChuSuDung_TaiSan 
-                     WHERE idChuSuDung IN {dsMaChuSuDung}))
-                   AND (TS.idTaiSan IN (
-                       SELECT idTaiSan
-                       FROM TS_ThuaDat_TaiSan
-                       WHERE idThuaDat IN {dsMaThuaDat}))
+                 WHERE (TS.idTaiSan IN (SELECT idTaiSan FROM TS_ChuSuDung_TaiSan WHERE idChuSuDung IN {dsMaChuSuDung}))
+                    AND (TS.idTaiSan IN (SELECT idTaiSan FROM TS_ThuaDat_TaiSan WHERE idThuaDat IN {dsMaThuaDat}))
+                    AND (TS.nDienTichXayDung <> 0 OR TS.hDienTichXayDung <> 0)
+                 ORDER BY TS.hNamHTXD, TS.nNamHTXD
                  """);
             var dsTaiSanInData = await query.QueryAsync<TaiSanData>();
             List<TaiSan> result = [];
@@ -176,7 +171,7 @@ public class TaiSanService(
         catch (Exception e)
         {
             logger.Error(e, "Lỗi truy vấn dữ liệu từ ELIS database {Database}",connectionSqls.Name);
-            return [];
+            throw;
         }
     }
     
@@ -193,12 +188,19 @@ public class TaiSanService(
         if (serial is null || dsMaThuaDat.Count == 0 || dsMaChuSuDung.Count == 0)
             return new Result<List<TaiSan>>(new ArgumentException("Thông tin tìm kiếm không hợp lệ"));
         var cacheKey = CacheSettings.KeyTaiSan(serial);
-        var results = await hybridCache.GetOrCreateAsync(cacheKey, 
-            async _ => await GetTaiSanInDataBaseAsync(serial, dsMaThuaDat, dsMaChuSuDung),
-            tags:[serial]);
-        return results.Count == 0 ?
-            new Result<List<TaiSan>>(new Exception("Không có kết quả")) : 
-            new Result<List<TaiSan>>(results);
+        try
+        {
+            var results = await hybridCache.GetOrCreateAsync(cacheKey,
+                async _ => await GetTaiSanInDataBaseAsync(serial, dsMaThuaDat, dsMaChuSuDung),
+                tags: [serial]);
+            return results;
+        }
+        catch (Exception e)
+        {
+            logger.Error(e, "Lỗi lấy thông tin tài sản");
+            return new Result<List<TaiSan>>(e);
+        }
+
     }
     
 
@@ -212,9 +214,17 @@ public class TaiSanService(
     {
         serial = serial.ChuanHoa();
         if (serial is null || dsMaThuaDat.Count == 0 || dsMaChuSuDung.Count == 0) return;
-        await hybridCache.SetAsync(CacheSettings.KeyTaiSan(serial),
-            await GetTaiSanInDataBaseAsync(serial, dsMaThuaDat, dsMaChuSuDung),
-            tags: [serial]);
+        try
+        {
+            await hybridCache.SetAsync(CacheSettings.KeyTaiSan(serial),
+                await GetTaiSanInDataBaseAsync(serial, dsMaThuaDat, dsMaChuSuDung),
+                tags: [serial]);
+        }
+        catch (Exception e)
+        {
+            logger.Error(e,"Lỗi lưu cache");
+        }
+
     }
     
     /// <summary>
