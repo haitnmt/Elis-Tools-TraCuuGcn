@@ -34,9 +34,12 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<AuthEndpointCookieHandler>();
+builder.Services.AddScoped<EndpointHandler>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddAuthorizationCore();
+
 
 builder.AddAppSettingsServices();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
@@ -53,7 +56,8 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 
 builder.Services.AddHttpClient(
     "Endpoint",
-    opt => opt.BaseAddress = validUri);
+    opt => opt.BaseAddress = validUri)
+    .AddHttpMessageHandler<EndpointHandler>();
 var authEndpoint = builder.Configuration["AuthEndpoint"];
 if (string.IsNullOrWhiteSpace(authEndpoint))
 {
@@ -63,14 +67,10 @@ if (string.IsNullOrWhiteSpace(authEndpoint))
 // Cấu hình HttpClient cho AuthEndpoint với hỗ trợ cookie
 builder.Services.AddHttpClient(
     "AuthEndpoint",
-    client => { client.BaseAddress = new Uri(authEndpoint); }).ConfigurePrimaryHttpMessageHandler(() =>
-    new HttpClientHandler
-    {
-        UseCookies = true,
-        UseDefaultCredentials = false,
-        AllowAutoRedirect = false,
-        CookieContainer = new System.Net.CookieContainer()
-    });
+    client => 
+    { 
+        client.BaseAddress = new Uri(authEndpoint);
+    }).AddHttpMessageHandler<AuthEndpointCookieHandler>();
 
 var app = builder.Build();
 

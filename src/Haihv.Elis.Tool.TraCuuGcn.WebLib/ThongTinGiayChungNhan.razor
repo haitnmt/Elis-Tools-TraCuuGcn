@@ -272,6 +272,8 @@ else
 @inject IAuthService AuthService
 @inject IDialogService DialogService
 @inject ISnackbar SnackbarService
+@inject IHttpClientFactory HttpClientFactory
+
 @code {
 
     private HttpClient? _httpClient;
@@ -341,7 +343,7 @@ else
         try
         {
             // Khởi tạo client HTTP
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
             // Gọi API xóa cache
             var responseMessage = await _httpClient.DeleteAsync(url);
 
@@ -380,7 +382,7 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
             
             // Lấy thông tin GCN
             var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
@@ -456,7 +458,7 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
             // Tải thông tin thửa đất
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
 

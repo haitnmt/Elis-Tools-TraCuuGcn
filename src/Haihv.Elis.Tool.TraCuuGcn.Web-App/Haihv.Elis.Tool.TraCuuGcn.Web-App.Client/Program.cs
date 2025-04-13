@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
-using System.Net;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddScoped<ZxingService>();
@@ -26,9 +25,13 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<AuthEndpointCookieHandler>();
+builder.Services.AddScoped<EndpointHandler>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
 builder.Services.AddAuthorizationCore();
+
+
 
 // Tải cấu hình từ Blazor Server
 var baseUrl = builder.HostEnvironment.BaseAddress;
@@ -48,7 +51,8 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 
 builder.Services.AddHttpClient(
         "Endpoint",
-        opt => opt.BaseAddress = validUri);
+        opt => opt.BaseAddress = validUri)
+        .AddHttpMessageHandler<EndpointHandler>();
 // Đăng ký httpClient để gọi Auth API
 if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
 {
@@ -61,13 +65,7 @@ builder.Services.AddHttpClient(
         opt =>
         {
                 opt.BaseAddress = validAuthUri;
-        })
-        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-                UseCookies = true,
-                UseDefaultCredentials = false,
-                AllowAutoRedirect = false,
-                CookieContainer = new System.Net.CookieContainer()
-        });
+        }).AddHttpMessageHandler<AuthEndpointCookieHandler>();
+        
 
 await builder.Build().RunAsync();
