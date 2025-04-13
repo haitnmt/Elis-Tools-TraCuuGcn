@@ -42,14 +42,14 @@ public static class AuthenticationEndPoints
             string.IsNullOrWhiteSpace(authChuSuDung.SoDinhDanh) || 
             string.IsNullOrWhiteSpace(authChuSuDung.HoVaTen))
         {
-            return Results.BadRequest(new Response<AccessToken>("Số định danh và Họ tên không được để trống!"));
+            return Results.BadRequest(new Response<LoginToken>("Số định danh và Họ tên không được để trống!"));
         }
         var url = httpContext.Request.GetDisplayUrl();
         var (ipAddress, isPrivate) = httpContext.GetIpInfo();
         var (count, exprSecond) = isPrivate ? (0, 0) : await checkIpService.CheckLockAsync(ipAddress);
         if (exprSecond > 0)
         {
-            return Results.BadRequest(new Response<AccessToken>($"Bạn đã đăng nhập sai quá nhiều, thử lại sau {exprSecond} giây!"));
+            return Results.BadRequest(new Response<LoginToken>($"Bạn đã đăng nhập sai quá nhiều, thử lại sau {exprSecond} giây!"));
         }
         var result = await authenticationService.AuthChuSuDungAsync(authChuSuDung);
         return await Task.FromResult(result.Match(
@@ -64,7 +64,7 @@ public static class AuthenticationEndPoints
                     url,
                     authChuSuDung.SoDinhDanh,
                     ipAddress);
-                return Results.Ok(new Response<AccessToken>(token));
+                return Results.Ok(new Response<LoginToken>(token));
             },
             ex =>
             {
@@ -74,10 +74,10 @@ public static class AuthenticationEndPoints
                     ipAddress);
                 if (isPrivate)
                 {
-                    return Results.BadRequest(new Response<AccessToken>(ex.Message));
+                    return Results.BadRequest(new Response<LoginToken>(ex.Message));
                 }
                 checkIpService.SetLockAsync(ipAddress);
-                return Results.BadRequest(new Response<AccessToken>(
+                return Results.BadRequest(new Response<LoginToken>(
                     $"{ex.Message} {(count < 3 ? $"Bạn còn {3 - count} lần thử" : "")}"));
             }));
     }

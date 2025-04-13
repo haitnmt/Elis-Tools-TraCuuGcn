@@ -1,7 +1,5 @@
 ﻿namespace Haihv.Elis.Tool.TraCuuGcn.Models;
 
-public record AccessToken(
-    string Token, 
-    string TokenId,
-    string RefreshToken, 
-    DateTime Expiry);
+public record LoginToken(
+    string AccessToken,
+    string? RefreshToken = null);

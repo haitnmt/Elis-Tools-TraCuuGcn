@@ -44,6 +44,7 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
 {
     throw new InvalidOperationException("BackendUrl is not configured");
 }
+
 // Kiểm tra xem API URL hợp lệ hay không
 if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 {
@@ -58,8 +59,18 @@ if (string.IsNullOrWhiteSpace(authEndpoint))
 {
     throw new InvalidOperationException("AuthEndpoint is not configured");
 }
+
+// Cấu hình HttpClient cho AuthEndpoint với hỗ trợ cookie
 builder.Services.AddHttpClient(
-    "AuthEndpoint", client => client.BaseAddress = new Uri(authEndpoint));
+    "AuthEndpoint",
+    client => { client.BaseAddress = new Uri(authEndpoint); }).ConfigurePrimaryHttpMessageHandler(() =>
+    new HttpClientHandler
+    {
+        UseCookies = true,
+        UseDefaultCredentials = false,
+        AllowAutoRedirect = false,
+        CookieContainer = new System.Net.CookieContainer()
+    });
 
 var app = builder.Build();
 

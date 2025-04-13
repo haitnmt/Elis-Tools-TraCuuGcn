@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
 using MudBlazor.Services;
+using System.Net;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddScoped<ZxingService>();
@@ -53,8 +54,20 @@ if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
 {
         throw new InvalidOperationException($"Invalid Auth Base URL: {authEndpoint}");
 }
+
+// Cấu hình HttpClient cho AuthEndpoint với hỗ trợ cookie
 builder.Services.AddHttpClient(
         "AuthEndpoint",
-        opt => opt.BaseAddress = validAuthUri);
+        opt =>
+        {
+                opt.BaseAddress = validAuthUri;
+        })
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+                UseCookies = true,
+                UseDefaultCredentials = false,
+                AllowAutoRedirect = false,
+                CookieContainer = new System.Net.CookieContainer()
+        });
 
 await builder.Build().RunAsync();

@@ -30,7 +30,7 @@ public interface IAuthenticationService
     /// </summary>
     /// <param name="authChuSuDung">Thông tin xác thực chủ sử dụng.</param>
     /// <returns>Trả về thông tin token nếu thành công hoặc lỗi nếu không thành công.</returns>
-    ValueTask<Result<AccessToken>> AuthChuSuDungAsync(AuthChuSuDung? authChuSuDung);
+    ValueTask<Result<LoginToken>> AuthChuSuDungAsync(AuthChuSuDung? authChuSuDung);
     
 }
 
@@ -79,26 +79,26 @@ public sealed class AuthenticationService(
     /// </summary>
     /// <param name="authChuSuDung">Thông tin xác thực chủ sử dụng.</param>
     /// <returns>Trả về thông tin token nếu thành công hoặc lỗi nếu không thành công.</returns>
-    public async ValueTask<Result<AccessToken>> AuthChuSuDungAsync(AuthChuSuDung? authChuSuDung)
+    public async ValueTask<Result<LoginToken>> AuthChuSuDungAsync(AuthChuSuDung? authChuSuDung)
     {
         if (authChuSuDung is null)
-            return new Result<AccessToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
+            return new Result<LoginToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
         var soDinhDanh = authChuSuDung.SoDinhDanh;
         var serial = authChuSuDung.Serial.ChuanHoa();
         var hoTen = authChuSuDung.HoVaTen;
         if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial) ||
             string.IsNullOrWhiteSpace(hoTen))
-            return new Result<AccessToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
+            return new Result<LoginToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
         var chuSuDung = await chuSuDungService.GetResultAuthChuSuDungAsync(serial, soDinhDanh);
         return chuSuDung.Match(
             csd =>
             {
                 if (!CompareVietnameseStrings(csd.HoVaTen, hoTen))
-                    return new Result<AccessToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
+                    return new Result<LoginToken>(new ValueIsNullException("Thông tin xác thực không hợp lệ!"));
                 var accessToken = tokenProvider.GenerateToken(authChuSuDung);
-                return new Result<AccessToken>(accessToken);
+                return new Result<LoginToken>(accessToken);
             },
-            _ => new Result<AccessToken>(new ValueIsNullException("Không tìm thấy chủ sử dụng!")));
+            _ => new Result<LoginToken>(new ValueIsNullException("Không tìm thấy chủ sử dụng!")));
     }
 
     /// <summary>
@@ -164,7 +164,7 @@ public static class AuthenticationExtensions
         };
         // Bổ sung Token vào Header
         httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Replace("Bearer ",""));
-        var response = await httpClient.GetAsync($"user/checkGroup?groupName={groupName}");
+        var response = await httpClient.GetAsync($"/api/ldapGroup/check?groupName={groupName}");
         return response.IsSuccessStatusCode;
     }
 }

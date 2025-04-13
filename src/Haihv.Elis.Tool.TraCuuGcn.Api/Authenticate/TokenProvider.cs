@@ -12,7 +12,7 @@ public sealed class TokenProvider(
     string audience = "Jwt:Audience",
     int expiryMinutes = 60)
 {
-    public AccessToken GenerateToken(AuthChuSuDung chuSuDung)
+    public LoginToken GenerateToken(AuthChuSuDung chuSuDung)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -34,7 +34,7 @@ public sealed class TokenProvider(
             SigningCredentials = credentials
         };
 
-        return new AccessToken(tokenHandler.CreateToken(tokenDescriptor), id, string.Empty, expires);
+        return new LoginToken(tokenHandler.CreateToken(tokenDescriptor));
     }
 }
 
