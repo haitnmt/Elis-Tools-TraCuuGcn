@@ -1,6 +1,4 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Net;
-using System.Net.Http.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -13,16 +11,33 @@ public class JwtAuthStateProvider(IHttpClientFactory httpClientFactory,
 {
     private readonly JwtSecurityTokenHandler _tokenHandler = new();
     private readonly HttpClient _httpClientAuth = httpClientFactory.CreateClient("AuthEndpoint");
+    private string? _lastKnownToken;
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         try
         {
             var token = await localStorage.GetItemAsync<string>(AuthService.AccessTokenKey);
+            
+            // Kiểm tra xem token có thay đổi so với lần trước không
+            if (token != _lastKnownToken)
+            {
+                Console.WriteLine("Token đã thay đổi, cập nhật trạng thái xác thực");
+                _lastKnownToken = token;
+            }
+            
             if (string.IsNullOrWhiteSpace(token))
             {
-                token = await _httpClientAuth.RefreshToken();
-                await localStorage.SetItemAsync(AuthService.AccessTokenKey, token);
+                token = await _httpClientAuth.RefreshToken(localStorage);
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    await localStorage.SetItemAsync(AuthService.AccessTokenKey, token);
+                    _lastKnownToken = token;
+                }
+                else
+                {
+                    return CreateAnonymousUser();
+                }
             }
             
             var jwtToken = _tokenHandler.ReadJwtToken(token);
@@ -30,15 +45,19 @@ public class JwtAuthStateProvider(IHttpClientFactory httpClientFactory,
             var expiry = jwtToken.ValidTo;
             if (expiry <= DateTime.UtcNow.AddSeconds(60))
             {
-                token = await _httpClientAuth.RefreshToken();
-                await localStorage.SetItemAsync(AuthService.AccessTokenKey, token);
+                token = await _httpClientAuth.RefreshToken(localStorage);
+                if (!string.IsNullOrWhiteSpace(token))
+                {
+                    await localStorage.SetItemAsync(AuthService.AccessTokenKey, token);
+                    _lastKnownToken = token;
+                    jwtToken = _tokenHandler.ReadJwtToken(token);
+                }
             }
-            
-            jwtToken = _tokenHandler.ReadJwtToken(token);
             
             if (jwtToken is null || jwtToken.ValidTo <= DateTime.UtcNow)
             {
-                await localStorage.RemoveItemAsync("authToken");
+                await localStorage.RemoveItemAsync(AuthService.AccessTokenKey);
+                _lastKnownToken = null;
                 return CreateAnonymousUser();
             }
 
@@ -46,8 +65,9 @@ public class JwtAuthStateProvider(IHttpClientFactory httpClientFactory,
             var identity = new ClaimsIdentity(claims, "jwt");
             return new AuthenticationState(new ClaimsPrincipal(identity));
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Lỗi khi lấy trạng thái xác thực: {ex.Message}");
             return CreateAnonymousUser();
         }
     }

@@ -48,7 +48,7 @@
 </AuthorizeView>
 
 @inject ISnackbar SnackbarService
-@inject IHttpClientFactory HttpClientFactory
+@inject IAuthService AuthService
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -73,7 +73,7 @@
         var url = $"{UrlDeleteMaQr}?serial={_serial}";
         try
         {
-            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+            _httpClient ??= await AuthService.CreateEndpointClient();
             var response = await _httpClient.DeleteAsync(url);
             if (response.IsSuccessStatusCode)
             {

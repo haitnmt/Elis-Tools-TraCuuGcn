@@ -43,7 +43,7 @@
 
 @inject IAuthService AuthService
 @inject LeafletMapService LeafletMapService
-@inject IHttpClientFactory HttpClientFactory
+
 @code 
 {
     [Parameter] public string? Serial { get; set; }
@@ -76,7 +76,7 @@
         _error = null;
         _isLoading = true;
         StateHasChanged();
-        _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+        _httpClient ??= await AuthService.CreateEndpointClient();
         var url = $"{GetToaDoThuaDatUrl}?serial={_serial}";
         _geoJsonData = null;
         try

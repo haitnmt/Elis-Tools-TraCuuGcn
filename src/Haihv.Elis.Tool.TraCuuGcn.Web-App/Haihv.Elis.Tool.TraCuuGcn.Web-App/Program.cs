@@ -35,9 +35,9 @@ builder.Services.AddMudServices(config =>
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthEndpointCookieHandler>();
-builder.Services.AddScoped<EndpointHandler>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<IStorageSyncService, StorageSyncService>();
 builder.Services.AddAuthorizationCore();
 
 
@@ -56,8 +56,7 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 
 builder.Services.AddHttpClient(
     "Endpoint",
-    opt => opt.BaseAddress = validUri)
-    .AddHttpMessageHandler<EndpointHandler>();
+    opt => opt.BaseAddress = validUri);
 var authEndpoint = builder.Configuration["AuthEndpoint"];
 if (string.IsNullOrWhiteSpace(authEndpoint))
 {

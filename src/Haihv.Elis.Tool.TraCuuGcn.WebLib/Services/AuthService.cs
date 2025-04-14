@@ -1,4 +1,4 @@
-﻿﻿﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -19,7 +19,7 @@ public interface IAuthService
     Task SetSerialElis(string? serial);
     Task<bool> IsLdapUser();
     Task Logout();
-    Task<string?> GetAccessTokenAsync();
+    Task<HttpClient> CreateEndpointClient();
 }
 
 public class AuthService(
@@ -35,6 +35,7 @@ public class AuthService(
     private const string SerialKey = "serial";
     private const string MaDinhDanhKey = "maDinhDanh";
     public const string AccessTokenKey = "accessToken";
+    public const string AllowRefreshTokenKey = "allowRefreshTokenKey";
 
     public async Task<AuthResult> LoginByChuSuDung(AuthChuSuDung authChuSuDung)
     {
@@ -48,6 +49,10 @@ public class AuthService(
                 return new AuthResult { Error = authResponse?.ErrorMsg };
                 
             await SetLocalStorageAsync(authResponse.Value.AccessToken, authChuSuDung.Serial, authChuSuDung.SoDinhDanh);
+            
+            // Không cho phép refresh token sau khi đăng nhập bằng chủ sử dụng
+            // Vì đăng nhập bằng chủ sử dụng chỉ được dùng một lần duy nhất
+            await localStorage.SetItemAsync(AllowRefreshTokenKey, false);
         
             var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
         
@@ -89,6 +94,9 @@ public class AuthService(
                 
             // Lưu access token vào local storage
             await SetLocalStorageAsync(accessToken);
+            
+            // Đánh dấu cho phép refresh token sau khi đăng nhập thành công
+            await localStorage.SetItemAsync(AllowRefreshTokenKey, true);
 
             // Cập nhật trạng thái xác thực
             var authenticationState = await _jwtAuthStateProvider.GetAuthenticationStateAsync();
@@ -111,6 +119,7 @@ public class AuthService(
     {
         if (accessToken is not null)
         {
+            // Lưu token vào localStorage - điều này sẽ kích hoạt sự kiện storage trên các tab khác
             await localStorage.SetItemAsync(AccessTokenKey, accessToken);
             if (!string.IsNullOrWhiteSpace(serial))
                 await localStorage.SetItemAsync(SerialKey, serial);
@@ -119,6 +128,18 @@ public class AuthService(
         }
     }
     
+    public async Task<HttpClient> CreateEndpointClient()
+    {
+        var accessToken = await GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            Console.WriteLine("Access token không tồn tại trong local storage");
+            await Logout();
+            return _httpClient;
+        }
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return _httpClient;
+    }
     public async Task<bool> CheckAuthorBySerialElis(string? serial)
     {
         var authenticationState = await ((JwtAuthStateProvider)authStateProvider).GetAuthenticationStateAsync();
@@ -154,21 +175,26 @@ public class AuthService(
         try
         {
             Console.WriteLine("Đang thực hiện đăng xuất...");
+            // Kiểm tra xem có phải người dùng LDAP hay không
+            if (await IsLdapUser())
+            {
+                var token = await localStorage.GetItemAsync<string>(AccessTokenKey);
+                // Tạo request message để có thể cấu hình thêm
+                var request = new HttpRequestMessage(HttpMethod.Post, "/api/logout");
             
-            var token = await localStorage.GetItemAsync<string>(AccessTokenKey);
+                // Thêm Authorization header
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                // Tham số all=false để chỉ đăng xuất thiết bị hiện tại
+                request.Content = JsonContent.Create(false);
             
-            // Tạo request message để có thể cấu hình thêm
-            var request = new HttpRequestMessage(HttpMethod.Post, "/api/logout");
+                Console.WriteLine("Đang gửi request đăng xuất...");
+                var response = await _httpClientAuth.SendAsync(request);
             
-            // Thêm Authorization header
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            // Tham số all=false để chỉ đăng xuất thiết bị hiện tại
-            request.Content = JsonContent.Create(false);
-            
-            Console.WriteLine("Đang gửi request đăng xuất...");
-            var response = await _httpClientAuth.SendAsync(request);
-            
-            Console.WriteLine($"Kết quả đăng xuất: {response.StatusCode} - {response.ReasonPhrase}");
+                Console.WriteLine($"Kết quả đăng xuất: {response.StatusCode} - {response.ReasonPhrase}");
+                // Đánh dấu không cho phép refresh token sau khi đăng xuất
+                await localStorage.SetItemAsync(AllowRefreshTokenKey, false);
+            }
+
         }
         catch (Exception e)
         {
@@ -179,10 +205,9 @@ public class AuthService(
             }
         }
         
-        // Xóa token khỏi local storage
-        await localStorage.RemoveItemAsync(AccessTokenKey);
+        // Xóa token khỏi local storage - điều này sẽ kích hoạt sự kiện storage trên các tab khác
         await localStorage.RemoveItemAsync(MaDinhDanhKey);
-        await localStorage.RemoveItemAsync(SerialKey);
+        await localStorage.RemoveItemAsync(AccessTokenKey);
         
         Console.WriteLine("Đã xóa token khỏi local storage");
         
@@ -191,19 +216,12 @@ public class AuthService(
         
         Console.WriteLine("Đăng xuất hoàn tất");
     }
-
-    private async Task<string?> GetAuthenToken()
-    {
-        return await localStorage.GetItemAsync<string>(AccessTokenKey);
-    }
     
-    public async Task<string?> GetAccessTokenAsync()
+    private async Task<string?> GetAccessTokenAsync()
     {
-        var token = await localStorage.GetItemAsync<string>(AccessTokenKey);
-        if (string.IsNullOrWhiteSpace(token)) return null;
-        
         try
         {
+            var token = await localStorage.GetItemAsync<string>(AccessTokenKey);
             // Kiểm tra xem access token có còn hợp lệ không
             var jwtToken = _tokenHandler.ReadJwtToken(token);
             var expiry = jwtToken.ValidTo;
@@ -214,11 +232,12 @@ public class AuthService(
             
             // Nếu access token đã hết hạn, thực hiện refresh token
 
-            var accessToken = await _httpClientAuth.RefreshToken();
+            var accessToken = await _httpClientAuth.RefreshToken(localStorage);
 
             if (string.IsNullOrWhiteSpace(accessToken))
             {
-                await Logout();
+                // Cập nhật trạng thái xác thực là anonymous
+                _jwtAuthStateProvider.NotifyUserChanged(JwtAuthStateProvider.AnonymousUser);
                 return null;
             }
             
@@ -248,35 +267,41 @@ public record AuthResult(bool Success = false, string? Error = null);
 
 public static class AuthExtensions
 {
-    public static async Task<string?> RefreshToken(this HttpClient httpClient)
+    public static async Task<string?> RefreshToken(this HttpClient httpClient, ILocalStorageService localStorage)
     {
         try
         {
+            var statusRefreshToken = await localStorage.GetItemAsync<bool?>(AuthService.AllowRefreshTokenKey);
+            if (statusRefreshToken is null || !statusRefreshToken.Value)
+            {
+                Console.WriteLine("Không thực hiện refresh token");
+                return null;
+            }
             Console.WriteLine("Đang thực hiện refresh token...");
             
-            // Tạo request message để có thể cấu hình thêm
             var request = new HttpRequestMessage(HttpMethod.Post, "/api/refreshToken");
             
-            Console.WriteLine("Đang gửi request refresh token...");
             var response = await httpClient.SendAsync(request);
             
             Console.WriteLine($"Kết quả refresh token: {response.StatusCode} - {response.ReasonPhrase}");
 
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                Console.WriteLine(response.ReasonPhrase);
+                Console.WriteLine($"Refresh token thất bại: {response.ReasonPhrase}");
+                await localStorage.SetItemAsync(AuthService.AllowRefreshTokenKey, false);
                 return null;
             }
-
             
             var accessToken = await response.Content.ReadFromJsonAsync<string>();
             if (accessToken is null || string.IsNullOrWhiteSpace(accessToken))
             {
                 Console.WriteLine("Không nhận được access token từ server");
+                await localStorage.SetItemAsync(AuthService.AllowRefreshTokenKey, false);
                 return null;
             }
             
             Console.WriteLine("Refresh token thành công, đã nhận access token mới");
+            await localStorage.SetItemAsync(AuthService.AllowRefreshTokenKey, true);
 
             return accessToken;
         }
@@ -287,6 +312,7 @@ public static class AuthExtensions
             {
                 Console.WriteLine($"Inner exception: {e.InnerException.Message}");
             }
+            await localStorage.SetItemAsync(AuthService.AllowRefreshTokenKey, false);
             return null;
         }
     }

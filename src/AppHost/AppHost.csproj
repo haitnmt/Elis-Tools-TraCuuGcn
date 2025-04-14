@@ -15,7 +15,6 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" Version="9.1.0"/>
         <PackageReference Include="Aspire.Hosting.Redis" Version="9.1.0" />
-        <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     </ItemGroup>
 
     <ItemGroup>

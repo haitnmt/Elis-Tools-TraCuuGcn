@@ -23,12 +23,12 @@ builder.Services.AddMudServices(config =>
         config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
 });
 
-builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<AuthEndpointCookieHandler>();
-builder.Services.AddScoped<EndpointHandler>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<IStorageSyncService, StorageSyncService>();
 builder.Services.AddAuthorizationCore();
 
 
@@ -51,8 +51,7 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 
 builder.Services.AddHttpClient(
         "Endpoint",
-        opt => opt.BaseAddress = validUri)
-        .AddHttpMessageHandler<EndpointHandler>();
+        opt => opt.BaseAddress = validUri);
 // Đăng ký httpClient để gọi Auth API
 if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
 {

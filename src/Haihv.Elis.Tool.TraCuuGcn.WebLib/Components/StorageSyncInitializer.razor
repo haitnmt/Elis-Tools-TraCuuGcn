@@ -1,0 +1,15 @@
+﻿@implements IAsyncDisposable
+@inject IStorageSyncService StorageSyncService
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        await StorageSyncService.InitializeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await StorageSyncService.DisposeAsync();
+    }
+}

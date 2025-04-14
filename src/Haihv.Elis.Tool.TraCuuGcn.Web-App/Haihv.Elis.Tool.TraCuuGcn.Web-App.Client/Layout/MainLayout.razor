@@ -1,5 +1,6 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @attribute [StreamRendering]
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Components
 @* Required *@
 <MudThemeProvider/>
 <MudPopoverProvider/>
@@ -8,6 +9,9 @@
 
 @* Needed for snackbars *@
 <MudSnackbarProvider/>
+
+<StorageSyncInitializer/>
+
 <MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode"/>
 @if (_isInitialized)
 {

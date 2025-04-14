@@ -272,7 +272,6 @@ else
 @inject IAuthService AuthService
 @inject IDialogService DialogService
 @inject ISnackbar SnackbarService
-@inject IHttpClientFactory HttpClientFactory
 
 @code {
 
@@ -331,6 +330,7 @@ else
             await LoadDataAsync();
         }
     }
+    
 
     /// <summary>
     /// Xóa cache thông tin GCN theo serial
@@ -343,7 +343,7 @@ else
         try
         {
             // Khởi tạo client HTTP
-            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+            _httpClient ??= await AuthService.CreateEndpointClient();
             // Gọi API xóa cache
             var responseMessage = await _httpClient.DeleteAsync(url);
 
@@ -382,7 +382,7 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+            _httpClient ??= await AuthService.CreateEndpointClient();
             
             // Lấy thông tin GCN
             var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
@@ -458,7 +458,7 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+            _httpClient ??= await AuthService.CreateEndpointClient();
             // Tải thông tin thửa đất
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
 
@@ -664,5 +664,4 @@ else
             StateHasChanged();
         }
     }
-
 }

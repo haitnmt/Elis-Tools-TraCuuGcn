@@ -132,7 +132,8 @@
 </AuthorizeView>
 
 @inject ISnackbar SnackbarService
-@inject IHttpClientFactory HttpClientFactory    
+@inject IAuthService AuthService
+
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -244,7 +245,7 @@
             PhapLyGiayChungNhan.NguoiKy = _nguoiKy;
             PhapLyGiayChungNhan.SoVaoSo = _soVaoSo;
             PhapLyGiayChungNhan.NgayVaoSo = _ngayVaoSo;
-            _httpClient ??= HttpClientFactory.CreateClient("Endpoint");
+            _httpClient ??= await AuthService.CreateEndpointClient();
             var response = await _httpClient.PostAsJsonAsync(UrlUpdateGiayChungNhan, PhapLyGiayChungNhan);
             if (response.IsSuccessStatusCode)
             {
