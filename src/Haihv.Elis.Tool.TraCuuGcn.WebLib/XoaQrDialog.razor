@@ -73,7 +73,7 @@
         var url = $"{UrlDeleteMaQr}?serial={_serial}";
         try
         {
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= await AuthService.CreateEndpointClient();
             var response = await _httpClient.DeleteAsync(url);
             if (response.IsSuccessStatusCode)
             {

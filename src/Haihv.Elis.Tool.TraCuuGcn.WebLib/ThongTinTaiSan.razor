@@ -148,7 +148,7 @@
         _isLoading = true;
         StateHasChanged();
         _taiSans = [];
-        _httpClient ??= await AuthService.CreateHttpClient();
+        _httpClient ??= await AuthService.CreateEndpointClient();
         var url = $"{UrlGetThongTinTaiSan}?serial={_serial}";
         try
         {

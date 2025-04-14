@@ -5,8 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.04.09.1</AssemblyVersion>
-        <FileVersion>2025.04.09.1</FileVersion>
+        <AssemblyVersion>2025.04.14.1</AssemblyVersion>
+        <FileVersion>2025.04.14.1</FileVersion>
         <NeutralLanguage>vi-VN</NeutralLanguage>
     </PropertyGroup>
 
@@ -18,6 +18,7 @@
         <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
         <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.3" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
         <PackageReference Include="MudBlazor" Version="8.5.1" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.8.0" />

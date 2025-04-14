@@ -23,11 +23,15 @@ builder.Services.AddMudServices(config =>
         config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
 });
 
-builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<AuthEndpointCookieHandler>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<IStorageSyncService, StorageSyncService>();
 builder.Services.AddAuthorizationCore();
+
+
 
 // Tải cấu hình từ Blazor Server
 var baseUrl = builder.HostEnvironment.BaseAddress;
@@ -53,8 +57,14 @@ if (!Uri.TryCreate(authEndpoint, UriKind.Absolute, out var validAuthUri))
 {
         throw new InvalidOperationException($"Invalid Auth Base URL: {authEndpoint}");
 }
+
+// Cấu hình HttpClient cho AuthEndpoint với hỗ trợ cookie
 builder.Services.AddHttpClient(
         "AuthEndpoint",
-        opt => opt.BaseAddress = validAuthUri);
+        opt =>
+        {
+                opt.BaseAddress = validAuthUri;
+        }).AddHttpMessageHandler<AuthEndpointCookieHandler>();
+        
 
 await builder.Build().RunAsync();

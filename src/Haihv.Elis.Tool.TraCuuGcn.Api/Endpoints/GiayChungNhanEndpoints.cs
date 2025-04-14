@@ -44,6 +44,7 @@ public static class GiayChungNhanEndpoints
     private static async Task<IResult> UpdateGiayChungNhan(HttpContext context,
         ILogger logger, HybridCache hybridCache,
         IConfiguration configuration, IConnectionElisData connectionElisData,
+        IHttpClientFactory httpClientFactory,
         ILogElisDataServices logElisDataServices,
         IGiayChungNhanService giayChungNhanService)
     {

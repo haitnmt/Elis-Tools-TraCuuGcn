@@ -108,7 +108,7 @@
         _isLoading = true;
         StateHasChanged();
         _chuSuDungInfos = [];
-        _httpClient ??= await AuthService.CreateHttpClient();
+        _httpClient ??= await AuthService.CreateEndpointClient();
         var url = $"{UrlGetThongTinChuSuDung}?serial={_serial}";
         try
         {

@@ -34,9 +34,12 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<AuthEndpointCookieHandler>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
+builder.Services.AddScoped<IStorageSyncService, StorageSyncService>();
 builder.Services.AddAuthorizationCore();
+
 
 builder.AddAppSettingsServices();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
@@ -44,6 +47,7 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
 {
     throw new InvalidOperationException("BackendUrl is not configured");
 }
+
 // Kiểm tra xem API URL hợp lệ hay không
 if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
 {
@@ -58,8 +62,14 @@ if (string.IsNullOrWhiteSpace(authEndpoint))
 {
     throw new InvalidOperationException("AuthEndpoint is not configured");
 }
+
+// Cấu hình HttpClient cho AuthEndpoint với hỗ trợ cookie
 builder.Services.AddHttpClient(
-    "AuthEndpoint", client => client.BaseAddress = new Uri(authEndpoint));
+    "AuthEndpoint",
+    client => 
+    { 
+        client.BaseAddress = new Uri(authEndpoint);
+    }).AddHttpMessageHandler<AuthEndpointCookieHandler>();
 
 var app = builder.Build();
 

@@ -96,21 +96,22 @@ else
                                     @_giayChungNhanInfo.MaGiayChungNhan
                                 </MudField>
                             </MudItem>
-                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
+                            @* @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy)) *@
+                            @* { *@
+                            @*     <MudItem xs="12" md="6" xl="4"> *@
+                            @*         <MudField Label="Người ký" Variant="Variant.Text"> *@
+                            @*             @_giayChungNhanInfo.NguoiKy *@
+                            @*         </MudField> *@
+                            @*     </MudItem> *@
+                            @* *@
+                            @* } *@
+                            @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
                             {
                                 <MudItem xs="12" md="6" xl="4">
-                                    <MudField Label="Người ký" Variant="Variant.Text">
-                                        @_giayChungNhanInfo.NguoiKy
+                                    <MudField Label="Ngày ký" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
                                     </MudField>
                                 </MudItem>
-                                @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
-                                {
-                                    <MudItem xs="12" md="6" xl="4">
-                                        <MudField Label="Ngày ký" Variant="Variant.Text">
-                                            @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
-                                        </MudField>
-                                    </MudItem>
-                                }
                             }
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.SoVaoSo))
                             {
@@ -271,6 +272,7 @@ else
 @inject IAuthService AuthService
 @inject IDialogService DialogService
 @inject ISnackbar SnackbarService
+
 @code {
 
     private HttpClient? _httpClient;
@@ -328,6 +330,7 @@ else
             await LoadDataAsync();
         }
     }
+    
 
     /// <summary>
     /// Xóa cache thông tin GCN theo serial
@@ -340,7 +343,7 @@ else
         try
         {
             // Khởi tạo client HTTP
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= await AuthService.CreateEndpointClient();
             // Gọi API xóa cache
             var responseMessage = await _httpClient.DeleteAsync(url);
 
@@ -379,7 +382,7 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= await AuthService.CreateEndpointClient();
             
             // Lấy thông tin GCN
             var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
@@ -455,7 +458,7 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= await AuthService.CreateHttpClient();
+            _httpClient ??= await AuthService.CreateEndpointClient();
             // Tải thông tin thửa đất
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
 
@@ -661,5 +664,4 @@ else
             StateHasChanged();
         }
     }
-
 }
