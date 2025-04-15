@@ -101,7 +101,7 @@
     private void HandleIntervalElapsed(string value)
     {
         _disabledXoaQr = string.IsNullOrWhiteSpace(value) || !value.Trim().Equals(Serial.Trim(), StringComparison.OrdinalIgnoreCase);
-       _serial = value;
+       _serial = Serial;
         StateHasChanged();
     }
 }
