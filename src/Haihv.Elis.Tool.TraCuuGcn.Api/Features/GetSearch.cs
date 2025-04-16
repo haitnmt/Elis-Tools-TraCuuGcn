@@ -70,6 +70,7 @@ public static class GetSearch
                     var response = await sender.Send(new Query(query));
                     return Results.Ok(response);
                 })
+                .RequireAuthorization()
                 .WithTags("Search");
         }
     }

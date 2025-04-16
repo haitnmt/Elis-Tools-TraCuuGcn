@@ -53,9 +53,9 @@ builder.Services.AddSingleton(
 //             ClockSkew = TimeSpan.Zero,
 //         };
 //     });
-var keycloakConfig = builder.Configuration.GetSection("OpenIdConnect");
-var authority = keycloakConfig["Authority"];
-var audience = keycloakConfig["Audience"];
+var openIdConnectConfig = builder.Configuration.GetSection("OpenIdConnect");
+var authority = openIdConnectConfig["Authority"];
+var audience = openIdConnectConfig["Audience"];
 
 builder.Services.AddAuthentication()
     .AddJwtBearer("Bearer", jwtOptions =>
