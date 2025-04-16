@@ -41,7 +41,6 @@
     </MudCard>
 }
 
-@inject IAuthService AuthService
 @inject LeafletMapService LeafletMapService
 
 @code 
@@ -76,7 +75,7 @@
         _error = null;
         _isLoading = true;
         StateHasChanged();
-        _httpClient ??= await AuthService.CreateHttpClient();
+        if (_httpClient is null) return;
         var url = $"{GetToaDoThuaDatUrl}?serial={_serial}";
         _geoJsonData = null;
         try

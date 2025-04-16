@@ -4,6 +4,8 @@ using Microsoft.JSInterop;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
+using Haihv.Elis.Tool.TraCuuGcn.WebLib.Components;
+
 public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
 {
     private IJSObjectReference? _zxingReader;

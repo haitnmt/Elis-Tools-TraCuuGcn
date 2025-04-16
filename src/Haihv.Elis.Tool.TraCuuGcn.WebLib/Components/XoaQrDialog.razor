@@ -48,7 +48,7 @@
 </AuthorizeView>
 
 @inject ISnackbar SnackbarService
-@inject IAuthService AuthService
+
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
@@ -59,11 +59,12 @@
 
     private string? _serial;
     private bool _disabledXoaQr = true;
-    private HttpClient? _httpClient;
+    private HttpClient? _httpClient = null;
     
 
     private async Task XoaQr(MouseEventArgs arg)
     {
+        if (_httpClient is null) return;
         if (string.IsNullOrWhiteSpace(_serial) || _serial != Serial)
         {
             SnackbarService.Add("Số phát hành không chính xác", Severity.Error);
@@ -73,7 +74,6 @@
         var url = $"{UrlDeleteMaQr}?serial={_serial}";
         try
         {
-            _httpClient ??= await AuthService.CreateHttpClient();
             var response = await _httpClient.DeleteAsync(url);
             if (response.IsSuccessStatusCode)
             {

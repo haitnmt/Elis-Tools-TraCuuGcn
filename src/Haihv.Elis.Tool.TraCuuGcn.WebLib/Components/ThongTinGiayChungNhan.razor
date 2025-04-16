@@ -268,7 +268,6 @@ else
     }
 }
 
-@inject IAuthService AuthService
 @inject IDialogService DialogService
 @inject ISnackbar SnackbarService
 @code {
@@ -340,7 +339,8 @@ else
         try
         {
             // Khởi tạo client HTTP
-            _httpClient ??= await AuthService.CreateHttpClient();
+            //TODO: khởi tạo HttpClient ở đây
+            if (_httpClient is null) return false;
             // Gọi API xóa cache
             var responseMessage = await _httpClient.DeleteAsync(url);
 
@@ -379,7 +379,8 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= await AuthService.CreateHttpClient();
+            //TODO: khởi tạo HttpClient ở đây
+            if (_httpClient is null) return;
             
             // Lấy thông tin GCN
             var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
@@ -413,15 +414,15 @@ else
                 {
                     Serial = _giayChungNhanInfo.Serial;
 
-                    // Kiểm tra thông tin xác thực
-                    if (!await AuthService.CheckAuthorBySerialElis(Serial))
-                        await AuthService.Logout();
+                    //TODO Kiểm tra thông tin xác thực
+                    // if (!await AuthService.CheckAuthorBySerialElis(Serial))
+                    //     await AuthService.Logout();
 
                     // Cập nhật các thông tin liên quan
                     await SerialChanged.InvokeAsync(Serial);
                     await GetGetPermissionsCanUpdate();
                     await LoadThuaDatAsync();
-                    await AuthService.SetSerialElis(Serial);
+                    // await AuthService.SetSerialElis(Serial);
                     await HasGiayChungNhanChanged.InvokeAsync(_giayChungNhanInfo.HasGiayChungNhan);
                 }
 
@@ -455,7 +456,8 @@ else
         try
         {
             // Khởi tạo client HTTP 
-            _httpClient ??= await AuthService.CreateHttpClient();
+            //TODO: khởi tạo HttpClient ở đây
+            if (_httpClient is null) return;
             // Tải thông tin thửa đất
             var response = await _httpClient.GetFromJsonAsync<Response<List<ThuaDatPublic>>>(url);
 

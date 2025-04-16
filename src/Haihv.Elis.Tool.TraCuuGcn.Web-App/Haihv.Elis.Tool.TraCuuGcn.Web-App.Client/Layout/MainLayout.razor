@@ -32,54 +32,7 @@
                 </MudStack>
             </MudHidden>
             <MudSpacer/>
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                @if (string.IsNullOrWhiteSpace(_displayName))
-                {
-                    <MudButton
-                        Color="Color.Inherit"
-                        OnClick="OpenDangNhap">
-                        <MudText Typo="Typo.body2">
-                            Đăng nhập
-                        </MudText>
-                    </MudButton>
-                }
-                else
-                {
-                    <MudStack Row="true">
-                        <MudText>
-                            Xin chào, @_displayName
-                        </MudText>
-                    </MudStack>
-                    <MudTooltip Text="Đăng xuất">
-                        <MudIconButton
-                            Icon="@Icons.Material.Filled.Logout"
-                            Size="Size.Small"
-                            Color="Color.Inherit"
-                            OnClick="Logout"/>
-                    </MudTooltip>
-                }
-            </MudHidden>
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudTooltip
-                    Text="@(string.IsNullOrWhiteSpace(_displayName) ? "Đăng nhập" : $"Xin chào, {_displayName}! Click để đăng xuất")">
-                    <ChildContent>
-                        <MudIconButton Icon="@Icons.Material.Filled.Person"
-                                       Size="Size.Small"
-                                       OnClick="@(string.IsNullOrWhiteSpace(_displayName) ? OpenDangNhap : Logout)"></MudIconButton>
-                    </ChildContent>
-                    <TooltipContent>
-                        @if (string.IsNullOrWhiteSpace(_displayName))
-                        {
-                            <MudText Typo="Typo.body2">Đăng nhập</MudText>
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2">Xin chào, @_displayName!</MudText>
-                            <MudText Typo="Typo.body2">Click để đăng xuất!</MudText>
-                        }
-                    </TooltipContent>
-                </MudTooltip>
-            </MudHidden>
+            <LogInOrOut/>
             <MudToggleIconButton @bind-Toggled="@_isDarkMode"
                                  Icon="@Icons.Material.Filled.DarkMode"
                                  Color="@Color.Error"

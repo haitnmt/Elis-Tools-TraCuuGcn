@@ -87,8 +87,6 @@
     </MudCard>
 }
 
-@inject IAuthService AuthService
-
 @code {
     [Parameter] public string? Serial { get; set; }
     [Parameter] public bool HasGiayChungNhan { get; set; }
@@ -121,7 +119,8 @@
         _isLoading = true;
         StateHasChanged();
         _thuaDats = [];
-        _httpClient ??= await AuthService.CreateHttpClient();
+        // TODO: tạo api lấy thông tin Thửa đất
+        if (_httpClient is null) return;
         var url = $"{UrlGetThongTinThuaDat}?serial={_serial}";
         try
         {

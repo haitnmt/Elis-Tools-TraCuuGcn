@@ -108,7 +108,6 @@
 @implements IDisposable
 @inject IDialogService DialogService
 @inject AppSettingsService AppSettingService
-@inject IAuthService AuthService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @code {
     private string? _searchQuery;
@@ -131,8 +130,8 @@
     {
         if (firstRender)
         {
-            if (string.IsNullOrWhiteSpace(_searchQuery))
-                await AuthService.SetSerialElis(null);
+            // if (string.IsNullOrWhiteSpace(_searchQuery))
+            //     await AuthService.SetSerialElis(null);
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             AuthenticationStateChanged(Task.FromResult(authState));
             StateHasChanged();
@@ -146,8 +145,8 @@
             var authState = await task;
             var wasAuthenticated = _isAuthenticated;
             _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-            _isLdapUser = await AuthService.IsLdapUser();
-
+            // _isLdapUser = await AuthService.IsLdapUser();
+            
             // If authentication state changed, we need to refresh the UI
             if (wasAuthenticated != _isAuthenticated)
             {

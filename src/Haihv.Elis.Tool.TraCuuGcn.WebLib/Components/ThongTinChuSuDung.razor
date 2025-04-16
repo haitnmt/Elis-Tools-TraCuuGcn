@@ -74,7 +74,6 @@
     </AuthorizeView>
 }
 
-@inject IAuthService AuthService
 
 @code {
     [Parameter] public string? Serial { get; set; }
@@ -108,7 +107,8 @@
         _isLoading = true;
         StateHasChanged();
         _chuSuDungInfos = [];
-        _httpClient ??= await AuthService.CreateHttpClient();
+        //TODO: khởi tạo HttpClient ở đây
+        if (_httpClient is null) return;
         var url = $"{UrlGetThongTinChuSuDung}?serial={_serial}";
         try
         {

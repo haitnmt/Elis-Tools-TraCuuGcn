@@ -1,5 +1,4 @@
-﻿@using Haihv.Elis.Tool.TraCuuGcn.Models
-<MudDialog>
+﻿<MudDialog>
     <TitleContent>
         <MudStack Row="true" AlignItems="AlignItems.End"> 
             <MudAvatar Color="Color.Warning" Variant="Variant.Outlined" Rounded="true">
@@ -91,7 +90,6 @@
         </MudButton>
     </DialogActions>
 </MudDialog>
-@inject IAuthService AuthService
 @inject ISnackbar SnackbarService
 @code {
     [CascadingParameter]
@@ -102,13 +100,12 @@
     private string? _serial;
     private bool _isUserLocal;
     private bool _processing;
-    private AuthResult? _authResult;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _serial = await AuthService.GetSerialElis();
+            _serial = string.Empty;
             _isUserLocal = string.IsNullOrWhiteSpace(_serial);
             _textXacThuc = _isUserLocal ? "Tài khoản nội bộ" : "Theo thông tin Chủ sử dụng đất";
             StateHasChanged();
@@ -118,32 +115,32 @@
     private async Task XacThuc()
     {
         _processing = true;
-        if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
-        {
-            _authResult = new AuthResult(false, 
-                _isUserLocal ? 
-                    "Tên đăng nhập và mật khẩu không được để trống" :
-                    "Số định danh và tên chủ sử dụng không được để trống");
-            SnackbarService.Add(_authResult.Error ?? string.Empty, Severity.Warning);
-        }
-        else
-        {
-            var message = _isUserLocal ? "Đăng nhập người dùng" : "Xác thực theo Chủ sử dụng";
-            _authResult = _isUserLocal ? 
-                await AuthService.LoginUser(new AuthUser(_username, _password)) :
-                string.IsNullOrWhiteSpace(_serial) ? 
-                    new AuthResult(false, "Không tìm thấy thông tin Giấy chứng nhận") :
-                    await AuthService.LoginByChuSuDung(new AuthChuSuDung(_serial, _username, _password));
-            if (_authResult.Success)
-            {
-                SnackbarService.Add($"{message} thành công", Severity.Success);
-                MudDialog.Close(DialogResult.Ok(_serial));
-            }
-            else
-            {
-                SnackbarService.Add(_authResult.Error ?? string.Empty, Severity.Error);
-            }
-        }
+        // if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
+        // {
+        //     _authResult = new AuthResult(false, 
+        //         _isUserLocal ? 
+        //             "Tên đăng nhập và mật khẩu không được để trống" :
+        //             "Số định danh và tên chủ sử dụng không được để trống");
+        //     SnackbarService.Add(_authResult.Error ?? string.Empty, Severity.Warning);
+        // }
+        // else
+        // {
+        //     var message = _isUserLocal ? "Đăng nhập người dùng" : "Xác thực theo Chủ sử dụng";
+        //     _authResult = _isUserLocal ? 
+        //         await AuthService.LoginUser(new AuthUser(_username, _password)) :
+        //         string.IsNullOrWhiteSpace(_serial) ? 
+        //             new AuthResult(false, "Không tìm thấy thông tin Giấy chứng nhận") :
+        //             await AuthService.LoginByChuSuDung(new AuthChuSuDung(_serial, _username, _password));
+        //     if (_authResult.Success)
+        //     {
+        //         SnackbarService.Add($"{message} thành công", Severity.Success);
+        //         MudDialog.Close(DialogResult.Ok(_serial));
+        //     }
+        //     else
+        //     {
+        //         SnackbarService.Add(_authResult.Error ?? string.Empty, Severity.Error);
+        //     }
+        // }
         _processing = false;
         StateHasChanged();
     }

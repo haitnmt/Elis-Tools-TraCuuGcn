@@ -14,9 +14,11 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.4" />
+        <PackageReference Include="Microsoft.Extensions.ServiceDiscovery.Yarp" Version="9.2.0" />
         <ProjectReference Include="..\..\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\Haihv.Elis.Tool.TraCuuGcn.Web-App.Client\Haihv.Elis.Tool.TraCuuGcn.Web-App.Client.csproj" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.4" />
     </ItemGroup>
        
     <ItemGroup>

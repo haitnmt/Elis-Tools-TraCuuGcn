@@ -112,8 +112,6 @@
     }
 }
 
-@inject IAuthService AuthService
-
 @code {
     [Parameter] public bool HasGiayChungNhan { get; set; }
     [Parameter] public string? Serial { get; set; }
@@ -148,7 +146,8 @@
         _isLoading = true;
         StateHasChanged();
         _taiSans = [];
-        _httpClient ??= await AuthService.CreateHttpClient();
+        // TODO: Tạo HttpClient để gọi API lấy thông tin tài sản
+        if (_httpClient is null) return;
         var url = $"{UrlGetThongTinTaiSan}?serial={_serial}";
         try
         {

@@ -1,20 +1,56 @@
-using Blazored.LocalStorage;
+using System.Net.Http.Headers;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Components;
+using Haihv.Elis.Tool.TraCuuGcn.Web.App.Authentication;
 using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
-using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor;
 using MudBlazor.Services;
 using ServiceDefaults;
+using Yarp.ReverseProxy.Transforms;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+var oidcConfig = builder.Configuration.GetSection("OpenIdConnect");
+const string oidcScheme = LoginLogoutEndpointRouteBuilderExtensions.OidcSchemeName;
+// Add services to the container.
+builder.Services.AddAuthentication(oidcScheme)
+    .AddOpenIdConnect(oidcScheme, oidcOptions =>
+    {
+        oidcOptions.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        oidcOptions.Authority = oidcConfig["Authority"];
+        oidcOptions.ClientId = oidcConfig["ClientId"];
+        oidcOptions.ClientSecret = oidcConfig["ClientSecret"];
+        oidcOptions.ResponseType = oidcConfig["ResponseType"] ?? "code";
+        oidcOptions.Scope.Clear();
+        foreach (var scope in (oidcConfig["Scope"] ?? "openid profile email").Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        {
+            oidcOptions.Scope.Add(scope);
+        }
+        oidcOptions.MapInboundClaims = false;
+        oidcOptions.TokenValidationParameters.NameClaimType = "name";
+        oidcOptions.TokenValidationParameters.RoleClaimType = "roles";
+        oidcOptions.SaveTokens = true;
+    })
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
+
+builder.Services.ConfigureCookieOidcRefresh(CookieAuthenticationDefaults.AuthenticationScheme, oidcScheme);
+builder.Services.AddAuthorization();
+builder.Services.AddCascadingAuthenticationState();
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+    .AddInteractiveWebAssemblyComponents()
+    .AddAuthenticationStateSerialization();
+
+builder.Services.AddHttpForwarderWithServiceDiscovery();
+builder.Services.AddHttpContextAccessor();
+
+
 builder.Services.AddScoped<ZxingService>();
 builder.Services.AddScoped<BarcodeDetectionService>();
 builder.Services.AddScoped<LeafletMapService>();
@@ -32,12 +68,6 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
 });
 
-builder.Services.AddCascadingAuthenticationState();
-builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthStateProvider>();
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddAuthorizationCore();
-
 builder.AddAppSettingsServices();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
@@ -45,21 +75,15 @@ if (string.IsNullOrWhiteSpace(apiEndpoint))
     throw new InvalidOperationException("BackendUrl is not configured");
 }
 // Kiểm tra xem API URL hợp lệ hay không
-if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var validUri))
+if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var clientBaseAddress))
 {
     throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
 
-builder.Services.AddHttpClient(
-    "Endpoint",
-    opt => opt.BaseAddress = validUri);
-var authEndpoint = builder.Configuration["AuthEndpoint"];
-if (string.IsNullOrWhiteSpace(authEndpoint))
+builder.Services.AddHttpClient<IDataServices, ServerDataServices>(httpClient =>
 {
-    throw new InvalidOperationException("AuthEndpoint is not configured");
-}
-builder.Services.AddHttpClient(
-    "AuthEndpoint", client => client.BaseAddress = new Uri(authEndpoint));
+    httpClient.BaseAddress = clientBaseAddress;
+});
 
 var app = builder.Build();
 
@@ -77,17 +101,28 @@ else
 
 app.UseHttpsRedirection();
 
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+
+app.MapDefaultEndpoints();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
+app.MapForwarder("/api/*", apiEndpoint, transformBuilder =>
+{
+    transformBuilder.AddRequestTransform(async transformContext =>
+    {
+        var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
+        transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+    });
+}).RequireAuthorization();
+
 app.MapAppSettingsEndpoints();
-// Thêm Endpoint kiểm tra ứng dụng hoạt động
-app.MapGet("/health", () => Results.Ok("OK")).WithName("GetHealth");
+
+app.MapGroup("/authentication").MapLoginAndLogout();
+
 app.Run();
