@@ -8,7 +8,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 public class SearchFailedException : TraCuuGcnException
 {
     /// <summary>
-    /// Khởi tạo một instance mới của <see cref="SearchFailedException"/>.
+    /// Khởi tạo một instance mới của <see cref="TraCuuGcnException"/>.
     /// </summary>
     /// <param name="message">Thông báo lỗi.</param>
     /// <param name="innerException">Exception gốc (nếu có).</param>
@@ -23,7 +23,7 @@ public class SearchFailedException : TraCuuGcnException
 public class SearchNotFoundException : TraCuuGcnException
 {
     /// <summary>
-    /// Khởi tạo một instance mới của <see cref="SearchNotFoundException"/>.
+    /// Khởi tạo một instance mới của <see cref="TraCuuGcnException"/>.
     /// </summary>
     /// <param name="query">Số phát hành Giấy chứng nhận</param>
     /// <param name="innerException">Exception gốc (nếu có).</param>

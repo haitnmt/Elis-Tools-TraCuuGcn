@@ -1,42 +1,48 @@
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 @implements IDisposable
 @inject NavigationManager Navigation
-@inject IHttpClientFactory HttpClientFactory
 
 <div class="nav-item px-3">
     <AuthorizeView>
         <Authorized>
             <MudStack Row="true">
                 <MudText>
-                    @context.User.Identity?.Name
+                   @_userInfo?.DisplayName
                 </MudText>
                 <form action="authentication/logout" method="post">
                     <AntiforgeryToken />
                     <input type="hidden" name="ReturnUrl" value="@_currentUrl" />
                     <MudTooltip Text="Đăng xuất">
-                        <MudIconButton
-                            Icon="@Icons.Material.Filled.Logout"
-                            Size="Size.Small"
-                            Color="Color.Inherit"
-                            ButtonType="ButtonType.Submit"/>
+                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Size="Size.Small" Color="Color.Inherit"
+                                       ButtonType="ButtonType.Submit" />
                     </MudTooltip>
                 </form>
             </MudStack>
         </Authorized>
         <NotAuthorized>
-            <MudButton Color="Color.Inherit"
-                       Href="/authentication/login">
+            <MudButton Color="Color.Inherit" Href="/authentication/login">
                 <MudText>Đăng nhập</MudText>
             </MudButton>
         </NotAuthorized>
     </AuthorizeView>
 </div>
+
+@inject UserInfoService UserInfoService
 @code {
     private string? _currentUrl;
-
-    protected override void OnInitialized()
+    private UserInfo? _userInfo;
+    protected override async Task OnInitializedAsync()
     {
         _currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
         Navigation.LocationChanged += OnLocationChanged;
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _userInfo = await UserInfoService.GetUserInfoAsync();
+        StateHasChanged();
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)

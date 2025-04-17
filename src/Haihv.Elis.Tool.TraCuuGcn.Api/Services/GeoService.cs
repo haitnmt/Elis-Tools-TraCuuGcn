@@ -109,7 +109,7 @@ public class GeoService : IGeoService
         var connectionSqls = await _connectionElisData.GetAllConnectionAsync(serial);
         if (connectionSqls.Count == 0) return [];
 
-        var thuaDats = await _thuaDatService.GetThuaDatInDatabaseAsync(serial, cancellationToken);
+        var thuaDats = await _thuaDatService.GetAsync(serial, cancellationToken);
         if (thuaDats.Count == 0) return [];
 
         var result = new ConcurrentBag<Coordinates>();

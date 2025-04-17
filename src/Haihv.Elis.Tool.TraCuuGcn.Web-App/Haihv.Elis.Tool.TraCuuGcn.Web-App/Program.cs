@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Components;
 using Haihv.Elis.Tool.TraCuuGcn.Web.App.Authentication;
 using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
@@ -34,6 +35,24 @@ builder.Services.AddAuthentication(oidcScheme)
         oidcOptions.TokenValidationParameters.NameClaimType = "name";
         oidcOptions.TokenValidationParameters.RoleClaimType = "roles";
         oidcOptions.SaveTokens = true;
+        oidcOptions.Events.OnTokenValidated = context =>
+        {
+            // Trích xuất roles từ token
+            const string roleClaimType = "resource_access.{client-id}.roles";
+            var roleClaims = context.SecurityToken.Claims
+                .Where(c => c.Type == roleClaimType || c.Type.EndsWith("/roles"))
+                .ToList();
+
+            if (roleClaims.Count == 0 || context.Principal?.Identity is not ClaimsIdentity identity)
+                return Task.CompletedTask;
+            foreach (var roleClaim in roleClaims)
+            {
+                identity.AddClaim(new Claim("role", roleClaim.Value));
+            }
+
+            return Task.CompletedTask;
+        };
+
     })
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -69,6 +88,7 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.AddAppSettingsServices();
+builder.Services.AddScoped<UserInfoService>();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
 {

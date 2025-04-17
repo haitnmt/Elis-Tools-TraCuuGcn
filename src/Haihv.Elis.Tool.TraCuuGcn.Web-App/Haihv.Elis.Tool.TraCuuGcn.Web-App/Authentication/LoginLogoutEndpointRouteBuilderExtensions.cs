@@ -1,3 +1,5 @@
+using Haihv.Elis.Tool.TraCuuGcn.WebLib.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +21,9 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         // without being able to choose another account.
         group.MapPost("/logout", ([FromForm] string? returnUrl) => TypedResults.SignOut(GetAuthProperties(null),
             [CookieAuthenticationDefaults.AuthenticationScheme, "keycloak"]));
+        
+        group.MapGet("/userInfos", GetUserInfo)
+            .RequireAuthorization();
 
         return group;
     }
@@ -43,5 +48,13 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         }
 
         return new AuthenticationProperties { RedirectUri = returnUrl };
+    }
+    
+    private static UserInfo GetUserInfo(IHttpContextAccessor httpContextAccessor)
+    {
+        var httpContext = httpContextAccessor.HttpContext
+                          ?? throw new InvalidOperationException("HttpContext không khả dụng");
+        var user = httpContext.User;
+        return user.GetUserInfo();
     }
 }

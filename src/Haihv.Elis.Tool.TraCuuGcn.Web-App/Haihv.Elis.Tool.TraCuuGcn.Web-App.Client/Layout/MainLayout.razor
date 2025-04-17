@@ -53,6 +53,14 @@
             <MudText Typo="Typo.caption">
                 © @(DateTime.Today.Year) vpdkbacninh.vn | haihv.vn
             </MudText>
+            <AuthorizeView Roles="realm_access.roles.LDCacPhong">
+                <Authorized>
+                    <a>admin_welis</a>
+                </Authorized>
+                <NotAuthorized>
+                    <a>Không có quyền</a>
+                </NotAuthorized>
+            </AuthorizeView>
             <MudSpacer/>
             <MudStack Row="true" AlignItems="AlignItems.Center">
                 <MudHidden Breakpoint="Breakpoint.SmAndDown">

@@ -7,7 +7,7 @@ using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
 using ILogger = Serilog.ILogger;
 
-namespace Haihv.Elis.Tool.TraCuuGcn.Api.Features;
+namespace Haihv.Elis.Tool.TraCuuGcn.Api.Features.Search;
 
 public static class GetSearch
 {
@@ -60,7 +60,7 @@ public static class GetSearch
                 });
         }
     }
-    public class Endpoint : ICarterModule
+    public class SearchEndpoint : ICarterModule
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
