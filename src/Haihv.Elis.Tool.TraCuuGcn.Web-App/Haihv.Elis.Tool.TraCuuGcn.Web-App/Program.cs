@@ -88,7 +88,6 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.AddAppSettingsServices();
-builder.Services.AddScoped<UserInfoService>();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
 {
@@ -100,9 +99,9 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var clientBaseAddress))
     throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
 
-builder.Services.AddHttpClient<IDataServices, ServerDataServices>(httpClient =>
+builder.Services.AddHttpClient<IDataServices, ServerDataServices>(client =>
 {
-    httpClient.BaseAddress = clientBaseAddress;
+    client.BaseAddress = clientBaseAddress;
 });
 
 var app = builder.Build();

@@ -35,10 +35,5 @@ builder.Services.AddHttpClient<IDataServices, ClientDataServices>(httpClient =>
 {
     httpClient.BaseAddress = new Uri(baseUrl);
 });
-builder.Services.AddHttpClient<UserInfoService>(client =>
-{
-    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
-});
-
 
 await builder.Build().RunAsync();

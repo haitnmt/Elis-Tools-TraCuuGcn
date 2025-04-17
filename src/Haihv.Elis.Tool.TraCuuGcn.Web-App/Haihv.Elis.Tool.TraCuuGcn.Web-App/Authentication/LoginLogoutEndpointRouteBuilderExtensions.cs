@@ -1,4 +1,4 @@
-using Haihv.Elis.Tool.TraCuuGcn.WebLib.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Models;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -22,7 +22,7 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         group.MapPost("/logout", ([FromForm] string? returnUrl) => TypedResults.SignOut(GetAuthProperties(null),
             [CookieAuthenticationDefaults.AuthenticationScheme, "keycloak"]));
         
-        group.MapGet("/userInfos", GetUserInfo)
+        group.MapGet("/user/info", GetUserInfo)
             .RequireAuthorization();
 
         return group;
@@ -50,11 +50,8 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         return new AuthenticationProperties { RedirectUri = returnUrl };
     }
     
-    private static UserInfo GetUserInfo(IHttpContextAccessor httpContextAccessor)
+    private static async Task<UserInfo?> GetUserInfo(IDataServices dataServices)
     {
-        var httpContext = httpContextAccessor.HttpContext
-                          ?? throw new InvalidOperationException("HttpContext không khả dụng");
-        var user = httpContext.User;
-        return user.GetUserInfo();
+        return await dataServices.GetUserInfoAsync();
     }
 }
