@@ -30,16 +30,8 @@ public interface IChuSuDungService
     /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    Task<List<ChuSuDungInfo>> GetAsync(string? serial = null, CancellationToken cancellationToken = default);
+    Task<List<ChuSuDungElis>> GetInDatabaseAsync(string? serial = null, CancellationToken cancellationToken = default);
     
-    /// <summary>
-    /// Lưu thông tin chủ sử dụng vào cache.
-    /// </summary>
-    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
-    /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
-    Task SetCacheAuthChuSuDungAsync(string? serial, CancellationToken cancellationToken = default);
-
     /// <summary>
     /// Lấy Danh sách mã chủ sử dụng.
     /// </summary>

@@ -270,6 +270,7 @@ else
 
 @inject IDialogService DialogService
 @inject ISnackbar SnackbarService
+@inject IGiayChungNhanServices GiayChungNhanServices
 @code {
 
     private HttpClient? _httpClient;
@@ -286,7 +287,7 @@ else
     [Parameter] public EventCallback<bool> RefreshDataChanged { get; set; }
 
     // Constants
-    private const string Url = "/elis/search";
+    private const string Url = "/api/search";
     private const string UrlThuaDat = "/elis/thua-dat-public";
     private const string UrlClearCache = "/elis/delete-cache";
     private const string UrlGetPermissionsCanUpdate = "elis/permissions/can-update";
@@ -373,27 +374,16 @@ else
         StateHasChanged();
         await DonViChanged.InvokeAsync(string.Empty);
         _giayChungNhanInfo = null;
-
-        // Tạo URL và gọi API
-        var url = $"{Url}?query={_query}";
         try
         {
-            // Khởi tạo client HTTP 
-            //TODO: khởi tạo HttpClient ở đây
-            if (_httpClient is null) return;
-            
             // Lấy thông tin GCN
-            var response = await _httpClient.GetFromJsonAsync<Response<GiayChungNhanInfo>>(url);
+            _giayChungNhanInfo = await GiayChungNhanServices.GetGiayChungNhanInfoAsync(_query);
 
             // Kiểm tra kết quả
-            if (response?.Value == null)
+            if (_giayChungNhanInfo is null)
             {
-                _error = response?.ErrorMsg ?? "Không có thông tin Giấy chứng nhận";
-                return;
+                _error = "Không có thông tin Giấy chứng nhận";
             }
-
-            // Lưu kết quả
-            _giayChungNhanInfo = response.Value;
         }
         catch (Exception e)
         {

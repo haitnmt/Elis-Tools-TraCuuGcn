@@ -26,26 +26,27 @@ public static class GetSearch
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var ipAddress = httpContext.GetIpAddress();
+            var email = httpContext.User.GetEmail();
             var url = httpContext.Request.GetDisplayUrl();
             var query = request.Search;
             var result = await searchService.GetResultAsync(query, cancellationToken);
             return result.Match<GiayChungNhanInfo>(
                 info =>
                 {
-                    logger.Information("Tìm kiếm thông tin thành công: {Url}{ClientIp}",
+                    logger.Information("Tìm kiếm thông tin thành công: {Url}{ClientIp}{Email}",
                         url,
-                        ipAddress);
-                    // Lưu thông tin chủ sử dụng để lưu vào cache
+                        ipAddress, 
+                        email); // Lưu thông tin chủ sử dụng để lưu vào cache
                     var serial = info.Serial?.ChuanHoa();
                     if (string.IsNullOrWhiteSpace(serial))
                     {
-                        logger.Warning("Không tìm thấy thông tin GCN: {Url}{ClientIp}",
+                        logger.Warning("Không tìm thấy thông tin GCN: {Url}{ClientIp}{Email}",
                             url,
-                            ipAddress);
+                            ipAddress, 
+                            email);
                         throw new SearchNotFoundException(query);
                     }
-                    _ = chuSuDungService.SetCacheAuthChuSuDungAsync(serial, cancellationToken);
-                    _ = chuSuDungService.GetAsync(serial, cancellationToken);
+                    _ = chuSuDungService.GetInDatabaseAsync(serial, cancellationToken);
                     _ = taiSanService.SetCacheAsync(serial, thuaDatService, chuSuDungService);
                     // Lưu thông tin toạ độ thửa đất để lưu vào cache
                     _ = geoService.GetAsync(serial, cancellationToken);
@@ -53,9 +54,10 @@ public static class GetSearch
                 },
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi tìm kiếm thông tin: {Url}{ClientIp}",
+                    logger.Error(ex, "Lỗi khi tìm kiếm thông tin: {Url}{ClientIp}{Email}",
                         url,
-                        ipAddress);
+                        ipAddress, 
+                        email);
                     throw new SearchFailedException(ex.Message);
                 });
         }

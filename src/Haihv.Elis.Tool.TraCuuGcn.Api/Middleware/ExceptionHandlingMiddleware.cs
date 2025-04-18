@@ -53,15 +53,16 @@ public class ExceptionHandlingMiddleware
                 statusCode = traCuuGcnException.StatusCode;
                 errorCode = traCuuGcnException.ErrorCode;
                 message = traCuuGcnException.Message;
-                
-                // Log với mức độ phù hợp dựa trên status code
-                if ((int)statusCode >= 500)
+
+                switch ((int)statusCode)
                 {
-                    _logger.Error(exception, "Lỗi server: {ErrorCode} - {Message}", errorCode, message);
-                }
-                else if ((int)statusCode >= 400)
-                {
-                    _logger.Warning("Lỗi client: {ErrorCode} - {Message}", errorCode, message);
+                    // Log với mức độ phù hợp dựa trên status code
+                    case >= 500:
+                        _logger.Error(exception, "Lỗi server: {ErrorCode} - {Message}", errorCode, message);
+                        break;
+                    case >= 400:
+                        _logger.Warning("Lỗi client: {ErrorCode} - {Message}", errorCode, message);
+                        break;
                 }
                 break;
                 

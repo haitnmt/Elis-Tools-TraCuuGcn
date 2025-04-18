@@ -50,8 +50,8 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         return new AuthenticationProperties { RedirectUri = returnUrl };
     }
     
-    private static async Task<UserInfo?> GetUserInfo(IDataServices dataServices)
+    private static async Task<UserInfo?> GetUserInfo(IUserServices userServices)
     {
-        return await dataServices.GetUserInfoAsync();
+        return await userServices.GetUserInfoAsync();
     }
 }

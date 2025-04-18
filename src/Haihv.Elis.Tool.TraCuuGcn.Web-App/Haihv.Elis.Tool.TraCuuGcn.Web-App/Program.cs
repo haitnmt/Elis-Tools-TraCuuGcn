@@ -99,7 +99,7 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var clientBaseAddress))
     throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
 
-builder.Services.AddHttpClient<IDataServices, ServerDataServices>(client =>
+builder.Services.AddHttpClient<IUserServices, ServerUserServices>(client =>
 {
     client.BaseAddress = clientBaseAddress;
 });
@@ -131,7 +131,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
-app.MapForwarder("/api/*", apiEndpoint, transformBuilder =>
+app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
 {
     transformBuilder.AddRequestTransform(async transformContext =>
     {

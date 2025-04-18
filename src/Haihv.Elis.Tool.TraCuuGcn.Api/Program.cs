@@ -1,6 +1,5 @@
 using System.Text;
 using Carter;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using ServiceDefaults;
@@ -23,36 +22,6 @@ var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
 // Add Caching
 builder.Services.AddCache(redisConnectionString);
 
-// Add Jwt
-builder.Services.AddSingleton(
-    _ => new TokenProvider(builder.Configuration["Jwt:SecretKey"]!,
-        builder.Configuration["Jwt:Issuer"]!,
-        builder.Configuration["Jwt:Audience"]!,
-        builder.Configuration.GetValue<int>("Jwt:ExpireMinutes")));
-
-// // Add service Authentication and Authorization for Identity Server
-// builder.Services.AddAuthorizationBuilder();
-//
-// // Cấu hình Authentication với nhiều JwtScheme
-// var jwtTokenSettings = new JwtTokenSettings();
-// builder.Configuration.GetSection("JwtTokenSettings").Bind(jwtTokenSettings);
-// builder.Services.AddAuthentication(options =>
-//     {
-//         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-//         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-//     })
-//     .AddJwtBearer(options =>
-//     {
-//         options.RequireHttpsMetadata = false;
-//         options.TokenValidationParameters = new TokenValidationParameters
-//         {
-//             IssuerSigningKeys = jwtTokenSettings.SecretKeys.Select(key =>
-//                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))).ToList(),
-//             ValidIssuers = jwtTokenSettings.Issuers,
-//             ValidAudiences = jwtTokenSettings.Audiences,
-//             ClockSkew = TimeSpan.Zero,
-//         };
-//     });
 var openIdConnectConfig = builder.Configuration.GetSection("OpenIdConnect");
 var authority = openIdConnectConfig["Authority"];
 var audience = openIdConnectConfig["Audience"];
@@ -65,6 +34,7 @@ builder.Services.AddAuthentication()
         jwtOptions.RequireHttpsMetadata = true;
     });
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IPermissionService, PermissionService>();
 // Add ConnectionElisData
 builder.Services.AddSingleton<IConnectionElisData, ConnectionElisData>();
 
@@ -90,8 +60,6 @@ builder.Services.AddSingleton<IGeoService, GeoService>();
 // Add SearchService
 builder.Services.AddSingleton<ISearchService, SearchService>();
 
-// Add AuthenticationService
-builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 builder.Services.AddSingleton<ICheckIpService, CheckIpService>();
 
 // Add BackgroundService

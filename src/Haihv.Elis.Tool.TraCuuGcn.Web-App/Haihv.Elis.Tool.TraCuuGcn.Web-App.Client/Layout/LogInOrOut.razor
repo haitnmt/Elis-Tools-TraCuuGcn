@@ -2,33 +2,32 @@
 @using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 @implements IDisposable
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IUserServices UserServices
 
-<div class="nav-item px-3">
-    <AuthorizeView>
-        <Authorized>
-            <MudStack Row="true">
-                <MudText>
-                   @_userInfo?.DisplayName
-                </MudText>
-                <form action="authentication/logout" method="post">
-                    <AntiforgeryToken />
-                    <input type="hidden" name="ReturnUrl" value="@_currentUrl" />
-                    <MudTooltip Text="Đăng xuất">
-                        <MudIconButton Icon="@Icons.Material.Filled.Logout" Size="Size.Small" Color="Color.Inherit"
-                                       ButtonType="ButtonType.Submit" />
-                    </MudTooltip>
-                </form>
-            </MudStack>
-        </Authorized>
-        <NotAuthorized>
-            <MudButton Color="Color.Inherit" Href="/authentication/login">
-                <MudText>Đăng nhập</MudText>
-            </MudButton>
-        </NotAuthorized>
-    </AuthorizeView>
-</div>
+<AuthorizeView>
+    <Authorized>
+        <MudStack Row="true">
+            <MudText>
+               @_userInfo?.DisplayName
+            </MudText>
+            <form action="authentication/logout" method="post">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="@_currentUrl" />
+                <MudTooltip Text="Đăng xuất">
+                    <MudIconButton Icon="@Icons.Material.Filled.Logout" Size="Size.Small" Color="Color.Inherit"
+                                   ButtonType="ButtonType.Submit" />
+                </MudTooltip>
+            </form>
+        </MudStack>
+    </Authorized>
+    <NotAuthorized>
+        <MudButton Color="Color.Inherit" Href="/authentication/login">
+            <MudText>Đăng nhập</MudText>
+        </MudButton>
+    </NotAuthorized>
+</AuthorizeView>
 
-@inject IDataServices DataServices
 @code {
     private string? _currentUrl;
     private UserInfo? _userInfo;
@@ -42,8 +41,20 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (!firstRender) return;
-        _userInfo = await DataServices.GetUserInfoAsync();
-        StateHasChanged();
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                _userInfo = await UserServices.GetUserInfoAsync();
+                StateHasChanged();
+            }
+        }
+        catch (Exception)
+        {
+            _userInfo = null;
+        }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)

@@ -7,12 +7,13 @@ using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Features.ThuaDat;
 
-public static class GetThuaDatAsync
+public static class GetThuaDat
 {
-    public record Query(string Serial) : IRequest<IEnumerable<TraCuuGcn.Models.ThuaDat>>;
+    public record Query(string Serial, string? SoDinhDanh) : IRequest<IEnumerable<TraCuuGcn.Models.ThuaDat>>;
 
     public class Handler(
         ILogger logger,
+        IPermissionService permissionService,
         IHttpContextAccessor httpContextAccessor,
         IThuaDatService thuaDatService) : IRequestHandler<Query, IEnumerable<TraCuuGcn.Models.ThuaDat>>
     {
@@ -20,7 +21,10 @@ public static class GetThuaDatAsync
         {
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-            var ipAddress = httpContext.GetIpAddress();
+            var user = httpContext.User;
+            var email = user.GetEmail();
+            if (!await permissionService.HasReadPermission(user, request.Serial, request.SoDinhDanh, cancellationToken))
+                throw new UnauthorizedAccessException();
             var url = httpContext.Request.GetDisplayUrl();
             var serial = request.Serial;
             // Lấy thông tin Thửa Đất
@@ -29,17 +33,17 @@ public static class GetThuaDatAsync
             return result.Match(
                 thuaDats =>
                 {
-                    logger.Information("Lấy thông tin Thửa Đất thành công: {Url}{ClientIp}{Serial}",
+                    logger.Information("Lấy thông tin Thửa Đất thành công: {Url}{Email}{Serial}",
                         url,
-                        ipAddress,
+                        email,
                         serial);
                     return thuaDats;
                 },
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {Url}{ClientIp}{Serial}",
+                    logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {Url}{Email}{Serial}",
                         url,
-                        ipAddress,
+                        email,
                         serial);
                     throw ex;
                 });
@@ -50,10 +54,10 @@ public static class GetThuaDatAsync
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/thua-dat/", async (ISender sender, string serial) =>
+            app.MapGet("/thua-dat/", async (ISender sender, string serial, string? soDinhDanh = null) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
-                    var response = await sender.Send(new Query(serial));
+                    var response = await sender.Send(new Query(serial, soDinhDanh));
                     return Results.Ok(response);
                 })
                 .RequireAuthorization()

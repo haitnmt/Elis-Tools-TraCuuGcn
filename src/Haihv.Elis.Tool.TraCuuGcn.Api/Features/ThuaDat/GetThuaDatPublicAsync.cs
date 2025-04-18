@@ -21,7 +21,7 @@ public static class GetThuaDatPublicAsync
         {
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-            var ipAddress = httpContext.GetIpAddress();
+            var email = httpContext.User.GetEmail();
             var url = httpContext.Request.GetDisplayUrl();
             var serial = request.Serial;
             // Lấy thông tin Thửa Đất
@@ -30,18 +30,18 @@ public static class GetThuaDatPublicAsync
             return result.Match(
                 thuaDats =>
                 {
-                    logger.Information("Lấy thông tin Thửa Đất công khai thành công: {Url}{ClientIp}{Serial}",
+                    logger.Information("Lấy thông tin Thửa Đất công khai thành công: {Url}{Email}{Serial}",
                         url,
-                        ipAddress,
+                        email,
                         serial);
                     var thuaDatPublic = thuaDats.Select(x => x.ConvertToThuaDatPublic());
                     return thuaDatPublic;
                 },
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất công khai: {Url}{ClientIp}{Serial}",
+                    logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất công khai: {Url}{Email}{Serial}",
                         url,
-                        ipAddress,
+                        email,
                         serial);
                     throw ex;
                 });
