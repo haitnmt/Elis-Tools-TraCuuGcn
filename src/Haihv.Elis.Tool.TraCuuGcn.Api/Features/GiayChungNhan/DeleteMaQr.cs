@@ -50,7 +50,7 @@ public static class DeleteMaQr
                         // Ghi log vào ELIS Data
                         logElisDataServices.WriteLogToElisDataAsync(serial, email, url,
                             $"Xóa mã QR của Giấy chứng nhận có phát hành (Serial): {serial}",
-                            LogElisDataServices.LoaiTacVu.Xoa);
+                            LogElisDataServices.LoaiTacVu.Xoa, cancellationToken);
                         // Xóa cache liên quan
                         _ = hybridCache.RemoveByTagAsync(serial, cancellationToken).AsTask();
                         return true;

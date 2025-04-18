@@ -3,6 +3,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using LanguageExt.Common;
 using Microsoft.Extensions.Caching.Hybrid;
 using System.Collections.Concurrent;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
@@ -53,7 +54,7 @@ public class GeoService : IGeoService
         _apiSdeUrl = connectionElisData.ApiSdeUrl();
 
         if (!string.IsNullOrWhiteSpace(_apiSdeUrl)) return;
-        var ex = new NullReferenceException("Không tìm thấy đường dẫn API SDE");
+        var ex = new SdeNotConfigException();
         _logger.Error(ex, "Không tìm thấy đường dẫn API SDE trong cấu hình");
         throw ex;
     }
@@ -65,7 +66,7 @@ public class GeoService : IGeoService
             var coordinates = await GetAsync(serial, cancellationToken);
             if (coordinates.Count > 0) return coordinates;
             _logger.Error("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu: {Serial}", serial);
-            return new Result<List<Coordinates>>(new Exception("Không tìm thấy toạ độ thửa trong cơ sở dữ liệu."));
+            return new Result<List<Coordinates>>(new ToaDoNotFoundException(serial));
 
         }
         catch (Exception e)
@@ -139,7 +140,9 @@ public class GeoService : IGeoService
                     {
                         _logger.Warning("API SDE trả về mã lỗi {StatusCode} cho {Serial} {Database}",
                             (int)response.StatusCode, serial, database);
-                        return;
+                        throw new SdeGetException(response.ReasonPhrase ?? 
+                                                  "Lỗi trong quá trình lấy dữ liệu từ API SDE", 
+                            response.StatusCode);
                     }
 
                     var json = await response.Content.ReadFromJsonAsync<BodyResponse>(cancellationToken: cancellationToken);
@@ -147,14 +150,11 @@ public class GeoService : IGeoService
                     {
                         _logger.Warning("API SDE trả về trạng thái không thành công cho {Serial} {Database}: {Status}",
                             serial, database, json?.Status);
-                        return;
+                        if (json is null)
+                            throw new ToaDoNotFoundException(serial);
+                        if (json.Status != "success")
+                            throw new SdeGetException(json.Status, response.StatusCode);
                     }
-
-                    if (!string.IsNullOrWhiteSpace(json.Message))
-                    {
-                        _logger.Debug("API SDE thông báo: {Message}", json.Message);
-                    }
-
                     result.Add(json.Data);
                 }
                 catch (Exception e)

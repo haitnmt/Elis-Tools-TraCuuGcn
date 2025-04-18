@@ -2,7 +2,6 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
-using Haihv.Elis.Tool.TraCuuGcn.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
 using ILogger = Serilog.ILogger;
@@ -53,10 +52,10 @@ public static class GetHasUpdatePermission
         /// <param name="app">Đối tượng cấu hình endpoint</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/giay-chung-nhan/has-update-permission", async (ISender sender, PhapLyGiayChungNhan phapLyGiayChungNhan) =>
+            app.MapPost("/giay-chung-nhan/has-update-permission", async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
-                    var response = await sender.Send(new PostUpdateGiayChungNhan.Command(phapLyGiayChungNhan));
+                    var response = await sender.Send(new Query(serial));
                     return response ? Results.Ok("Có quyền cập nhật thông tin giấy chứng nhận") : Results.Unauthorized();
                 })
                 .RequireAuthorization() // Yêu cầu xác thực

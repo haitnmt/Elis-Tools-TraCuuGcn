@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using MediatR;
@@ -19,14 +20,16 @@ public static class GetThuaDat
     {
         public async Task<IEnumerable<TraCuuGcn.Models.ThuaDat>> Handle(Query request, CancellationToken cancellationToken)
         {
+            var serial = request.Serial.ChuanHoa();
+            if (string.IsNullOrWhiteSpace(serial))
+                throw new NoSerialException();
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var user = httpContext.User;
-            var email = user.GetEmail();
-            if (!await permissionService.HasReadPermission(user, request.Serial, request.SoDinhDanh, cancellationToken))
+            if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
+            var email = user.GetEmail();
             var url = httpContext.Request.GetDisplayUrl();
-            var serial = request.Serial;
             // Lấy thông tin Thửa Đất
             var result = await thuaDatService.GetResultAsync(serial, cancellationToken);
             // Xử lý kết quả

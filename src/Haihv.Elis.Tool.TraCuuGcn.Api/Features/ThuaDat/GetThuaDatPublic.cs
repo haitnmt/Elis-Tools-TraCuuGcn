@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
@@ -8,7 +9,7 @@ using ILogger = Serilog.ILogger;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Features.ThuaDat;
 
-public static class GetThuaDatPublicAsync
+public static class GetThuaDatPublic
 {
     public record Query(string Serial) : IRequest<IEnumerable<ThuaDatPublic>>;
 
@@ -19,11 +20,13 @@ public static class GetThuaDatPublicAsync
     {
         public async Task<IEnumerable<ThuaDatPublic>> Handle(Query request, CancellationToken cancellationToken)
         {
+            var serial = request.Serial.ChuanHoa();
+            if (string.IsNullOrWhiteSpace(serial))
+                throw new NoSerialException();
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var email = httpContext.User.GetEmail();
             var url = httpContext.Request.GetDisplayUrl();
-            var serial = request.Serial;
             // Lấy thông tin Thửa Đất
             var result = await thuaDatService.GetResultAsync(serial, cancellationToken);
             // Xử lý kết quả

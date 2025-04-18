@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
@@ -89,7 +90,8 @@ public class TaiSanService(
             dsMaThuaDat.Count == 0 || 
             dsMaChuSuDung.Count == 0) return [];
         var connectionSqls = await connectionElisData.GetConnectionAsync(serial);
-        if (connectionSqls is null) return [];
+        if (connectionSqls is null)
+            throw new NoConnectionDataElisException(serial);
         try
         {
             var sqlConnectionString = connectionSqls.ElisConnectionString;
@@ -171,7 +173,7 @@ public class TaiSanService(
         catch (Exception e)
         {
             logger.Error(e, "Lỗi truy vấn dữ liệu từ ELIS database {Database}",connectionSqls.Name);
-            throw;
+            throw new DataElisException(e);
         }
     }
     
