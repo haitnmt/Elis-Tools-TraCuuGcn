@@ -126,7 +126,7 @@ public static class DeleteMaQr
         /// <param name="app">Builder để đăng ký endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapDelete("/giay-chung-nhan/ma-qr", async (ISender sender, string serial) =>
+            app.MapDelete("/giay-chung-nhan/delete-ma-qr", async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(serial));

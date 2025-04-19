@@ -99,10 +99,10 @@ if (!Uri.TryCreate(apiEndpoint, UriKind.Absolute, out var clientBaseAddress))
     throw new InvalidOperationException($"Invalid API Base URL: {apiEndpoint}");
 }
 
-builder.Services.AddHttpClient<IUserServices, ServerUserServices>(client =>
-{
-    client.BaseAddress = clientBaseAddress;
-});
+builder.Services.AddHttpClient<IUserServices, ServerUserServices>(
+    client => client.BaseAddress = clientBaseAddress);
+builder.Services.AddHttpClient<IGiayChungNhanServices, ServerGiayChungNhanServices>(
+    client => client.BaseAddress = clientBaseAddress);
 
 var app = builder.Build();
 

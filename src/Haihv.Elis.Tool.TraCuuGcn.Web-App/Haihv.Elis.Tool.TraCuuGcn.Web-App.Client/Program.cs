@@ -31,13 +31,9 @@ var appSettings = await AppSettingsService.GetAppSettings(baseUrl);
 // Đăng ký dịch vụ cấu hình ứng dụng
 builder.AddAppSettingsServices(appSettings);
 
-builder.Services.AddHttpClient<IUserServices, ClientUserServices>(httpClient =>
-{
-    httpClient.BaseAddress = new Uri(baseUrl);
-});
-builder.Services.AddHttpClient<IGiayChungNhanServices, ClientGiayChungNhanServices>(httpClient =>
-{
-    httpClient.BaseAddress = new Uri(baseUrl);
-});
+builder.Services.AddHttpClient<IUserServices, ClientUserServices>(
+    httpClient => httpClient.BaseAddress = new Uri(baseUrl));
+builder.Services.AddHttpClient<IGiayChungNhanServices, ClientGiayChungNhanServices>(
+    httpClient => httpClient.BaseAddress = new Uri(baseUrl));
 
 await builder.Build().RunAsync();

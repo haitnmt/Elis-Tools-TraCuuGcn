@@ -18,6 +18,10 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     /// </summary>
     private const string UriSearch = "/api/search";
     
+    private const string UriUpdate = "/api/giay-chung-nhan/update";
+    private const string UriHasUpdatePermission = "/api/giay-chung-nhan/has-update-permission";
+    private const string UriDeleteMaQr = "/api/giay-chung-nhan/delete-ma-qr";
+    
     /// <summary>
     /// Lấy thông tin Giấy chứng nhận theo chuỗi truy vấn từ API
     /// </summary>
@@ -27,5 +31,65 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     {
         var requestUri = $"{UriSearch}?query={query}";
         return await httpClient.GetFromJsonAsync<GiayChungNhanInfo>(requestUri);
+    }
+
+    /// <summary>
+    /// Cập nhật thông tin pháp lý của giấy chứng nhận thông qua API.
+    /// </summary>
+    /// <param name="phapLyGiayChungNhan">Thông tin pháp lý của giấy chứng nhận cần cập nhật</param>
+    /// <returns>Tuple (bool, string?) trong đó:
+    /// - bool: true nếu cập nhật thành công, false nếu thất bại
+    /// - string?: thông báo từ API hoặc null
+    /// </returns>
+    public async Task<(bool, string?)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan phapLyGiayChungNhan)
+    {
+        try
+        {
+            var response = await httpClient.PostAsJsonAsync(UriUpdate, phapLyGiayChungNhan);
+            var message = await response.Content.ReadAsStringAsync();
+            return (response.IsSuccessStatusCode, message);
+        }
+        catch (Exception)
+        {
+            return (false, "Có lỗi xảy ra khi cập nhật thông tin giấy chứng nhận");
+        }
+    }
+
+    /// <summary>
+    /// Kiểm tra quyền cập nhật Giấy chứng nhận dựa vào số serial
+    /// </summary>
+    /// <param name="serial">Số serial của Giấy chứng nhận cần kiểm tra</param>
+    /// <returns>Tuple (bool, string?) trong đó:
+    /// - bool: true nếu có quyền cập nhật, false nếu không có quyền
+    /// - string?: thông báo từ API hoặc null
+    /// </returns>
+    public async Task<(bool, string?)> GetHasUpdatePermissionAsync(string serial)
+    {
+        try
+        {
+            var requestUri = $"{UriHasUpdatePermission}?serial={serial}";
+            var response = await httpClient.GetAsync(requestUri);
+            var message = await response.Content.ReadAsStringAsync();
+            return (response.IsSuccessStatusCode, message);
+        }
+        catch (Exception)
+        {
+            return (false, "Lỗi khi kiểm tra quyền cập nhật");
+        }
+    }
+
+    /// <summary>
+    /// Xóa mã QR liên quan đến giấy chứng nhận theo số serial từ API.
+    /// </summary>
+    /// <param name="serial">Số serial của mã QR cần xóa.</param>
+    /// <returns>Tuple (bool, string?) trong đó:
+    /// - bool: true nếu xóa thành công, false nếu thất bại
+    /// - string?: thông báo từ API hoặc null
+    /// </returns>
+    public async Task<(bool, string?)> DeleteMaQrAsync(string serial)
+    {
+        var response = await httpClient.DeleteAsync($"{UriDeleteMaQr}?serial={serial}");
+        var message = await response.Content.ReadAsStringAsync();
+        return (response.IsSuccessStatusCode, message);
     }
 }

@@ -25,19 +25,9 @@ internal abstract class ServerServices(HttpClient httpClient, IHttpContextAccess
     /// </exception>
     protected async Task<T?> GetDataAsync<T>(string uri)
     {
-        // Lấy HttpContext từ accessor, ném ngoại lệ nếu không có
-        var httpContext = httpContextAccessor.HttpContext ??
-                          throw new InvalidOperationException("No HttpContext available from the IHttpContextAccessor!");
 
-        // Lấy access token từ context để xác thực, ném ngoại lệ nếu không tìm thấy
-        var accessToken = await httpContext.GetTokenAsync("access_token") ??
-                          throw new InvalidOperationException("No access_token was saved");
-
-        // Tạo yêu cầu HTTP GET với URI đã chỉ định
-        using var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-        
-        // Thêm header Authorization với Bearer token
-        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        // Khởi tạo HttpRequestMessage
+        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, uri);
         
         // Gửi yêu cầu và nhận phản hồi
         using var response = await httpClient.SendAsync(requestMessage);
@@ -47,5 +37,28 @@ internal abstract class ServerServices(HttpClient httpClient, IHttpContextAccess
 
         // Đọc và chuyển đổi nội dung phản hồi JSON thành đối tượng kiểu T
         return await response.Content.ReadFromJsonAsync<T>();
+    }
+
+    /// <summary>
+    /// Tạo một đối tượng HttpRequestMessage với phương thức và đường dẫn chỉ định,
+    /// đồng thời gắn thêm tiêu đề Authorization với Bearer token từ ngữ cảnh hiện tại.
+    /// </summary>
+    /// <param name="method">Phương thức HTTP cần sử dụng (GET, POST, PUT, DELETE, v.v.).</param>
+    /// <param name="uri">Đường dẫn API cần gọi.</param>
+    /// <returns>Một đối tượng HttpRequestMessage đã được cấu hình với phương thức,
+    /// đường dẫn và tiêu đề Authorization.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Ném ra khi không có HttpContext hoặc không tìm thấy access_token trong ngữ cảnh hiện tại.
+    /// </exception>
+    protected async Task<HttpRequestMessage> CreateHttpRequestMessage(HttpMethod method, string uri)
+    {
+        var httpContext = httpContextAccessor.HttpContext ??
+                          throw new InvalidOperationException(
+                              "No HttpContext available from the IHttpContextAccessor!");
+        var accessToken = await httpContext.GetTokenAsync("access_token") ??
+                          throw new InvalidOperationException("No access_token was saved");
+        var requestMessage = new HttpRequestMessage(method, uri);
+        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        return requestMessage;
     }
 }
