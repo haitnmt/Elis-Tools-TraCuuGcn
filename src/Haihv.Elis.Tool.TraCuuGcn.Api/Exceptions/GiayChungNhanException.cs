@@ -13,7 +13,7 @@ public class GiayChungNhanNotFoundException : TraCuuGcnException
     /// <param name="serial">Số phát hành Giấy chứng nhận.</param>
     /// <param name="innerException">Exception gốc (nếu có).</param>
     public GiayChungNhanNotFoundException(string serial, Exception? innerException = null)
-        : base($"Không tìm thấy GCN với số phát hành: {serial}.", HttpStatusCode.NotFound, "GCN_NOT_FOUND", innerException)
+        : base($"Không tìm thấy Giấy chứng nhận với số phát hành: {serial}.", HttpStatusCode.NotFound, "GCN_NOT_FOUND", innerException)
     {
     }
 
@@ -23,7 +23,7 @@ public class GiayChungNhanNotFoundException : TraCuuGcnException
     /// <param name="maVach">Mã vạch của Giấy chứng nhận.</param>
     /// <param name="innerException">Exception gốc (nếu có).</param>
     public GiayChungNhanNotFoundException(long maVach,Exception? innerException = null)
-        : base($"Không tìm thấy GCN với mã vạch: {maVach}.", HttpStatusCode.NotFound, "GCN_NOT_FOUND", innerException)
+        : base($"Không tìm thấy Giấy chứng nhận với mã vạch: {maVach}.", HttpStatusCode.NotFound, "GCN_NOT_FOUND", innerException)
     {
     }
 }

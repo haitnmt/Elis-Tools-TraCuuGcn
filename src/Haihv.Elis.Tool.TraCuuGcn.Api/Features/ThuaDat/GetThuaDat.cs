@@ -40,6 +40,7 @@ public static class GetThuaDat
                         url,
                         email,
                         serial);
+                    if (thuaDats.Count == 0) throw new ThuaDatNotFoundException(serial);
                     return thuaDats;
                 },
                 ex =>

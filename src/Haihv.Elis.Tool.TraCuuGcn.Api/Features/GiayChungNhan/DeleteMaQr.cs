@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
+﻿using Carter;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using MediatR;
@@ -53,13 +54,14 @@ public static class DeleteMaQr
                             LogElisDataServices.LoaiTacVu.Xoa, cancellationToken);
                         // Xóa cache liên quan
                         _ = hybridCache.RemoveByTagAsync(serial, cancellationToken).AsTask();
-                        return true;
                     }
-
-                    logger.Warning("Xóa mã QR không thành công: {Url}{MaDinhDanh}",
+                    else
+                    {                    
+                        logger.Warning("Xóa mã QR không thành công: {Url}{MaDinhDanh}",
                         url,
                         email);
-                    return false;
+                    }
+                    return succ;
                 },
                 ex =>
                 {
@@ -68,6 +70,20 @@ public static class DeleteMaQr
                         email);
                     return false;
                 });
+        }
+    }
+    public class GiayChungNhanEndpoint : ICarterModule
+    {
+        public void AddRoutes(IEndpointRouteBuilder app)
+        {
+            app.MapDelete("/giay-chung-nhan/ma-qr", async (ISender sender, string serial) =>
+                {
+                    // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
+                    var response = await sender.Send(new Query(serial));
+                    return response ? Results.Ok("Xóa mã QR thành công!") : Results.BadRequest("Lỗi khi xóa mã QR");
+                })
+                .RequireAuthorization()
+                .WithTags("Cache");
         }
     }
 }

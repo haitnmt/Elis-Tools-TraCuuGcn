@@ -125,7 +125,7 @@ public static class PostUpdateGiayChungNhan
         /// <param name="app">Đối tượng cấu hình endpoint</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/giay-chung-nhan/update", async (ISender sender, PhapLyGiayChungNhan phapLyGiayChungNhan) =>
+            app.MapPost("/giay-chung-nhan", async (ISender sender, PhapLyGiayChungNhan phapLyGiayChungNhan) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Command(phapLyGiayChungNhan));

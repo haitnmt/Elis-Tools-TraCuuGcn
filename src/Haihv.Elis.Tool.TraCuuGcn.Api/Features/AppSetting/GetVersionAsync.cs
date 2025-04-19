@@ -17,7 +17,7 @@ public static class GetVersionAsync
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/api/version", async (ISender sender) =>
+            app.MapGet("/version", async (ISender sender) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query());

@@ -13,7 +13,7 @@ public static class DeleteCache
     public record Query(string Serial) : IRequest<bool>;
     public class Handler(ILogger logger,
         HybridCache hybridCache,
-        HttpContextAccessor httpContextAccessor,
+        IHttpContextAccessor httpContextAccessor,
         IPermissionService permissionService) : IRequestHandler<Query, bool>
     {
         public async Task<bool> Handle(Query request, CancellationToken cancellationToken)

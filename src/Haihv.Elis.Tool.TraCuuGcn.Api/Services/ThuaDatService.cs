@@ -53,10 +53,6 @@ public class ThuaDatService(
                 async cancel => await GetThuaDatInDatabaseAsync(serial, cancel),
                 tags: [serial],
                 cancellationToken: cancellationToken);
-            if (thuaDats.Count == 0)
-            {
-                throw new ThuaDatNotFoundException(serial);
-            }
             return thuaDats;
         }
         catch (Exception exception)
