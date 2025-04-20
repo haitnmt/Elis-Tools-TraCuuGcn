@@ -41,7 +41,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     /// - bool: true nếu cập nhật thành công, false nếu thất bại
     /// - string?: thông báo từ API hoặc null
     /// </returns>
-    public async Task<(bool, string?)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan phapLyGiayChungNhan)
+    public async Task<(bool success, string? message)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan phapLyGiayChungNhan)
     {
         try
         {
@@ -63,7 +63,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     /// - bool: true nếu có quyền cập nhật, false nếu không có quyền
     /// - string?: thông báo từ API hoặc null
     /// </returns>
-    public async Task<(bool, string?)> GetHasUpdatePermissionAsync(string serial)
+    public async Task<(bool success, string? message)> GetHasUpdatePermissionAsync(string serial)
     {
         try
         {
@@ -86,7 +86,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     /// - bool: true nếu xóa thành công, false nếu thất bại
     /// - string?: thông báo từ API hoặc null
     /// </returns>
-    public async Task<(bool, string?)> DeleteMaQrAsync(string serial)
+    public async Task<(bool success, string? message)> DeleteMaQrAsync(string serial)
     {
         var response = await httpClient.DeleteAsync($"{UriDeleteMaQr}?serial={serial}");
         var message = await response.Content.ReadAsStringAsync();

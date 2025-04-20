@@ -30,7 +30,7 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <param name="maGcn">Mã giấy chứng nhận cần xóa mã QR.</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool, string?)> DeleteMaQrAsync(string maGcn)
+    public async Task<(bool success, string? message)> DeleteMaQrAsync(string maGcn)
     {
         var uri = $"{UriDeleteMaQr}?serial={maGcn}";
         // Khởi tạo HttpRequestMessage
@@ -48,7 +48,7 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <param name="maGcn">Mã giấy chứng nhận cần kiểm tra quyền cập nhật.</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool, string?)> GetHasUpdatePermissionAsync(string maGcn)
+    public async Task<(bool success, string? message)> GetHasUpdatePermissionAsync(string maGcn)
     {
         var uri = $"{UriCheckPermission}?serial={maGcn}";
         // Khởi tạo HttpRequestMessage
@@ -66,7 +66,7 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <param name="giayChungNhan">Thông tin giấy chứng nhận cần cập nhật.</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool, string?)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan giayChungNhan)
+    public async Task<(bool success, string? message)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan giayChungNhan)
     {
         // Khởi tạo HttpRequestMessage
         using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Post, UriUpdateGcn);

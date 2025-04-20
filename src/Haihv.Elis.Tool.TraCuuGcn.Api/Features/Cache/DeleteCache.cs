@@ -87,7 +87,7 @@ public static class DeleteCache
         /// <param name="app">Builder để đăng ký endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapDelete("/cache", async (ISender sender, string serial) =>
+            app.MapDelete("/cache/delete", async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(serial));

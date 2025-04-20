@@ -48,29 +48,7 @@
                 Target="_blank"/>
         </MudAppBar>
         <MudMainContent>
-            <AuthorizeView>
-                <Authorized>
-                    @Body
-                </Authorized>
-                <NotAuthorized>
-                    <MudStack Class="mt-2 mx-2 mb-16" 
-                              Style="height: calc((1 / 3)*(100vh - 50px))"
-                              Justify="Justify.FlexEnd">
-                        <MudGrid Justify="Justify.Center">
-                            <MudItem xs="12" sm="8" md="6" lg="4" xl="3" xxl="2">
-                                <MudAlert Variant="Variant.Outlined" Severity="Severity.Warning">
-                                    <MudText>
-                                        Vui lòng đăng nhập trước khi sử dụng!
-                                    </MudText>
-                                    <MudButton Color="Color.Warning" Href="/authentication/login">
-                                        Đăng nhập
-                                    </MudButton>
-                                </MudAlert>
-                            </MudItem>
-                        </MudGrid>
-                    </MudStack>
-                </NotAuthorized>
-            </AuthorizeView>
+            @Body
         </MudMainContent>
         <MudAppBar Bottom="true" Dense="true" Color="Color.Dark">
             <MudText Typo="Typo.caption">

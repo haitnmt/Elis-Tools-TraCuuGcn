@@ -1,5 +1,6 @@
 using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using ILogger = Serilog.ILogger;
 using MediatR;
@@ -23,7 +24,8 @@ public static class GetUserInfo
     /// <param name="httpContextAccessor">Đối tượng truy cập HttpContext.</param>
     public class Handler(
         ILogger logger,
-        IHttpContextAccessor httpContextAccessor) : IRequestHandler<Query, UserInfo>
+        IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService) : IRequestHandler<Query, UserInfo>
     {
         /// <summary>
         /// Xử lý yêu cầu lấy thông tin người dùng từ thông tin xác thực.
@@ -43,6 +45,8 @@ public static class GetUserInfo
             
             // Chuyển đổi thông tin từ Claims thành đối tượng UserInfo
             var userInfo = user.GetUserInfo();
+            
+            userInfo.IsLocalAccount = permissionService.IsLocalUser(user);
             
             // Ghi log thành công
             logger.Information("Lấy thông tin người sử dụng thành công {email}", userInfo.Email);

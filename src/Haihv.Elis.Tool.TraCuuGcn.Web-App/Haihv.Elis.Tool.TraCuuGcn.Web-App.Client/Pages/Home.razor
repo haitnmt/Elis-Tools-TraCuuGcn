@@ -44,13 +44,8 @@
                                         <MudText Typo="Typo.body1">
                                             Bạn cần xác thực thông tin để xem thông tin chi tiết
                                         </MudText>
-                                        <MudButton Variant="Variant.Text"
-                                                   Color="Color.Info"
-                                                   FullWidth="false"
-                                                   Size="Size.Small"
-                                                   StartIcon="@Icons.Material.Filled.Verified"
-                                                   OnClick="OpenAuthDialog">
-                                            Xác thực
+                                        <MudButton Color="Color.Inherit" Href="/authentication/login">
+                                            <MudText>Đăng nhập</MudText>
                                         </MudButton>
                                     </MudStack>
                                 </MudAlert>
@@ -106,7 +101,6 @@
 </MudStack>
 
 @implements IDisposable
-@inject IDialogService DialogService
 @inject AppSettingsService AppSettingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @code {
@@ -117,7 +111,6 @@
     private bool _hasGiayChungNhan;
     private string? _donVi;
     private bool _isAuthenticated;
-    private bool _isLdapUser;
     private int _countTaiSan;
 
     protected override void OnInitialized()
@@ -154,16 +147,7 @@
             }
         });
     }
-
-    private async Task OpenAuthDialog()
-    {
-        var options = new DialogOptions
-        {
-            CloseOnEscapeKey = true
-        };
-        await DialogService.ShowAsync<XacThucNguoiDung>(null, options);
-    }
-
+    
     private void SearchBarResultChanged(string? searchQuery)
     {
         if (string.Equals(_searchQuery, searchQuery, StringComparison.Ordinal)) return;
