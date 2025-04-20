@@ -131,6 +131,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
+app.MapForwarder("/api/search{**catch-all}", apiEndpoint);
+
 app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
 {
     transformBuilder.AddRequestTransform(async transformContext =>

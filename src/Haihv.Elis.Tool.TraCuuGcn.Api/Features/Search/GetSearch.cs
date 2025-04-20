@@ -114,7 +114,6 @@ public static class GetSearch
                     var response = await sender.Send(new Query(query));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization() // Yêu cầu xác thực người dùng
                 .WithTags("Search"); // Gắn tag để nhóm API trong Swagger
         }
     }
