@@ -13,7 +13,7 @@ internal class ServerChuSuDungService(HttpClient httpClient, IHttpContextAccesso
         try
         {
             // Khởi tạo HttpRequestMessage
-            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, ChuSuDungUri.GetChuSuDungWithQuery(serial, soDinhDanh));
+            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, ChuSuDungUri.GetChuSuDungWithQuery(serial, soDinhDanh));
             // Gửi yêu cầu và nhận phản hồi
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?

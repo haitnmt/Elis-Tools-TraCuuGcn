@@ -14,7 +14,7 @@ internal class ServerTaiSanService(HttpClient httpClient, IHttpContextAccessor h
         try
         {
             // Khởi tạo HttpRequestMessage
-            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, TaiSanUri.GetTaiSanWithQuery(serial, soDinhDanh));
+            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, TaiSanUri.GetTaiSanWithQuery(serial, soDinhDanh));
             // Gửi yêu cầu và nhận phản hồi
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?

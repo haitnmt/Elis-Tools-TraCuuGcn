@@ -13,7 +13,7 @@ internal class ServerThuaDatService(HttpClient httpClient, IHttpContextAccessor 
         try
         {
             // Khởi tạo HttpRequestMessage
-            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, ThuaDatUri.GetThuaDatPublicWithQuery(serial));
+            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, ThuaDatUri.GetThuaDatPublicWithQuery(serial));
             // Gửi yêu cầu và nhận phản hồi
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
@@ -32,7 +32,7 @@ internal class ServerThuaDatService(HttpClient httpClient, IHttpContextAccessor 
         try
         {
             // Khởi tạo HttpRequestMessage
-            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, ThuaDatUri.GetThuaDatWithQuery(serial, soDinhDanh));
+            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, ThuaDatUri.GetThuaDatWithQuery(serial, soDinhDanh));
             // Gửi yêu cầu và nhận phản hồi
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
@@ -51,7 +51,7 @@ internal class ServerThuaDatService(HttpClient httpClient, IHttpContextAccessor 
         try
         {
             // Khởi tạo HttpRequestMessage
-            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, ThuaDatUri.GetToaDoWithQuery(serial, soDinhDanh));
+            using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, ThuaDatUri.GetToaDoWithQuery(serial, soDinhDanh));
             // Gửi yêu cầu và nhận phản hồi
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
