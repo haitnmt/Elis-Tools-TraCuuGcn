@@ -396,6 +396,7 @@ else
         }
         // Reset dữ liệu
         _thuaDatPublic = [];
+        _thuaDatLoaded = false;
         _errorLoadThuaDat = null;
         _thuaDatLoaded = false;
         StateHasChanged();
@@ -404,10 +405,12 @@ else
             (_thuaDatPublic, var message) = await ThuaDatServices.GetThuaDatPublicAsync(_giayChungNhanInfo.Serial);
             if (_thuaDatPublic.Count == 0 && !string.IsNullOrWhiteSpace(message))
                 SnackbarService.Add(message, Severity.Warning);
+            _thuaDatLoaded = true;
+            StateHasChanged();
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
+            Console.WriteLine(e.Message);
             throw;
         }
     }
