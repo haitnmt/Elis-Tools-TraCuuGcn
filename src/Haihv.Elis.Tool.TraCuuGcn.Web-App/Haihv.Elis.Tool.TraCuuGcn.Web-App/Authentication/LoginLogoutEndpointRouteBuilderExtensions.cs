@@ -1,5 +1,3 @@
-using Haihv.Elis.Tool.TraCuuGcn.Models;
-using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +20,6 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         group.MapPost("/logout", ([FromForm] string? returnUrl) => TypedResults.SignOut(GetAuthProperties(returnUrl),
             [CookieAuthenticationDefaults.AuthenticationScheme, "keycloak"]));
         
-        group.MapGet("/user/info", GetUserInfo)
-            .RequireAuthorization();
-
         return group;
     }
 
@@ -48,10 +43,5 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         }
 
         return new AuthenticationProperties { RedirectUri = returnUrl };
-    }
-    
-    private static async Task<UserInfo?> GetUserInfo(IUserServices userServices)
-    {
-        return await userServices.GetUserInfoAsync();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
@@ -18,7 +19,7 @@ internal class ServerTaiSanService(HttpClient httpClient, IHttpContextAccessor h
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<List<TaiSan>>() ?? [], "Không tìm thấy thông tin Chủ sử dụng!") :
-                ([], response.ReasonPhrase);
+                ([], await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {

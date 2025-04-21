@@ -1,4 +1,5 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Services;
@@ -18,8 +19,7 @@ internal class ClientCacheService(HttpClient httpClient) : ICacheService
         try
         {
             var response = await httpClient.DeleteAsync(CacheUri.DeleteWithQuery(serial));
-            var errorMessage = await response.Content.ReadAsStringAsync();
-            return (response.IsSuccessStatusCode, errorMessage);
+            return (response.IsSuccessStatusCode, await response.ParseErrorMessageAsync());
         }
         catch (Exception ex)
         {

@@ -1,5 +1,6 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
@@ -17,7 +18,7 @@ internal class ServerThuaDatService(HttpClient httpClient, IHttpContextAccessor 
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<List<ThuaDatPublic>>() ?? [], "Không tìm thấy thông tin Thửa đất!") :
-                ([], response.ReasonPhrase);
+                ([], await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {
@@ -36,7 +37,7 @@ internal class ServerThuaDatService(HttpClient httpClient, IHttpContextAccessor 
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<List<ThuaDat>>() ?? [], "Không tìm thấy thông tin Thửa đất!") :
-                ([], response.ReasonPhrase);
+                ([], await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {
@@ -55,7 +56,7 @@ internal class ServerThuaDatService(HttpClient httpClient, IHttpContextAccessor 
             using var response = await _httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<object>() ?? null, "Không tìm thấy thông tin tọa độ thửa đất!") :
-                (null, response.ReasonPhrase);
+                (null, await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {

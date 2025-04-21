@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Models;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
+using Haihv.Elis.Tool.TraCuuGcn.Models;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
@@ -13,10 +14,6 @@ namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 /// <param name="httpContextAccessor">Đối tượng truy cập HttpContext hiện tại</param>
 internal sealed class ServerUserServices(HttpClient httpClient, IHttpContextAccessor httpContextAccessor) : ServerServices(httpClient, httpContextAccessor), IUserServices
 {
-    /// <summary>
-    /// URL endpoint để lấy thông tin người dùng từ API
-    /// </summary>
-    private const string UrlGetUserInfo = "api/user/info";
 
     /// <summary>
     /// Lấy thông tin người dùng hiện tại từ API server
@@ -24,6 +21,6 @@ internal sealed class ServerUserServices(HttpClient httpClient, IHttpContextAcce
     /// <returns>Đối tượng UserInfo chứa thông tin người dùng hoặc null nếu không có dữ liệu</returns>
     public async Task<UserInfo?> GetUserInfoAsync()
     {
-        return await GetDataAsync<UserInfo>(UrlGetUserInfo);
+        return await GetDataAsync<UserInfo>(UserInfoUri.GetUserInfo);
     }
 }

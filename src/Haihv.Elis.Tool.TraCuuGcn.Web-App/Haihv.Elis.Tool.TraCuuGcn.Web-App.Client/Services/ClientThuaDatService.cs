@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Json;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebApp.Client.Services;
@@ -14,7 +15,7 @@ internal class ClientThuaDatService(HttpClient httpClient) : IThuaDatServices
             var response = await httpClient.GetAsync(ThuaDatUri.GetThuaDatPublicWithQuery(serial));
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<List<ThuaDatPublic>>() ?? [], "Không tìm thấy thông tin Thửa đất!") :
-                ([], response.ReasonPhrase);
+                ([], await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {
@@ -30,7 +31,7 @@ internal class ClientThuaDatService(HttpClient httpClient) : IThuaDatServices
             var response = await httpClient.GetAsync(ThuaDatUri.GetThuaDatWithQuery(serial, soDinhDanh));
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<List<ThuaDat>>() ?? [], "Không tìm thấy thông tin Thửa đất!") :
-                ([], response.ReasonPhrase);
+                ([], await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {
@@ -46,7 +47,7 @@ internal class ClientThuaDatService(HttpClient httpClient) : IThuaDatServices
             var response = await httpClient.GetAsync(ThuaDatUri.GetToaDoWithQuery(serial, soDinhDanh));
             return response.IsSuccessStatusCode ?
                 (await response.Content.ReadFromJsonAsync<object>() ?? null, "Không tìm thấy thông tin tọa độ thửa đất!") :
-                (null, response.ReasonPhrase);
+                (null, await response.ParseErrorMessageAsync());
         }
         catch (Exception e)
         {

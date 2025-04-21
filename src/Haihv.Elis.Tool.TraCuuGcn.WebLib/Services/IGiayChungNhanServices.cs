@@ -24,19 +24,19 @@ public interface IGiayChungNhanServices
     /// </summary>
     /// <param name="phapLyGiayChungNhan">Thông tin pháp lý cần cập nhật</param>
     /// <returns>Null nếu cập nhật thành công, chuỗi thông báo lỗi nếu thất bại</returns>
-    Task<(bool success, string? message)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan phapLyGiayChungNhan);
+    Task<(bool success, string? error)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan phapLyGiayChungNhan);
 
     /// <summary>
     /// Kiểm tra quyền cập nhật Giấy chứng nhận
     /// </summary>
     /// <param name="serial">Số serial của Giấy chứng nhận</param>
     /// <returns>Null nếu có quyền cập nhật, chuỗi thông báo lỗi nếu không có quyền</returns> 
-    Task<(bool success, string? message)> GetHasUpdatePermissionAsync(string serial);
+    Task<(bool success, string? error)> GetHasUpdatePermissionAsync(string serial);
 
     /// <summary>
     /// Xóa mã QR của Giấy chứng nhận
     /// </summary>
     /// <param name="serial">Số serial của Giấy chứng nhận</param>
     /// <returns>Null nếu xóa thành công, chuỗi thông báo lỗi nếu thất bại</returns>
-    Task<(bool success, string? message)> DeleteMaQrAsync(string serial);
+    Task<(bool success, string? error)> DeleteMaQrAsync(string serial);
 }

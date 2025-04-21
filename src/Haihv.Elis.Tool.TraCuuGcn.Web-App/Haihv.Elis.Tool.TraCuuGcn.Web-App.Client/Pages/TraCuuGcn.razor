@@ -1,5 +1,6 @@
 ﻿@page "/TraCuuGcn"
 @page "/TraCuuGcn/{Query}"
+@using Haihv.Elis.Tool.TraCuuGcn.Models
 @using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 
 <MudStack Class="mt-2 mx-2 mb-16" 
@@ -16,6 +17,7 @@
                 { 
                     <ThongTinGiayChungNhan Query="@Query"
                                            @bind-Serial="@_serial"
+                                           UserInfo="_userInfo"
                                            DonViChanged="donVi => _donVi = donVi"
                                            HasGiayChungNhanChanged="HasGiayChungNhanChanged"
                                            RefreshDataChanged="RefreshDataChanged"/>
@@ -104,6 +106,7 @@
 @inject AppSettingsService AppSettingService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
+@inject IUserServices UserServices
 @code {
     [Parameter]
     [SupplyParameterFromQuery(Name = "query")]
@@ -118,6 +121,7 @@
     private string? _donVi;
     private bool _isAuthenticated;
     private int _countTaiSan;
+    private UserInfo? _userInfo;
 
     protected override void OnInitialized()
     {
@@ -159,7 +163,7 @@
             var authState = await task;
             var wasAuthenticated = _isAuthenticated;
             _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-            // _isLdapUser = await AuthService.IsLdapUser();
+            _userInfo = await UserServices.GetUserInfoAsync();
             
             if (wasAuthenticated != _isAuthenticated)
             {
@@ -167,21 +171,17 @@
             }
         });
     }
-    
+
     private void SearchBarResultChanged(string? searchQuery)
     {
         if (string.Equals(Query, searchQuery, StringComparison.Ordinal)) return;
         _hasGiayChungNhan = false;
         Query = searchQuery ?? string.Empty;
-        
-        if (string.IsNullOrWhiteSpace(Query))
-            NavigationManager.NavigateTo("/TraCuuGcn");
-        else
-            NavigationManager.NavigateTo($"/TraCuuGcn/{Uri.EscapeDataString(Query)}");
-            
         _serial = null;
-        _donVi = null;  
-        StateHasChanged();
+        _donVi = null;
+        NavigationManager.NavigateTo(string.IsNullOrWhiteSpace(Query) ? 
+            "/TraCuuGcn" : 
+            $"/TraCuuGcn/{Uri.EscapeDataString(Query)}");
     }
 
     private void HasGiayChungNhanChanged(bool hasGiayChungNhan)

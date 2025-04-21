@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
@@ -14,16 +15,11 @@ namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 internal sealed class ClientUserServices(HttpClient httpClient) : IUserServices
 {
     /// <summary>
-    /// URI endpoint để lấy thông tin người dùng từ API authentication
-    /// </summary>
-    private const string UrlGetUserInfo = "authentication/user/info";
-
-    /// <summary>
     /// Lấy thông tin người dùng hiện tại từ API
     /// </summary>
     /// <returns>Đối tượng UserInfo chứa thông tin người dùng hoặc null nếu không có dữ liệu</returns>
     public async Task<UserInfo?> GetUserInfoAsync()
     {
-        return await httpClient.GetFromJsonAsync<UserInfo>(UrlGetUserInfo);
+        return await httpClient.GetFromJsonAsync<UserInfo>(UserInfoUri.GetUserInfo);
     }
 }

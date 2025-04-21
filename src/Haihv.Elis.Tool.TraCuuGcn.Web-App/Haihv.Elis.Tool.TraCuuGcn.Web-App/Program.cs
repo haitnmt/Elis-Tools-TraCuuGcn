@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Components;
 using Haihv.Elis.Tool.TraCuuGcn.Web.App.Authentication;
 using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
@@ -140,7 +141,8 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
-app.MapForwarder("/api/search", apiEndpoint);
+app.MapForwarder(GiayChungNhanUri.Search, apiEndpoint);
+app.MapForwarder(ThuaDatUri.GetThuaDatPublic, apiEndpoint);
 
 app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
 {

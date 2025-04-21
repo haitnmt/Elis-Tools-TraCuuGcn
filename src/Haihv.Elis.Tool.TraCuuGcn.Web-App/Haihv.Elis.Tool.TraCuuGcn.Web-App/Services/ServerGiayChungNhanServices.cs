@@ -1,5 +1,6 @@
 ﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
@@ -16,21 +17,21 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     ServerServices(httpClient, httpContextAccessor), IGiayChungNhanServices
 {
     private readonly HttpClient _httpClient = httpClient;
+
     /// <summary>
     /// Xóa mã QR của giấy chứng nhận từ API server.
     /// </summary>
     /// <param name="serial">Số serial của Giấy chứng nhận</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool success, string? message)> DeleteMaQrAsync(string serial)
+    public async Task<(bool success, string? error)> DeleteMaQrAsync(string serial)
     {
         // Khởi tạo HttpRequestMessage
         using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, GiayChungNhanUri.DeleteMaQrWithQuery(serial));
 
         // Gửi yêu cầu và nhận phản hồi
         using var response = await _httpClient.SendAsync(requestMessage);
-        var message = await response.Content.ReadAsStringAsync();
-        return (response.IsSuccessStatusCode, message);
+        return (response.IsSuccessStatusCode, await response.ParseErrorMessageAsync());
     }
 
     /// <summary>
@@ -39,15 +40,14 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <param name="serial">Số serial của Giấy chứng nhận</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool success, string? message)> GetHasUpdatePermissionAsync(string serial)
+    public async Task<(bool success, string? error)> GetHasUpdatePermissionAsync(string serial)
     {
         // Khởi tạo HttpRequestMessage
         using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, GiayChungNhanUri.GetHasUpdatePermissionWithQuery(serial));
 
         // Gửi yêu cầu và nhận phản hồi
         using var response = await _httpClient.SendAsync(requestMessage);
-        var message = await response.Content.ReadAsStringAsync();
-        return (response.IsSuccessStatusCode, message);
+        return (response.IsSuccessStatusCode, await response.ParseErrorMessageAsync());
     }
 
     /// <summary>
@@ -56,15 +56,14 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <param name="giayChungNhan">Thông tin giấy chứng nhận cần cập nhật.</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool success, string? message)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan giayChungNhan)
+    public async Task<(bool success, string? error)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan giayChungNhan)
     {
         // Khởi tạo HttpRequestMessage
         using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Post, GiayChungNhanUri.UpdateGiayChungNhan);
         requestMessage.Content = JsonContent.Create(giayChungNhan);
         // Gửi yêu cầu và nhận phản hồi
         using var response = await _httpClient.SendAsync(requestMessage);
-        var message = await response.Content.ReadAsStringAsync();
-        return (response.IsSuccessStatusCode, message);
+        return (response.IsSuccessStatusCode, await response.ParseErrorMessageAsync());
     }
     
     /// <summary>

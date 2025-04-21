@@ -84,21 +84,18 @@ else
                                     @_giayChungNhanInfo.MaGiayChungNhan
                                 </MudField>
                             </MudItem>
-                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.NguoiKy))
+                            @*<MudItem xs="12" md="6" xl="4">
+                                <MudField Label="Người ký" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.NguoiKy
+                                </MudField>
+                            </MudItem>*@
+                            @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
                             {
                                 <MudItem xs="12" md="6" xl="4">
-                                    <MudField Label="Người ký" Variant="Variant.Text">
-                                        @_giayChungNhanInfo.NguoiKy
+                                    <MudField Label="Ngày ký" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
                                     </MudField>
                                 </MudItem>
-                                @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
-                                {
-                                    <MudItem xs="12" md="6" xl="4">
-                                        <MudField Label="Ngày ký" Variant="Variant.Text">
-                                            @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
-                                        </MudField>
-                                    </MudItem>
-                                }
                             }
                             @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.SoVaoSo))
                             {
@@ -392,8 +389,8 @@ else
 
     private async Task LoadThuaDatAsync()
     {
-        // Nếu không có Serial hoặc đã có GCN, không cần tải thông tin thửa đất
-        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || _giayChungNhanInfo.HasGiayChungNhan)
+        // Nếu không có Serial hoặc không có GCN, không cần tải thông tin thửa đất
+        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || !_giayChungNhanInfo.HasGiayChungNhan)
         {
             return;
         }

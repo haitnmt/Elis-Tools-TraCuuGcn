@@ -99,7 +99,6 @@ public static class GetThuaDatPublic
                     var response = await sender.Send(new Query(serial));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization() // Yêu cầu xác thực người dùng
                 .WithTags("ThuaDat"); // Gắn tag để nhóm API trong Swagger
         }
     }

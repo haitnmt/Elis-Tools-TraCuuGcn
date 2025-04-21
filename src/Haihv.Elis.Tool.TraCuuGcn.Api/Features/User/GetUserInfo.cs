@@ -1,6 +1,7 @@
 using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using ILogger = Serilog.ILogger;
 using MediatR;
@@ -67,7 +68,7 @@ public static class GetUserInfo
         /// <param name="app">Đối tượng xây dựng endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/user/info", async (ISender sender) =>
+            app.MapGet(UserInfoUri.GetUserInfo, async (ISender sender) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query());
