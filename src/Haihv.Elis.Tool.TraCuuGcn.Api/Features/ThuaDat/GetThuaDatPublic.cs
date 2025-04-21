@@ -2,6 +2,7 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -92,7 +93,7 @@ public static class GetThuaDatPublic
         /// <param name="app">Đối tượng xây dựng endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/thua-dat-public/", async (ISender sender, string serial) =>
+            app.MapGet(ThuaDatUri.GetThuaDatPublic, async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(serial));

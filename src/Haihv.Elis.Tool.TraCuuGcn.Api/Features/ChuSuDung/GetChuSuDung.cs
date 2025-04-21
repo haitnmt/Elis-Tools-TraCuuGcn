@@ -1,6 +1,7 @@
 ﻿using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -53,7 +54,7 @@ public static class GetChuSuDung
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/chu-su-dung/", async (ISender sender, string serial, string? soDinhDanh = null) =>
+            app.MapGet(ChuSuDungUri.GetChuSuDung, async (ISender sender, string serial, string? soDinhDanh = null) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(serial, soDinhDanh));

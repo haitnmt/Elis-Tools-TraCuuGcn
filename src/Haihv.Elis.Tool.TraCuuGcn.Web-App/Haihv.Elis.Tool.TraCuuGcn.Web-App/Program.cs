@@ -103,6 +103,15 @@ builder.Services.AddHttpClient<IUserServices, ServerUserServices>(
     client => client.BaseAddress = clientBaseAddress);
 builder.Services.AddHttpClient<IGiayChungNhanServices, ServerGiayChungNhanServices>(
     client => client.BaseAddress = clientBaseAddress);
+builder.Services.AddHttpClient<ICacheService, ServerCacheServices>(
+    client => client.BaseAddress = clientBaseAddress);
+builder.Services.AddHttpClient<IThuaDatServices, ServerThuaDatService>(
+    client=> client.BaseAddress = clientBaseAddress);
+builder.Services.AddHttpClient<IChuSuDungServices, ServerChuSuDungService>(
+    client=> client.BaseAddress = clientBaseAddress);
+builder.Services.AddHttpClient<ITaiSanServices, ServerTaiSanService>(
+    client=> client.BaseAddress = clientBaseAddress);
+
 
 var app = builder.Build();
 
@@ -131,7 +140,7 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
-app.MapForwarder("/api/search{**catch-all}", apiEndpoint);
+app.MapForwarder("/api/search", apiEndpoint);
 
 app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
 {

@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Models;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
+using Haihv.Elis.Tool.TraCuuGcn.Models;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
@@ -15,26 +16,16 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     ServerServices(httpClient, httpContextAccessor), IGiayChungNhanServices
 {
     private readonly HttpClient _httpClient = httpClient;
-
-    /// <summary>
-    /// URI endpoint để tìm kiếm thông tin Giấy chứng nhận từ API
-    /// </summary>
-    private const string UriSearch = "/api/search";
-    private const string UriDeleteMaQr = "/api/giay-chung-nhan/delete-ma-qr";
-    private const string UriCheckPermission = "/api/giay-chung-nhan/has-update-permission";
-    private const string UriUpdateGcn = "/api/giay-chung-nhan/update";
-
     /// <summary>
     /// Xóa mã QR của giấy chứng nhận từ API server.
     /// </summary>
-    /// <param name="maGcn">Mã giấy chứng nhận cần xóa mã QR.</param>
+    /// <param name="serial">Số serial của Giấy chứng nhận</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool success, string? message)> DeleteMaQrAsync(string maGcn)
+    public async Task<(bool success, string? message)> DeleteMaQrAsync(string serial)
     {
-        var uri = $"{UriDeleteMaQr}?serial={maGcn}";
         // Khởi tạo HttpRequestMessage
-        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, uri);
+        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Delete, GiayChungNhanUri.DeleteMaQrWithQuery(serial));
 
         // Gửi yêu cầu và nhận phản hồi
         using var response = await _httpClient.SendAsync(requestMessage);
@@ -45,14 +36,13 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <summary>
     /// Kiểm tra quyền cập nhật của mã giấy chứng nhận từ API server.
     /// </summary>
-    /// <param name="maGcn">Mã giấy chứng nhận cần kiểm tra quyền cập nhật.</param>
+    /// <param name="serial">Số serial của Giấy chứng nhận</param>
     /// <returns>Bộ giá trị gồm cờ trạng thái thành công
     /// và thông báo từ server, hoặc null nếu không có thông báo.</returns>
-    public async Task<(bool success, string? message)> GetHasUpdatePermissionAsync(string maGcn)
+    public async Task<(bool success, string? message)> GetHasUpdatePermissionAsync(string serial)
     {
-        var uri = $"{UriCheckPermission}?serial={maGcn}";
         // Khởi tạo HttpRequestMessage
-        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, uri);
+        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, GiayChungNhanUri.GetHasUpdatePermissionWithQuery(serial));
 
         // Gửi yêu cầu và nhận phản hồi
         using var response = await _httpClient.SendAsync(requestMessage);
@@ -69,7 +59,7 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     public async Task<(bool success, string? message)> UpdateGiayChungNhanAsync(PhapLyGiayChungNhan giayChungNhan)
     {
         // Khởi tạo HttpRequestMessage
-        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Post, UriUpdateGcn);
+        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Post, GiayChungNhanUri.UpdateGiayChungNhan);
         requestMessage.Content = JsonContent.Create(giayChungNhan);
         // Gửi yêu cầu và nhận phản hồi
         using var response = await _httpClient.SendAsync(requestMessage);
@@ -84,7 +74,6 @@ internal class ServerGiayChungNhanServices(HttpClient httpClient, IHttpContextAc
     /// <returns>Đối tượng GiayChungNhanInfo chứa thông tin giấy chứng nhận hoặc null nếu không tìm thấy</returns>
     public async Task<GiayChungNhanInfo?> GetGiayChungNhanInfoAsync(string query)
     {
-        var uri = $"{UriSearch}?query={query}";
-        return await GetDataAsync<GiayChungNhanInfo>(uri);
+        return await GetDataAsync<GiayChungNhanInfo>(GiayChungNhanUri.SearchWithQuery(query));
     }
 }

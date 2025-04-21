@@ -25,6 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Haihv.Elis.Tool.TraCuuGcn.Api.Uri\Haihv.Elis.Tool.TraCuuGcn.Api.Uri.csproj" />
       <ProjectReference Include="..\..\Haihv.Elis.Tool.TraCuuGcn.WebLib\Haihv.Elis.Tool.TraCuuGcn.WebLib.csproj" />
     </ItemGroup>
 

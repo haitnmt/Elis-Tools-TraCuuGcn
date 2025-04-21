@@ -55,9 +55,9 @@ internal abstract class ServerServices(HttpClient httpClient, IHttpContextAccess
         var httpContext = httpContextAccessor.HttpContext ??
                           throw new InvalidOperationException(
                               "No HttpContext available from the IHttpContextAccessor!");
-        var accessToken = await httpContext.GetTokenAsync("access_token") ??
-                          throw new InvalidOperationException("No access_token was saved");
         var requestMessage = new HttpRequestMessage(method, uri);
+        var accessToken = await httpContext.GetTokenAsync("access_token");
+        if (string.IsNullOrWhiteSpace(accessToken)) return requestMessage;
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         return requestMessage;
     }

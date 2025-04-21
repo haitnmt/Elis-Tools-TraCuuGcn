@@ -2,6 +2,7 @@ using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
 using ILogger = Serilog.ILogger;
@@ -107,7 +108,7 @@ public static class DeleteCache
         /// <param name="app">Đối tượng cấu hình endpoint</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapDelete("/giay-chung-nhan/delete-cache", async (ISender sender, string serial) =>
+            app.MapDelete(CacheUri.Delete, async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Command(serial));

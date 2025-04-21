@@ -63,6 +63,12 @@
     private string[] _barcodeTypes = ["qr_code", "code_128"];
     private bool _processing = true;
 
+    protected override void OnParametersSet()
+    {
+        if (!string.Equals(_result, Result, StringComparison.OrdinalIgnoreCase))
+            _result = Result;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

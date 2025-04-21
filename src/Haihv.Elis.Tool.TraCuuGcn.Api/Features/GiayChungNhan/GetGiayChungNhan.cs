@@ -2,6 +2,7 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
 using ILogger = Serilog.ILogger;
@@ -21,7 +22,8 @@ public static class GetGiayChungNhan
     /// Truy vấn thông tin Giấy chứng nhận
     /// </summary>
     /// <param name="Serial">Số Serial của Giấy chứng nhận cần truy vấn</param>
-    public record Query(string Serial) : IRequest<TraCuuGcn.Models.GiayChungNhan>;
+    /// <param name="SoDinhDanh">Số định danh của Chủ sử dụng</param>
+    public record Query(string Serial, string? SoDinhDanh = null) : IRequest<TraCuuGcn.Models.GiayChungNhan>;
     
     /// <summary>
     /// Xử lý truy vấn thông tin Giấy chứng nhận
@@ -35,6 +37,7 @@ public static class GetGiayChungNhan
     /// <param name="giayChungNhanService">Dịch vụ quản lý Giấy chứng nhận</param>
     public class Handler(ILogger logger,
         IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService,
         IGiayChungNhanService giayChungNhanService) : IRequestHandler<Query, TraCuuGcn.Models.GiayChungNhan>
     {
         /// <summary>
@@ -51,15 +54,16 @@ public static class GetGiayChungNhan
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             
-            // Lấy địa chỉ IP và URL yêu cầu cho mục đích ghi log
-            var ipAddress = httpContext.GetIpAddress();
-            var url = httpContext.Request.GetDisplayUrl();
             var serial = request.Serial;
+            var user = httpContext.User;
+            if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
+                throw new UnauthorizedAccessException();
+            var url = httpContext.Request.GetDisplayUrl();
             
             // Kiểm tra tính hợp lệ của số Serial
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-            
+            var email = user.GetEmail();
             // Thực hiện truy vấn thông tin Giấy chứng nhận
             var result = await giayChungNhanService.GetResultAsync(serial, cancellationToken: cancellationToken);
             
@@ -67,17 +71,19 @@ public static class GetGiayChungNhan
             return result.Match(giayChungNhan =>
             {
                 // Ghi log thành công
-                logger.Information("Lấy thông tin Giấy Chứng Nhận thành công: {Url}{ClientIp}{Serial}",
+                logger.Information("{Email} Lấy thông tin Giấy Chứng Nhận thành công: {Url}{Serial}",
+                    email,
                     url,
-                    ipAddress,
                     serial);
                 return giayChungNhan;
             },
             ex =>
             {
                 // Ghi log lỗi và ném lại ngoại lệ
-                logger.Error(ex, "Lỗi khi lấy thông tin Giấy Chứng Nhận: {Url}{ClientIp}{Serial}", 
-                    url, ipAddress, serial);
+                logger.Error(ex, "{Email} Lỗi khi lấy thông tin Giấy Chứng Nhận: {Url}{Serial}",
+                    email,
+                    url,
+                    serial);
                 throw ex;
             });
         }
@@ -97,7 +103,7 @@ public static class GetGiayChungNhan
         /// <param name="app">Đối tượng cấu hình endpoint</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/giay-chung-nhan/", async (ISender sender, string serial) =>
+            app.MapGet(GiayChungNhanUri.GetGiayChungNhan, async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(serial));

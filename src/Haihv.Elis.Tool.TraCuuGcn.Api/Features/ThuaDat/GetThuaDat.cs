@@ -2,6 +2,7 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
 using ILogger = Serilog.ILogger;
@@ -100,7 +101,7 @@ public static class GetThuaDat
         /// <param name="app">Đối tượng xây dựng endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/thua-dat/", async (ISender sender, string serial, string? soDinhDanh = null) =>
+            app.MapGet(ThuaDatUri.GetThuaDat, async (ISender sender, string serial, string? soDinhDanh = null) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(serial, soDinhDanh));

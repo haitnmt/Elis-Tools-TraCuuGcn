@@ -2,6 +2,7 @@
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -108,7 +109,7 @@ public static class GetSearch
         /// <param name="app">Đối tượng xây dựng endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/search", async (ISender sender, string query) =>
+            app.MapGet(GiayChungNhanUri.Search, async (ISender sender, string query) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query(query));

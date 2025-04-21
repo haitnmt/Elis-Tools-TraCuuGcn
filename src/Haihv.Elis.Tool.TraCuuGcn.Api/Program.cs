@@ -102,7 +102,7 @@ app.UseHttpsRedirection();
 app.UseCors();
 
 app.MapDefaultEndpoints();
-app.MapGroup("/api").MapCarter();
+app.MapCarter();
 
 // Authentication and Authorization
 app.UseAuthentication();

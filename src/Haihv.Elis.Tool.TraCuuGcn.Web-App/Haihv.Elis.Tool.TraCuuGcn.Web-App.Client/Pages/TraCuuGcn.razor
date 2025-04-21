@@ -1,0 +1,231 @@
+﻿@page "/TraCuuGcn"
+@page "/TraCuuGcn/{Query}"
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
+
+<MudStack Class="mt-2 mx-2 mb-16" 
+          Style="@GetStackStyle()" 
+          Justify="Justify.FlexEnd">
+    <MudGrid Justify="Justify.Center">
+        <MudItem xs="12" md="6" lg="4">
+            <MudStack>
+                <SearchBar AutoStopCamera="true" 
+                           IsCameraActiveChanged="b => _isCameraActive = b"
+                           Result="@Query"
+                           ResultChanged="SearchBarResultChanged"/>
+                @if (!string.IsNullOrWhiteSpace(Query))
+                { 
+                    <ThongTinGiayChungNhan Query="@Query"
+                                           @bind-Serial="@_serial"
+                                           DonViChanged="donVi => _donVi = donVi"
+                                           HasGiayChungNhanChanged="HasGiayChungNhanChanged"
+                                           RefreshDataChanged="RefreshDataChanged"/>
+                    @if (_appSettings is not null && _appSettings.IsDemoVersion && !string.IsNullOrWhiteSpace(_donVi))
+                    {
+                        <MudAlert Severity="Severity.Warning" ShowCloseIcon="true">
+                            <MudText Typo="Typo.body2">
+                                Hệ thống đang trong quá trình thử nghiệm, thông tin có thể không chính xác.
+                            </MudText>
+                            <MudStack Class="pt-1" Spacing="0">
+                                <MudText Typo="Typo.caption">
+                                    Vui lòng xác minh thông tin tại:
+                                </MudText>
+                                <MudText Typo="Typo.caption">
+                                    @_donVi
+                                </MudText>
+                            </MudStack>
+                        </MudAlert>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_serial))
+                    {
+                        <AuthorizeView>
+                            <NotAuthorized>
+                                <MudAlert Severity="Severity.Warning">
+                                    <MudStack Justify="Justify.FlexStart" AlignItems="AlignItems.Start" Spacing="0">
+                                        <MudText Typo="Typo.body1">
+                                            Bạn cần xác thực thông tin để xem thông tin chi tiết
+                                        </MudText>
+                                        <MudButton Color="Color.Inherit" Href="@($"authentication/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}")">
+                                            <MudText>Đăng nhập</MudText>
+                                        </MudButton>
+                                    </MudStack>
+                                </MudAlert>
+                            </NotAuthorized>
+                            <Authorized>
+                                @if (!string.IsNullOrWhiteSpace(_serial) && _hasGiayChungNhan && _countTaiSan > 3)
+                                {
+                                    <MudStack>
+                                        <ThongTinChuSuDung Serial="@_serial"
+                                                           HasGiayChungNhan="_hasGiayChungNhan"/>
+                                        <ThongTinThuaDat Serial="@_serial"
+                                                         HasGiayChungNhan="_hasGiayChungNhan"/>
+                                    </MudStack>
+                                }
+                            </Authorized>
+                        </AuthorizeView>
+                    }
+                }
+            </MudStack>
+        </MudItem>
+        <AuthorizeView>
+            <Authorized>
+                @if (_hasGiayChungNhan && !string.IsNullOrWhiteSpace(_serial))
+                {
+                    <MudItem xs="12" md="6" lg="4">
+                        @if (_countTaiSan > 3)
+                        {
+                            <ThongTinTaiSan Serial="@_serial"
+                                            HasGiayChungNhan="_hasGiayChungNhan"
+                                            CountChanged="CountChanged"/>
+                        }
+                        else
+                        {
+                            <MudStack>
+                                <ThongTinChuSuDung Serial="@_serial"
+                                                   HasGiayChungNhan="_hasGiayChungNhan"/>
+                                <ThongTinThuaDat Serial="@_serial"
+                                                 HasGiayChungNhan="_hasGiayChungNhan"/>
+                                <ThongTinTaiSan Serial="@_serial"
+                                                HasGiayChungNhan="_hasGiayChungNhan"
+                                                CountChanged="CountChanged"/>
+                            </MudStack>
+                        }
+                    </MudItem>
+                    <MudItem xs="12" md="6" lg="4">
+                        <ThuaDatLocation Serial="@_serial"
+                                         HasGiayChungNhan="_hasGiayChungNhan"/>
+                    </MudItem>
+                }
+            </Authorized>
+        </AuthorizeView>
+    </MudGrid>
+</MudStack>
+
+@implements IDisposable
+@inject AppSettingsService AppSettingService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "query")]
+    public string? QueryFromUrl { get; set; }
+    
+    [Parameter]
+    public string? Query { get; set; } = string.Empty;
+    private string? _serial;
+    private bool _isCameraActive;
+    private AppSettings? _appSettings;
+    private bool _hasGiayChungNhan;
+    private string? _donVi;
+    private bool _isAuthenticated;
+    private int _countTaiSan;
+
+    protected override void OnInitialized()
+    {
+        _appSettings = AppSettingService.AppSettings;
+        AuthenticationStateProvider.AuthenticationStateChanged += AuthenticationStateChanged;
+        
+        // Ưu tiên sử dụng giá trị từ tham số đường dẫn, nếu không có thì kiểm tra query string
+        if (string.IsNullOrEmpty(Query) && !string.IsNullOrEmpty(QueryFromUrl))
+        {
+            Query = QueryFromUrl;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Ưu tiên sử dụng giá trị từ tham số đường dẫn, nếu không có thì kiểm tra query string
+        if (string.IsNullOrEmpty(Query) && !string.IsNullOrEmpty(QueryFromUrl))
+        {
+            Query = QueryFromUrl;
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // if (string.IsNullOrWhiteSpace(_searchQuery))
+            //     await AuthService.SetSerialElis(null);
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            AuthenticationStateChanged(Task.FromResult(authState));
+            StateHasChanged();
+        }
+    }
+
+    private void AuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        InvokeAsync(async () =>
+        {
+            var authState = await task;
+            var wasAuthenticated = _isAuthenticated;
+            _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+            // _isLdapUser = await AuthService.IsLdapUser();
+            
+            if (wasAuthenticated != _isAuthenticated)
+            {
+                StateHasChanged();
+            }
+        });
+    }
+    
+    private void SearchBarResultChanged(string? searchQuery)
+    {
+        if (string.Equals(Query, searchQuery, StringComparison.Ordinal)) return;
+        _hasGiayChungNhan = false;
+        Query = searchQuery ?? string.Empty;
+        
+        if (string.IsNullOrWhiteSpace(Query))
+            NavigationManager.NavigateTo("/TraCuuGcn");
+        else
+            NavigationManager.NavigateTo($"/TraCuuGcn/{Uri.EscapeDataString(Query)}");
+            
+        _serial = null;
+        _donVi = null;  
+        StateHasChanged();
+    }
+
+    private void HasGiayChungNhanChanged(bool hasGiayChungNhan)
+    {
+        if (!hasGiayChungNhan) return;
+        _hasGiayChungNhan = true;
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= AuthenticationStateChanged;
+    }
+
+    private Task RefreshDataChanged(bool refresh)
+    {
+        if (!refresh) return Task.CompletedTask;
+        var searchQuery = Query;
+        Query = string.Empty;
+        _serial = null;
+        _hasGiayChungNhan = false;
+        _donVi = null;
+        StateHasChanged();
+        SearchBarResultChanged(searchQuery);
+        return Task.CompletedTask;
+    }
+
+    private void CountChanged(int countTaiSan)
+    {
+        if (_countTaiSan == countTaiSan) return;
+        _countTaiSan = countTaiSan;
+        var hasChanged = (_countTaiSan > 3 && countTaiSan <= 3) || (_countTaiSan <= 3 && countTaiSan > 3);
+        if (hasChanged)
+            StateHasChanged();
+    }
+    
+    /// <summary>
+    /// Lấy kiểu CSS cho MudStack tùy thuộc vào trạng thái hiện tại
+    /// </summary>
+    /// <returns>Chuỗi kiểu CSS</returns>
+    private string GetStackStyle()
+    {
+        if (string.IsNullOrWhiteSpace(Query) && !_isCameraActive)
+            return "height: calc((1 / 3)*(100vh - 50px))";
+        return string.Empty;
+    }
+}

@@ -1,7 +1,7 @@
 @using Haihv.Elis.Tool.TraCuuGcn.Models
 @using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 @implements IDisposable
-@inject NavigationManager Navigation
+@inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthStateProvider
 @inject IUserServices UserServices
 
@@ -22,7 +22,7 @@
         </MudStack>
     </Authorized>
     <NotAuthorized>
-        <MudButton Color="Color.Inherit" Href="/authentication/login">
+        <MudButton Color="Color.Inherit" Href="@($"authentication/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}")">
             <MudText>Đăng nhập</MudText>
         </MudButton>
     </NotAuthorized>
@@ -33,8 +33,8 @@
     private UserInfo? _userInfo;
     protected override async Task OnInitializedAsync()
     {
-        _currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
-        Navigation.LocationChanged += OnLocationChanged;
+        _currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
         await base.OnInitializedAsync();
     }
 
@@ -59,12 +59,12 @@
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        _currentUrl = Navigation.ToBaseRelativePath(e.Location);
+        _currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
         StateHasChanged();
     }
 
     public void Dispose()
     {
-        Navigation.LocationChanged -= OnLocationChanged;
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 }

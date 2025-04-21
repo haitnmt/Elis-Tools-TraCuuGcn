@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
@@ -13,14 +14,6 @@ namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 /// <param name="httpClient">HttpClient dùng để gửi request đến API</param>
 internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiayChungNhanServices
 {
-    /// <summary>
-    /// URI endpoint để tìm kiếm thông tin Giấy chứng nhận từ API
-    /// </summary>
-    private const string UriSearch = "/api/search";
-    
-    private const string UriUpdate = "/api/giay-chung-nhan/update";
-    private const string UriHasUpdatePermission = "/api/giay-chung-nhan/has-update-permission";
-    private const string UriDeleteMaQr = "/api/giay-chung-nhan/delete-ma-qr";
     
     /// <summary>
     /// Lấy thông tin Giấy chứng nhận theo chuỗi truy vấn từ API
@@ -29,8 +22,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     /// <returns>Đối tượng GiayChungNhanInfo chứa thông tin giấy chứng nhận hoặc null nếu không tìm thấy</returns>
     public async Task<GiayChungNhanInfo?> GetGiayChungNhanInfoAsync(string query)
     {
-        var requestUri = $"{UriSearch}?query={query}";
-        return await httpClient.GetFromJsonAsync<GiayChungNhanInfo>(requestUri);
+        return await httpClient.GetFromJsonAsync<GiayChungNhanInfo>(GiayChungNhanUri.SearchWithQuery(query));
     }
 
     /// <summary>
@@ -45,7 +37,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     {
         try
         {
-            var response = await httpClient.PostAsJsonAsync(UriUpdate, phapLyGiayChungNhan);
+            var response = await httpClient.PostAsJsonAsync(GiayChungNhanUri.UpdateGiayChungNhan, phapLyGiayChungNhan);
             var message = await response.Content.ReadAsStringAsync();
             return (response.IsSuccessStatusCode, message);
         }
@@ -67,8 +59,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     {
         try
         {
-            var requestUri = $"{UriHasUpdatePermission}?serial={serial}";
-            var response = await httpClient.GetAsync(requestUri);
+            var response = await httpClient.GetAsync(GiayChungNhanUri.GetHasUpdatePermissionWithQuery(serial));
             var message = await response.Content.ReadAsStringAsync();
             return (response.IsSuccessStatusCode, message);
         }
@@ -88,7 +79,7 @@ internal sealed class ClientGiayChungNhanServices(HttpClient httpClient) : IGiay
     /// </returns>
     public async Task<(bool success, string? message)> DeleteMaQrAsync(string serial)
     {
-        var response = await httpClient.DeleteAsync($"{UriDeleteMaQr}?serial={serial}");
+        var response = await httpClient.DeleteAsync(GiayChungNhanUri.DeleteMaQrWithQuery(serial));;
         var message = await response.Content.ReadAsStringAsync();
         return (response.IsSuccessStatusCode, message);
     }

@@ -1,4 +1,6 @@
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Services;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Client.Services;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
@@ -35,5 +37,12 @@ builder.Services.AddHttpClient<IUserServices, ClientUserServices>(
     httpClient => httpClient.BaseAddress = new Uri(baseUrl));
 builder.Services.AddHttpClient<IGiayChungNhanServices, ClientGiayChungNhanServices>(
     httpClient => httpClient.BaseAddress = new Uri(baseUrl));
-
+builder.Services.AddHttpClient<ICacheService, ClientCacheService>(
+    httpClient => httpClient.BaseAddress = new Uri(baseUrl));
+builder.Services.AddHttpClient<IThuaDatServices, ClientThuaDatService>(
+    httpClient => httpClient.BaseAddress = new Uri(baseUrl));
+builder.Services.AddHttpClient<IChuSuDungServices, ClientChuSuDungService>(
+    httpClient => httpClient.BaseAddress = new Uri(baseUrl));
+builder.Services.AddHttpClient<ITaiSanServices, ClientTaiSanService>(
+    httpClient => httpClient.BaseAddress = new Uri(baseUrl));
 await builder.Build().RunAsync();

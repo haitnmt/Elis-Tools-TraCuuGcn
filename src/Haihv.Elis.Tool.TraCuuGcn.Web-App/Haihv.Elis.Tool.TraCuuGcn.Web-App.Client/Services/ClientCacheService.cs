@@ -1,11 +1,10 @@
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Services;
 
-public class ClientCacheService(HttpClient httpClient) : ICacheService
+internal class ClientCacheService(HttpClient httpClient) : ICacheService
 {
-    private const string UriDeleteCache = "cache/delete";
-
     /// <summary>
     /// Xóa mục nhớ cache tương ứng với số serial được chỉ định.
     /// </summary>
@@ -18,7 +17,7 @@ public class ClientCacheService(HttpClient httpClient) : ICacheService
     {
         try
         {
-            var response = await httpClient.DeleteAsync($"{UriDeleteCache}/{serial}");
+            var response = await httpClient.DeleteAsync(CacheUri.DeleteWithQuery(serial));
             var errorMessage = await response.Content.ReadAsStringAsync();
             return (response.IsSuccessStatusCode, errorMessage);
         }

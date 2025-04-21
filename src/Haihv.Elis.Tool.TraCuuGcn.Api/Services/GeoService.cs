@@ -179,7 +179,7 @@ public class GeoService : IGeoService
 
         // Tạo HttpClient từ factory với cấu hình có sẵn
         var httpClient = _httpClientFactory.CreateClient("SdeApi");
-        httpClient.BaseAddress = new Uri(_apiSdeUrl);
+        httpClient.BaseAddress = new System.Uri(_apiSdeUrl);
 
         // Xử lý song song cho mỗi thửa đất
         var thuaDatTasks = thuaDats.Select(async thuaDat =>
