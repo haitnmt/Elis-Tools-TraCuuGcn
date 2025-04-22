@@ -78,7 +78,7 @@ public static class GetTaiSan
                     email,
                     url,
                     serial);
-                throw new ThuaDatNotFoundException(serial);
+                throw new TaiSanNotFoundException(serial);
             }
             
             // Chờ và kiểm tra kết quả chủ sử dụng
@@ -89,7 +89,7 @@ public static class GetTaiSan
                     email,
                     url,
                     serial);
-                throw new ChuSuDungNotFoundException(serial);
+                throw new TaiSanNotFoundException(serial);
             }
             
             // Lấy thông tin tài sản dựa trên mã thửa đất và mã chủ sử dụng
@@ -99,13 +99,15 @@ public static class GetTaiSan
             return await Task.FromResult(result.Match(
                 taiSan =>
                 {
-                    logger.Information("{Email} lấy thông tin tài sản thành công: {Url} {Serial}",
-                        email,
-                        url,
-                        serial);
-                    
                     // Nếu có tài sản, trả về danh sách
-                    if (taiSan.Count != 0) return taiSan;
+                    if (taiSan.Count != 0)
+                    {
+                        logger.Information("{Email} lấy thông tin tài sản thành công: {Url} {Serial}",
+                            email,
+                            url,
+                            serial);
+                        return taiSan;
+                    }
                     
                     // Nếu không có tài sản, ghi log và ném ngoại lệ
                     logger.Warning("{Email} Không tìm thấy thông tin tài sản: {Url} {Serial}",

@@ -143,7 +143,7 @@ else
                                 </MudAlert>
                             }
 
-                            @if (_visibleUpdate)
+                            @if (_permissionsCanUpdate)
                             {
                                 <MudStack Row="true"
                                           Justify="Justify.SpaceBetween"
@@ -165,24 +165,6 @@ else
                                         Xóa Mã QR
                                     </MudButton>
                                 </MudStack>
-                                @if (_permissionsCanUpdate)
-                                {
-                                    @if (!_giayChungNhanInfo.HasGiayChungNhan)
-                                    {
-                                        <MudAlert Severity="Severity.Warning">
-                                            Không tìm thấy thông tin thửa đất!
-                                        </MudAlert>
-                                    }
-                                }
-                                else
-                                {
-                                    @if (!string.IsNullOrWhiteSpace(_permissionsStatus))
-                                    {
-                                        <MudAlert Severity="Severity.Warning">
-                                            @_permissionsStatus
-                                        </MudAlert>
-                                    }
-                                }
                             }
                         }
                         else
@@ -193,57 +175,40 @@ else
                             }
                             else
                             {
-                                if (!string.IsNullOrWhiteSpace(_errorLoadThuaDat))
+                                foreach (var thuaDatPublic in _thuaDatPublic)
                                 {
                                     <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
-                                        <MudAlert Severity="Severity.Error">
-                                            @(string.IsNullOrWhiteSpace(_errorLoadThuaDat) ? "Không có thông tin" : _errorLoadThuaDat)
-                                        </MudAlert>
-                                        <MudButton EndIcon="@Icons.Material.Filled.Refresh"
-                                                   FullWidth="true"
-                                                   Color="Color.Secondary"
-                                                   Variant="Variant.Text"
-                                                   OnClick="LoadThuaDatAsync">Thử lại
-                                        </MudButton>
-                                    </MudPaper>
-                                }
-                                else
-                                {
-                                    foreach (var thuaDatPublic in _thuaDatPublic)
-                                    {
-                                        <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
-                                            <MudGrid>
-                                                <MudItem xs="6" lg="4">
-                                                    <MudField Label="Tờ bản đồ" Variant="Variant.Text">
-                                                        @thuaDatPublic.ToBanDo
-                                                    </MudField>
-                                                </MudItem>
-                                                <MudItem xs="6" lg="4">
-                                                    <MudField Label="Thửa đất số" Variant="Variant.Text">
-                                                        @thuaDatPublic.ThuaDatSo
-                                                    </MudField>
-                                                </MudItem>
-                                                <MudItem xs="6" lg="4">
-                                                    <MudField Label="Diện tích" Variant="Variant.Text">
-                                                        @thuaDatPublic.DienTich
-                                                    </MudField>
-                                                </MudItem>
+                                        <MudGrid>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Tờ bản đồ" Variant="Variant.Text">
+                                                    @thuaDatPublic.ToBanDo
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Thửa đất số" Variant="Variant.Text">
+                                                    @thuaDatPublic.ThuaDatSo
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Diện tích" Variant="Variant.Text">
+                                                    @thuaDatPublic.DienTich
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <MudField Label="Địa chỉ" Variant="Variant.Text">
+                                                    @thuaDatPublic.DiaChi
+                                                </MudField>
+                                            </MudItem>
+                                            @if (!string.IsNullOrWhiteSpace(thuaDatPublic.GhiChu))
+                                            {
                                                 <MudItem xs="12">
-                                                    <MudField Label="Địa chỉ" Variant="Variant.Text">
-                                                        @thuaDatPublic.DiaChi
+                                                    <MudField Label="Ghi chú" Variant="Variant.Text">
+                                                        @thuaDatPublic.GhiChu
                                                     </MudField>
                                                 </MudItem>
-                                                @if (!string.IsNullOrWhiteSpace(thuaDatPublic.GhiChu))
-                                                {
-                                                    <MudItem xs="12">
-                                                        <MudField Label="Ghi chú" Variant="Variant.Text">
-                                                            @thuaDatPublic.GhiChu
-                                                        </MudField>
-                                                    </MudItem>
-                                                }
-                                            </MudGrid>
-                                        </MudPaper>
-                                    }
+                                            }
+                                        </MudGrid>
+                                    </MudPaper>
                                 }
                             }
                         }
@@ -268,7 +233,7 @@ else
     [Parameter] public UserInfo? UserInfo { get; set; }
     [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
     [Parameter] public string? Serial { get; set; }
-    [Parameter] public EventCallback<string> SerialChanged { get; set; }
+    [Parameter] public EventCallback<string?> SerialChanged { get; set; }
     [Parameter] public EventCallback<string> DonViChanged { get; set; }
     [Parameter] public EventCallback<bool> HasGiayChungNhanChanged { get; set; }
     [Parameter] public EventCallback<bool> RefreshDataChanged { get; set; }
@@ -278,12 +243,9 @@ else
     private GiayChungNhanInfo? _giayChungNhanInfo;
     private List<ThuaDatPublic> _thuaDatPublic = [];
     private string? _error;
-    private string? _errorLoadThuaDat;
     private bool _dataLoaded;
     private bool _thuaDatLoaded = true;
     private bool _permissionsCanUpdate;
-    private string? _permissionsStatus;
-    private bool _visibleUpdate;
     private UserInfo? _userInfo;
     private bool _processingGetPermissionsCanUpdate;
 
@@ -369,8 +331,15 @@ else
 
                     // Cập nhật các thông tin liên quan
                     await SerialChanged.InvokeAsync(Serial);
-                    await GetGetPermissionsCanUpdate();
-                    await LoadThuaDatAsync();
+                    if (UserInfo?.IsLocalAccount ?? false)
+                    {
+                        await GetGetPermissionsCanUpdate();
+                    }
+                    else
+                    {
+                        await LoadThuaDatAsync();
+                    }
+
                     // await AuthService.SetSerialElis(Serial);
                     await HasGiayChungNhanChanged.InvokeAsync(_giayChungNhanInfo.HasGiayChungNhan);
                 }
@@ -397,8 +366,6 @@ else
         // Reset dữ liệu
         _thuaDatPublic = [];
         _thuaDatLoaded = false;
-        _errorLoadThuaDat = null;
-        _thuaDatLoaded = false;
         StateHasChanged();
         try
         {
@@ -417,13 +384,10 @@ else
 
     private async Task GetGetPermissionsCanUpdate()
     {
-        // Reset trạng thái
-        _visibleUpdate = false;
-
+        _permissionsCanUpdate = false;
         // Kiểm tra điều kiện tiên quyết
         if ((!UserInfo?.IsLocalAccount ?? false) || string.IsNullOrWhiteSpace(Serial))
         {
-            _permissionsCanUpdate = false;
             return;
         }
 
@@ -434,24 +398,28 @@ else
             return;
         }
 
-        string? message;
-
         // Kiểm tra ngày ký
         if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
         {
-            message = $"Giấy chứng nhận đã ký không có quyền cập nhật thông tin: {_giayChungNhanInfo.NgayKy:dd/MM/yyyy}";
-            Console.WriteLine(message);
             SnackbarService.Add("Giấy chứng nhận đã ký không có quyền cập nhật thông tin", Severity.Warning);
             return;
         }
 
         // Chuẩn bị kiểm tra quyền
-        _permissionsStatus = null;
         _processingGetPermissionsCanUpdate = true;
         StateHasChanged();
-        (var success, message) = await GiayChungNhanServices.GetHasUpdatePermissionAsync(Serial);
+        var (success, message) = await GiayChungNhanServices.GetHasUpdatePermissionAsync(Serial);
+        if (!success)
+        {
+            SnackbarService.Add("Không có quyền cập nhật Giấy chứng nhận", Severity.Warning);
+        }
+
         if (!string.IsNullOrWhiteSpace(message))
-            SnackbarService.Add(message, success ? Severity.Info : Severity.Warning);
+            Console.WriteLine($"GetHasUpdatePermissionAsync: [{message}]");
+        
+        _permissionsCanUpdate = success;
+        _processingGetPermissionsCanUpdate = false;
+        StateHasChanged();
     }
 
     /// <summary>

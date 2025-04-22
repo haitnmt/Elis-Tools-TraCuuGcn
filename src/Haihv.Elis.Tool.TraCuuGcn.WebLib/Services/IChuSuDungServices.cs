@@ -20,4 +20,12 @@ public interface IChuSuDungServices
     /// Số định danh cần thiết để xác định quyền truy cập thông tin (Người dùng nội bộ không cần khai báo)
     /// </remarks>
     Task<(List<ChuSuDungInfo> dsChuSuDung, string? message)> GetChuSuDungInfoAsync(string serial, string? soDinhDanh = null);
+
+    /// <summary>
+    /// Kiểm tra quyền truy cập dữ liệu
+    /// </summary>
+    /// <param name="serial">Số serial của Giấy chứng nhận</param>
+    /// <param name="soDinhDanh">Số định danh của Người sử dụng đất</param>
+    /// <returns>Null nếu có quyền truy cập, chuỗi thông báo lỗi nếu không có quyền</returns> 
+    Task<(bool success, string? error)> GetHasReadPermissionAsync(string serial, string soDinhDanh);
 }

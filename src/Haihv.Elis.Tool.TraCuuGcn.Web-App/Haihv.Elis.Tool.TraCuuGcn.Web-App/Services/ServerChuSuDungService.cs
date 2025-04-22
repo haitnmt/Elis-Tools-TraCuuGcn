@@ -26,4 +26,14 @@ internal class ServerChuSuDungService(HttpClient httpClient, IHttpContextAccesso
             return ([], e.Message);
         }
     }
+
+    public async Task<(bool success, string? error)> GetHasReadPermissionAsync(string serial, string soDinhDanh)
+    {
+        // Khởi tạo HttpRequestMessage
+        using var requestMessage = await CreateHttpRequestMessage(HttpMethod.Get, ChuSuDungUri.GetHasReadPermissionWithQuery(serial, soDinhDanh));
+
+        // Gửi yêu cầu và nhận phản hồi
+        using var response = await _httpClient.SendAsync(requestMessage);
+        return (response.IsSuccessStatusCode, await response.ParseErrorMessageAsync());
+    }
 }

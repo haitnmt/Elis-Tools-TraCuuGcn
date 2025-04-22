@@ -102,7 +102,6 @@
     }
 }
 @inject ITaiSanServices TaiSanServices
-@inject SnackbarService SnackbarService
 
 @code {
     [Parameter] public bool HasGiayChungNhan { get; set; }
@@ -137,7 +136,7 @@
         {
             (_taiSans, var message) = await TaiSanServices.GetTaiSanAsync(_serial, SoDinhDanh);
             if (!string.IsNullOrWhiteSpace(message) && _taiSans.Count == 0)
-                SnackbarService.Add(message, Severity.Warning);
+                Console.WriteLine(message);
         }
         catch (Exception e)
         {

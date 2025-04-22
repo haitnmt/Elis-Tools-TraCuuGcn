@@ -62,7 +62,7 @@ public class PermissionService(IConfiguration configuration,
     /// <summary>
     /// Tên vai trò của người dùng nội bộ, được lấy từ cấu hình ứng dụng
     /// </summary>
-    private readonly string _roleLocal = configuration["OpenIdConnect.RoleLocalUser"] ?? "Domain Users";
+    private readonly string _roleLocal = configuration.GetValue<string>("OpenIdConnect:RoleLocalUser") ?? "Domain Users";
 
     /// <summary>
     /// Kiểm tra người dùng có phải là người dùng nội bộ (local) hay không

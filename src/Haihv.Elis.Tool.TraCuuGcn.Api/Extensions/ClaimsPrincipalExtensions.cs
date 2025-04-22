@@ -71,4 +71,5 @@ public static class ClaimsPrincipalExtensions
     {
         return user.GetUserRoles().Contains(role);
     }
+    
 }

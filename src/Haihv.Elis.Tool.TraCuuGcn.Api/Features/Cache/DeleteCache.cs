@@ -1,102 +1,121 @@
-﻿using Carter;
+using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Caching.Hybrid;
 using ILogger = Serilog.ILogger;
+
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Features.Cache;
 
 /// <summary>
-/// Chức năng xóa cache của giấy chứng nhận theo số serial.
+/// Tính năng xóa cache của Giấy chứng nhận
 /// </summary>
+/// <remarks>
+/// Tính năng này cho phép xóa cache dữ liệu của Giấy chứng nhận và thông tin mã QR
+/// dựa trên số Serial được cung cấp
+/// </remarks>
 public static class DeleteCache
 {
     /// <summary>
-    /// Yêu cầu xóa cache của giấy chứng nhận theo số serial.
+    /// Lệnh xóa cache thông tin Giấy chứng nhận
     /// </summary>
-    /// <param name="Serial">Số serial của giấy chứng nhận.</param>
-    public record Query(string Serial) : IRequest<bool>;
+    /// <param name="Serial">Số Serial của Giấy chứng nhận cần xóa cache</param>
+    public record Command(string Serial) : IRequest<bool>;
     
     /// <summary>
-    /// Xử lý yêu cầu xóa cache.
+    /// Xử lý lệnh xóa cache thông tin Giấy chứng nhận
     /// </summary>
-    public class Handler(ILogger logger,
-        HybridCache hybridCache,
+    /// <remarks>
+    /// Lớp này thực hiện việc kiểm tra quyền, xóa thông tin mã QR và cache liên quan đến Giấy chứng nhận
+    /// </remarks>
+    /// <param name="logger">Dịch vụ ghi log</param>
+    /// <param name="permissionService">Dịch vụ kiểm tra quyền</param>
+    /// <param name="httpContextAccessor">Đối tượng truy cập HttpContext</param>
+    /// <param name="gcnQrService">Dịch vụ quản lý mã QR giấy chứng nhận</param>
+    public class Handler(
+        ILogger logger,
+        IPermissionService permissionService,
         IHttpContextAccessor httpContextAccessor,
-        IPermissionService permissionService) : IRequestHandler<Query, bool>
+        IGcnQrService gcnQrService) : IRequestHandler<Command, bool>
     {
         /// <summary>
-        /// Xử lý yêu cầu xóa cache theo số serial.
+        /// Xử lý yêu cầu xóa cache thông tin Giấy chứng nhận
         /// </summary>
-        /// <param name="request">Yêu cầu chứa số serial của giấy chứng nhận.</param>
-        /// <param name="cancellationToken">Token hủy bỏ thao tác.</param>
-        /// <returns>True nếu xóa cache thành công, ngược lại là false.</returns>
-        /// <exception cref="NoSerialException">Khi số serial không hợp lệ.</exception>
-        /// <exception cref="InvalidOperationException">Khi HttpContext không khả dụng.</exception>
-        /// <exception cref="UnauthorizedAccessException">Khi người dùng không có quyền xóa cache.</exception>
-        public async Task<bool> Handle(Query request, CancellationToken cancellationToken)
+        /// <param name="request">Lệnh xóa cache chứa số Serial của Giấy chứng nhận</param>
+        /// <param name="cancellationToken">Token hủy thao tác</param>
+        /// <returns>True nếu xóa cache thành công, ngược lại False</returns>
+        /// <exception cref="InvalidOperationException">Ném ra khi HttpContext không khả dụng</exception>
+        /// <exception cref="UnauthorizedAccessException">Ném ra khi người dùng không có quyền xóa cache</exception>
+        /// <exception cref="NoSerialException">Ném ra khi số Serial không hợp lệ</exception>
+        public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
         {
-            // Chuẩn hóa số serial và kiểm tra tính hợp lệ
+            // Lấy HttpContext, ném ngoại lệ nếu không có
+            var httpContext = httpContextAccessor.HttpContext
+                              ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var serial = request.Serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-            
-            // Kiểm tra HttpContext và quyền người dùng
-            var httpContext = httpContextAccessor.HttpContext
-                              ?? throw new InvalidOperationException("HttpContext không khả dụng");
+                
+            // Lấy thông tin người dùng
             var user = httpContext.User;
-            
-            // Chỉ cho phép người dùng local xóa cache
-            if (!permissionService.IsLocalUser(user))
-                throw new UnauthorizedAccessException();
-            
-            // Lấy thông tin URL và email người dùng để ghi log
-            var url = httpContext.Request.GetDisplayUrl();
             var email = user.GetEmail();
             
-            try
-            {
-                // Xóa tất cả cache có tag trùng với số serial
-                await hybridCache.RemoveByTagAsync(serial, cancellationToken);
-                
-                // Ghi log thành công
-                logger.Information("{Email} xóa cache thành công: {Url} {Serial}",
-                    email, url, serial);
-                return true;
-            }
-            catch (Exception e)
-            {
-                // Ghi log lỗi và trả về false
-                logger.Error(e, "Lỗi khi xóa cache: {Url} {Email} {Serial}",
-                    url, email, serial);
-                return false;
-            }
+            // Kiểm tra quyền xóa cache, ném ngoại lệ nếu không có quyền
+            if (!permissionService.IsLocalUser(user))
+                throw new UnauthorizedAccessException("Không có quyền xóa cache cho giấy chứng nhận này");
+            
+            var url = httpContext.Request.GetDisplayUrl();
+            
+            // Thực hiện xóa cache thông tin Giấy chứng nhận
+            var result = await gcnQrService.DeleteMaQrAsync(serial, cancellationToken);
+            
+            // Xử lý kết quả xóa cache
+            return result.Match(
+                succ =>
+                {
+                    // Ghi log thành công
+                    logger.Information("{Email} xóa cache Giấy chứng nhận thành công: {Url}{Serial}",
+                        email,
+                        url,
+                        serial);
+                    return succ;
+                },
+                ex =>
+                {
+                    // Ghi log lỗi và ném lại ngoại lệ
+                    logger.Error(ex, "Lỗi khi xóa cache Giấy chứng nhận: {Url}{Email}{Serial}",
+                        url,
+                        email,
+                        serial);
+                    throw ex;
+                });
         }
     }
     
     /// <summary>
-    /// Định nghĩa endpoint cho việc xóa cache.
+    /// Cấu hình endpoint cho tính năng xóa cache Giấy chứng nhận
     /// </summary>
-    public class CacheEndpoint : ICarterModule
+    /// <remarks>
+    /// Lớp này định nghĩa các endpoint API cho việc xóa cache thông tin Giấy chứng nhận
+    /// </remarks>
+    public class GiayChungNhanEndpoint : ICarterModule
     {
         /// <summary>
-        /// Cấu hình route cho endpoint xóa cache.
+        /// Đăng ký các route cho tính năng xóa cache Giấy chứng nhận
         /// </summary>
-        /// <param name="app">Builder để đăng ký endpoint.</param>
+        /// <param name="app">Đối tượng cấu hình endpoint</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapDelete("/cache/delete", async (ISender sender, string serial) =>
+            app.MapDelete(CacheUri.Delete, async (ISender sender, string serial) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
-                    var response = await sender.Send(new Query(serial));
-                    return response ? Results.Ok("Xóa Cache thành công!") : Results.BadRequest("Lỗi khi xóa cache");
+                    var response = await sender.Send(new Command(serial));
+                    return response ? Results.Ok("Xóa cache thành công") : Results.NotFound("Không tìm thấy thông tin cache");
                 })
-                .RequireAuthorization()
-                .WithTags("Cache")
-                .WithName("DeleteCache")
-                .WithDescription("Xóa cache theo số serial của Giấy chứng nhận");
+                .RequireAuthorization() // Yêu cầu xác thực
+                .WithTags("Cache"); // Gắn tag cho Swagger
         }
     }
 }
