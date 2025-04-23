@@ -133,7 +133,7 @@
 </MudStack>
 
 @implements IDisposable
-@inject AppSettingsService AppSettingService
+@inject IAppSettingsService AppSettingsService
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IUserServices UserServices
@@ -154,9 +154,9 @@
     private UserInfo? _userInfo;
     private string? _soDinhDanh;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _appSettings = AppSettingService.AppSettings;
+        _appSettings = await AppSettingsService.GetAppSettingAsync();
         AuthenticationStateProvider.AuthenticationStateChanged += AuthenticationStateChanged;
         
         // Ưu tiên sử dụng giá trị từ tham số đường dẫn, nếu không có thì kiểm tra query string

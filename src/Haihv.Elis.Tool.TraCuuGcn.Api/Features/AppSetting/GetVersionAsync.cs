@@ -1,4 +1,5 @@
 ﻿using Carter;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using MediatR;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Features.AppSetting;
@@ -43,7 +44,7 @@ public static class GetVersionAsync
         /// <param name="app">Builder để đăng ký các endpoint.</param>
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/version", async (ISender sender) =>
+            app.MapGet(SettingUri.GetApiVersion, async (ISender sender) =>
                 {
                     // Không cần try-catch ở đây vì đã có middleware xử lý exception toàn cục
                     var response = await sender.Send(new Query());

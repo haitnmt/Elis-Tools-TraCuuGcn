@@ -3,4 +3,5 @@
 internal static class BaseUri
 {
     internal const string Api = "/api";
+    internal const string App = "/app";
 }

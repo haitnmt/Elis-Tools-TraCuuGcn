@@ -22,6 +22,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\Haihv.Elis.Tool.TraCuuGcn.Api.Uri\Haihv.Elis.Tool.TraCuuGcn.Api.Uri.csproj" />
       <ProjectReference Include="..\Haihv.Elis.Tool.TraCuuGcn.Models\Haihv.Elis.Tool.TraCuuGcn.Models.csproj" />
     </ItemGroup>
         

@@ -68,9 +68,9 @@ public static class GetThuaDat
                 // Xử lý khi lấy thông tin thành công
                 thuaDats =>
                 {
-                    logger.Information("Lấy thông tin Thửa Đất thành công: {Url}{Email}{Serial}",
-                        url,
+                    logger.Information("{Email} Lấy thông tin Thửa Đất thành công: {Url} {Serial}",
                         email,
+                        url,
                         serial);
                         
                     // Kiểm tra danh sách thửa đất có dữ liệu hay không
@@ -81,9 +81,9 @@ public static class GetThuaDat
                 // Xử lý khi có lỗi
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất: {Url}{Email}{Serial}",
-                        url,
+                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin Thửa Đất: {Url} {Serial}",
                         email,
+                        url,
                         serial);
                     throw ex;
                 });

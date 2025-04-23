@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
+using Haihv.Elis.Tool.TraCuuGcn.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Components;
 using Haihv.Elis.Tool.TraCuuGcn.Web.App.Authentication;
 using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
@@ -15,6 +16,9 @@ using Yarp.ReverseProxy.Transforms;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+// Add Caching
+builder.AddCache();
 
 var oidcConfig = builder.Configuration.GetSection("OpenIdConnect");
 const string oidcScheme = LoginLogoutEndpointRouteBuilderExtensions.OidcSchemeName;
@@ -74,7 +78,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ZxingService>();
 builder.Services.AddScoped<BarcodeDetectionService>();
 builder.Services.AddScoped<LeafletMapService>();
-builder.Services.AddMemoryCache();
 builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopRight;
@@ -88,7 +91,7 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
 });
 
-builder.AddAppSettingsServices();
+builder.AddServerAppSettingsServices();
 var apiEndpoint = builder.Configuration["ApiEndpoint"];
 if (string.IsNullOrWhiteSpace(apiEndpoint))
 {

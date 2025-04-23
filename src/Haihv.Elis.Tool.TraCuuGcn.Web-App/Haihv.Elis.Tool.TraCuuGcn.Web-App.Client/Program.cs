@@ -1,6 +1,6 @@
-using Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Services;
 using Haihv.Elis.Tool.TraCuuGcn.WebApp.Client.Services;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Services;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using MudBlazor;
@@ -29,9 +29,8 @@ builder.Services.AddAuthenticationStateDeserialization();
 
 // Tải cấu hình từ Blazor Server
 var baseUrl = builder.HostEnvironment.BaseAddress;
-var appSettings = await AppSettingsService.GetAppSettings(baseUrl);
 // Đăng ký dịch vụ cấu hình ứng dụng
-builder.AddAppSettingsServices(appSettings);
+builder.AddClientAppSettingsServices(baseUrl);
 
 builder.Services.AddHttpClient<IUserServices, ClientUserServices>(
     httpClient => httpClient.BaseAddress = new Uri(baseUrl));

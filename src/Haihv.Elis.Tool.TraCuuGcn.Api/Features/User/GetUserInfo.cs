@@ -50,7 +50,7 @@ public static class GetUserInfo
             userInfo.IsLocalAccount = permissionService.IsLocalUser(user);
             
             // Ghi log thành công
-            logger.Information("Lấy thông tin người sử dụng thành công {email}", userInfo.Email);
+            logger.Information("{Email} Lấy thông tin cá nhân thành công ", userInfo.Email);
             
             // Trả về thông tin người dùng
             return Task.FromResult(userInfo);

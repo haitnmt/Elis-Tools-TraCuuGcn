@@ -2,6 +2,7 @@ using System.Text;
 using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
+using Haihv.Elis.Tool.TraCuuGcn.Extensions;
 using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,10 +18,8 @@ builder.Services.AddOpenApi();
 // Add Serilog
 builder.AddLogToElasticsearch();
 
-// Configure Redis
-var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
 // Add Caching
-builder.Services.AddCache(redisConnectionString);
+builder.AddCache();
 
 var openIdConnectConfig = builder.Configuration.GetSection("OpenIdConnect");
 var authority = openIdConnectConfig["Authority"];
