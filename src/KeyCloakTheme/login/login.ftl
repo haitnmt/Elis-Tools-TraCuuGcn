@@ -25,7 +25,7 @@
                                 <input tabindex="2" id="password" class="form-control" name="password" type="password" autocomplete="off"
                                        aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"
                                 />
-                                <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+                                <button type="button" class="toggle-password" aria-label="Hiển thị mật khẩu">
                                     <i class="fa fa-eye"></i>
                                 </button>
                             </div>
@@ -36,7 +36,7 @@
                             </#if>
                         </div>
 
-                        <div class="form-group form-check">
+                        <div class="form-group">
                             <#if realm.rememberMe && !usernameEditDisabled??>
                                 <div class="checkbox">
                                     <label>
@@ -55,64 +55,28 @@
                             <input tabindex="4" class="btn btn-primary btn-block" name="login" id="kc-login" type="submit" value="${msg("doLogIn")}"/>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group flex justify-between items-center text-sm mt-4">
                             <div id="kc-form-options">
                                 <#if realm.resetPasswordAllowed>
-                                    <span><a tabindex="5" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a></span>
+                                    <span><a tabindex="5" href="${url.loginResetCredentialsUrl}" class="text-blue-600 hover:underline">${msg("doForgotPassword")}</a></span>
                                 </#if>
                             </div>
 
                             <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
                                 <div id="kc-registration">
-                                    <span>${msg("noAccount")} <a tabindex="6" href="${url.registrationUrl}">${msg("doRegister")}</a></span>
+                                    <span>${msg("noAccount")} <a tabindex="6" href="${url.registrationUrl}" class="text-blue-600 hover:underline">${msg("doRegister")}</a></span>
                                 </div>
                             </#if>
                         </div>
                         
-                        <div class="form-group">
-                            <button type="button" id="toggle-dark-mode" class="btn btn-outline-secondary">
-                                <i class="fa fa-moon-o"></i> Chế độ tối
+                        <div class="form-group mt-6">
+                            <button type="button" id="toggle-dark-mode" class="btn btn-outline-secondary w-full flex items-center justify-center">
+                                <i class="fa fa-moon-o mr-2"></i> Chế độ tối
                             </button>
                         </div>
                     </form>
                 </#if>
             </div>
         </div>
-        
-        <script>
-            function togglePasswordVisibility() {
-                var passwordInput = document.getElementById('password');
-                var icon = document.querySelector('.toggle-password i');
-                
-                if (passwordInput.type === 'password') {
-                    passwordInput.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                } else {
-                    passwordInput.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                }
-            }
-            
-            document.getElementById('toggle-dark-mode').addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                
-                // Lưu trạng thái dark mode vào localStorage
-                if(document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('darkMode', 'enabled');
-                    this.innerHTML = '<i class="fa fa-sun-o"></i> Chế độ sáng';
-                } else {
-                    localStorage.setItem('darkMode', 'disabled');
-                    this.innerHTML = '<i class="fa fa-moon-o"></i> Chế độ tối';
-                }
-            });
-            
-            // Kiểm tra trạng thái dark mode khi tải trang
-            if(localStorage.getItem('darkMode') === 'enabled') {
-                document.body.classList.add('dark-mode');
-                document.getElementById('toggle-dark-mode').innerHTML = '<i class="fa fa-sun-o"></i> Chế độ sáng';
-            }
-        </script>
     </#if>
 </@layout.registrationLayout>

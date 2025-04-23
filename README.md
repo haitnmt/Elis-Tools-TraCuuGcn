@@ -62,7 +62,19 @@ Dự án được xây dựng theo kiến trúc microservices với các thành 
 - Elasticsearch (tùy chọn, cho logging)
 
 ## Cài đặt và chạy
+# KeyCloak Theme cho ELIS
 
+Theme tiếng Việt dành cho KeyCloak được tùy chỉnh cho Cổng dịch vụ công của Sở Giao thông Vận tải tỉnh Bắc Ninh.
+
+## Tính năng
+
+- Giao diện đăng nhập/đăng ký hoàn toàn bằng tiếng Việt
+- Thiết kế theo Tailwind CSS, responsive trên mọi thiết bị
+- Hỗ trợ chế độ tối (Dark Mode)
+- Tùy chỉnh đăng nhập, đăng ký và quên mật khẩu
+- Tùy chỉnh trang quản lý tài khoản người dùng
+
+## Cấu trúc thư mục
 ### Phát triển
 
 1. Clone repository:

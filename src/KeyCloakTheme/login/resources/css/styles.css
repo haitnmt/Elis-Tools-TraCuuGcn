@@ -1,0 +1,552 @@
+/* Tailwind CSS Custom - Styles for KeyCloak Theme */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+:root {
+  --primary-50: #f0f9ff;
+  --primary-100: #e0f2fe;
+  --primary-200: #bae6fd;
+  --primary-300: #7dd3fc;
+  --primary-400: #38bdf8;
+  --primary-500: #0ea5e9;
+  --primary-600: #0284c7;
+  --primary-700: #0369a1;
+  --primary-800: #075985;
+  --primary-900: #0c4a6e;
+  
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+  
+  --red-500: #ef4444;
+  --green-500: #10b981;
+  --yellow-500: #f59e0b;
+  
+  --font-sans: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.5;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* Header and Logo */
+.header {
+  padding: 1.5rem 0;
+}
+
+.logo img {
+  max-height: 80px;
+  margin-bottom: 0.5rem;
+}
+
+/* Card styling */
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.card-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Form controls */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--gray-700);
+  background-color: white;
+  background-clip: padding-box;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: var(--primary-500);
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.25);
+}
+
+.form-control.is-invalid {
+  border-color: var(--red-500);
+}
+
+.form-error {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--red-500);
+}
+
+/* Password field with toggle */
+.password-input-group {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Checkbox styling */
+.checkbox {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  accent-color: var(--primary-600);
+}
+
+/* Button styling */
+.btn {
+  display: inline-block;
+  font-weight: 500;
+  color: var(--gray-700);
+  text-align: center;
+  vertical-align: middle;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.btn-primary {
+  color: white;
+  background-color: var(--primary-600);
+  border-color: var(--primary-600);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-700);
+  border-color: var(--primary-700);
+}
+
+.btn-outline-secondary {
+  color: var(--gray-700);
+  border-color: var(--gray-300);
+}
+
+.btn-outline-secondary:hover {
+  color: var(--gray-700);
+  background-color: var(--gray-100);
+  border-color: var(--gray-300);
+}
+
+.btn-block {
+  display: block;
+  width: 100%;
+}
+
+/* Alert styling */
+.alert {
+  position: relative;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.375rem;
+}
+
+.alert-success {
+  color: #0f5132;
+  background-color: #d1e7dd;
+  border-color: #badbcc;
+}
+
+.alert-danger {
+  color: #842029;
+  background-color: #f8d7da;
+  border-color: #f5c2c7;
+}
+
+.alert-warning {
+  color: #664d03;
+  background-color: #fff3cd;
+  border-color: #ffecb5;
+}
+
+.alert-info {
+  color: #055160;
+  background-color: #cff4fc;
+  border-color: #b6effb;
+}
+
+/* Language dropdown */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  background-color: white;
+  border: 1px solid var(--gray-300);
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.dropdown-toggle:hover {
+  background-color: var(--gray-50);
+}
+
+.dropdown-menu {
+  position: absolute;
+  z-index: 1000;
+  right: 0;
+  margin-top: 0.125rem;
+  min-width: 10rem;
+  padding: 0.5rem 0;
+  background-color: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.375rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-menu a {
+  display: block;
+  padding: 0.25rem 1rem;
+  color: var(--gray-700);
+  text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+  background-color: var(--gray-100);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Footer */
+.footer {
+  margin-top: 2rem;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.footer-content {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.locale-container {
+  margin-bottom: 0.5rem;
+}
+
+.locale-container a {
+  color: var(--gray-600);
+  text-decoration: none;
+}
+
+.locale-container a:hover {
+  text-decoration: underline;
+}
+
+/* Dark mode styling */
+.dark-mode {
+  background-color: var(--gray-900);
+  color: var(--gray-100);
+}
+
+.dark-mode .card {
+  background-color: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+.dark-mode .card-header {
+  border-bottom-color: var(--gray-700);
+}
+
+.dark-mode .card-header h2 {
+  color: var(--gray-100);
+}
+
+.dark-mode .form-label {
+  color: var(--gray-300);
+}
+
+.dark-mode .form-control {
+  background-color: var(--gray-700);
+  border-color: var(--gray-600);
+  color: var(--gray-100);
+}
+
+.dark-mode .form-control:focus {
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.25);
+}
+
+.dark-mode .btn-outline-secondary {
+  color: var(--gray-300);
+  border-color: var(--gray-600);
+}
+
+.dark-mode .btn-outline-secondary:hover {
+  background-color: var(--gray-700);
+}
+
+.dark-mode .dropdown-toggle {
+  background-color: var(--gray-800);
+  color: var(--gray-300);
+  border-color: var(--gray-600);
+}
+
+.dark-mode .dropdown-toggle:hover {
+  background-color: var(--gray-700);
+}
+
+.dark-mode .dropdown-menu {
+  background-color: var(--gray-800);
+  border-color: var(--gray-700);
+}
+
+.dark-mode .dropdown-menu a {
+  color: var(--gray-300);
+}
+
+.dark-mode .dropdown-menu a:hover {
+  background-color: var(--gray-700);
+}
+
+.dark-mode a {
+  color: var(--primary-400);
+}
+
+.dark-mode .footer-content {
+  color: var(--gray-400);
+}
+
+.dark-mode .alert-success {
+  background-color: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #d1fae5;
+}
+
+.dark-mode .alert-danger {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fee2e2;
+}
+
+.dark-mode .alert-warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fef3c7;
+}
+
+.dark-mode .alert-info {
+  background-color: rgba(14, 165, 233, 0.2);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: #e0f2fe;
+}
+
+/* Password strength meter */
+.password-strength-meter {
+  height: 5px;
+  background-color: var(--gray-200);
+  margin-top: 0.5rem;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.password-strength-meter-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.strength-very-weak .password-strength-meter-bar {
+  width: 20%;
+  background-color: var(--red-500);
+}
+
+.strength-weak .password-strength-meter-bar {
+  width: 40%;
+  background-color: var(--yellow-500);
+}
+
+.strength-medium .password-strength-meter-bar {
+  width: 60%;
+  background-color: var(--yellow-500);
+}
+
+.strength-strong .password-strength-meter-bar {
+  width: 80%;
+  background-color: var(--primary-500);
+}
+
+.strength-very-strong .password-strength-meter-bar {
+  width: 100%;
+  background-color: var(--green-500);
+}
+
+.password-strength-text {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  color: var(--gray-500);
+}
+
+.dark-mode .password-strength-meter {
+  background-color: var(--gray-700);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+  }
+  
+  .language-selector {
+    margin-top: 1rem;
+  }
+  
+  .card-header {
+    padding: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+/* Accessibility focus styles */
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--primary-400);
+  outline-offset: 2px;
+}
+
+.dark-mode a:focus, 
+.dark-mode button:focus, 
+.dark-mode input:focus, 
+.dark-mode select:focus, 
+.dark-mode textarea:focus {
+  outline-color: var(--primary-300);
+}
+
+/* Loading animation */
+.loading {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid rgba(66, 153, 225, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--primary-500);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-400);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+.dark-mode ::-webkit-scrollbar-track {
+  background: var(--gray-800);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--gray-600);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-500);
+}

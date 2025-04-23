@@ -12,7 +12,6 @@
     <meta name="description" content="${msg("loginTitle",(realm.displayName!''))}">
     
     <link rel="icon" href="${url.resourcesPath}/img/favicon.ico" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     
     <#if properties.styles?has_content>
@@ -29,21 +28,21 @@
 </head>
 
 <body class="${properties.kcBodyClass!}">
-    <div class="container">
+    <div class="container mx-auto px-4 py-8">
         <div class="login-container">
             <div class="header">
                 <div id="kc-header-wrapper" class="${properties.kcHeaderWrapperClass!}">
                     <div class="logo">
-                        <img src="${url.resourcesPath}/img/logo.png" alt="Logo">
-                        <h1>${kcSanitize(msg("loginTitleHtml",(realm.displayNameHtml!'')))?no_esc}</h1>
+                        <img src="${url.resourcesPath}/img/logo.png" alt="Logo" class="mx-auto">
+                        <h1 class="text-center">${kcSanitize(msg("loginTitleHtml",(realm.displayNameHtml!'')))?no_esc}</h1>
                     </div>
                     <div class="language-selector">
-                        <#if realm.internationalizationEnabled  && locale.supported?size gt 1>
-                            <div class="dropdown">
+                        <#if realm.internationalizationEnabled && locale.supported?size gt 1>
+                            <div class="dropdown relative">
                                 <button class="dropdown-toggle">
-                                    ${locale.current} <i class="fa fa-caret-down"></i>
+                                    ${locale.current} <i class="fa fa-caret-down ml-1"></i>
                                 </button>
-                                <div class="dropdown-menu">
+                                <div class="dropdown-menu hidden">
                                     <#list locale.supported as l>
                                         <a href="${l.url}">${l.label}</a>
                                     </#list>
@@ -62,7 +61,7 @@
                     <div class="card-body">
                         <#if displayMessage && message?has_content && (message.type != 'warning' || !isAppInitiatedAction??)>
                             <div class="alert alert-${message.type}">
-                                <span class="message-icon">
+                                <span class="message-icon mr-2">
                                     <#if message.type = 'success'><i class="fa fa-check-circle"></i></#if>
                                     <#if message.type = 'warning'><i class="fa fa-exclamation-triangle"></i></#if>
                                     <#if message.type = 'error'><i class="fa fa-times-circle"></i></#if>
@@ -75,7 +74,7 @@
                         <#nested "form">
 
                         <#if displayInfo>
-                            <div class="info-text">
+                            <div class="info-text mt-4 text-sm text-gray-600">
                                 <#nested "info">
                             </div>
                         </#if>
@@ -94,7 +93,7 @@
                         </div>
                     </#if>
                     <div class="copyright">
-                        &copy; ${.now?string('yyyy')} - Keycloak Việt Nam. Tất cả các quyền được bảo lưu.
+                        &copy; ${.now?string('yyyy')} - vpdkbacninh.vn | haihv.vn. Tất cả các quyền được bảo lưu.
                     </div>
                 </div>
             </div>
