@@ -1,6 +1,7 @@
 name: Build and Deploy KeyCloak Theme
 
 on:
+  workflow_dispatch:  # Thêm trigger này để cho phép chạy thủ công
   push:
     branches: [ Use_keycloak ]
     paths:
@@ -8,7 +9,7 @@ on:
       - 'kubernetes/**'
       - 'src/DockerfileKeyCloak'
       - '.github/workflows/build-and-deploy.yaml'
-
+  
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
