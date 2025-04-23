@@ -26,15 +26,18 @@ jobs:
           registry: ${{ secrets.DOCKER_REGISTRY }}
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-      
+          
+      - name: Set image name
+        run: echo "IMAGE_NAME=keycloak" >> $GITHUB_ENV
+        
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_REGISTRY }}/elis-keycloak:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_REGISTRY }}/elis-keycloak:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_REGISTRY }}/elis-keycloak:buildcache,mode=max
+          tags: ${{ secrets.DOCKER_REGISTRY }}/ ${{ env.IMAGE_NAME }}:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
       
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
