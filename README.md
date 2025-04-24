@@ -45,8 +45,7 @@ Dự án được xây dựng theo kiến trúc microservices với các thành 
 - Xóa mã QR
 
 ### 4. Xác thực người dùng
-- Xác thực thông qua LDAP
-- Xác thực thông qua JWT
+- Xác thực thông qua SSO OpenID Connect (ví dụ: Keycloak, Azure AD, ...)
 
 ## Yêu cầu hệ thống
 
@@ -60,11 +59,6 @@ Dự án được xây dựng theo kiến trúc microservices với các thành 
 - Docker và Docker Compose
 - Redis (tùy chọn, cho caching)
 - Elasticsearch (tùy chọn, cho logging)
-
-## Cài đặt và chạy
-# KeyCloak Theme cho ELIS
-
-Theme tiếng Việt dành cho KeyCloak được tùy chỉnh cho Cổng dịch vụ công của Sở Giao thông Vận tải tỉnh Bắc Ninh.
 
 ## Tính năng
 
@@ -128,25 +122,22 @@ docker-compose up -d
 Hệ thống sử dụng file `appsettings.json` để cấu hình. Dưới đây là một số cấu hình quan trọng:
 
 ### API
+- `OpenIdConnect.Authority`: Địa chỉ máy chủ OpenID Connect (ví dụ: https://sso.example.com/realms/your-realm)
+- `OpenIdConnect.Audience`: Định danh ứng dụng (clientId) dùng cho xác thực API
 - `ElisSql.Databases`: Danh sách các kết nối đến cơ sở dữ liệu ELIS SQL
 - `ElisSql.ApiSde`: URL của API SDE
 - `Redis.ConnectionString`: Kết nối đến Redis (nếu sử dụng)
-- `JwtTokenSettings`: Cấu hình JWT
 - `FrontendUrl`: URL của ứng dụng web
 - `BackendUrl`: URL của API
 - `UserAdmin`: Danh sách các tài khoản admin
 
 ### Web App
+- `OpenIdConnect.Authority`: Địa chỉ máy chủ OpenID Connect
+- `OpenIdConnect.ClientId`: ClientId của ứng dụng web
+- `OpenIdConnect.ClientSecret`: ClientSecret của ứng dụng web (nếu cần)
+- `OpenIdConnect.ResponseType`: Loại response (thường là "code")
+- `OpenIdConnect.Scope`: Các scope cần thiết (ví dụ: "openid profile email")
 - `ApiEndpoint`: URL của API
-- `AuthEndpoint`: URL của dịch vụ xác thực
-
-## Đóng góp
-
-1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/amazing-feature`)
-3. Commit thay đổi (`git commit -m 'Add some amazing feature'`)
-4. Push lên branch (`git push origin feature/amazing-feature`)
-5. Tạo Pull Request
 
 ## Giấy phép
 
