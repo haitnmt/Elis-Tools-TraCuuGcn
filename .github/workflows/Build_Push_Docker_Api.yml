@@ -1,9 +1,12 @@
 ﻿name: WebApi Build and Push Docker Image
 
 on:
-  push:  # Automatically run on commit
-    branches:
-      - main  # Chỉ chạy trên nhánh chính
+  workflow_dispatch:  # Allow manual trigger with inputs
+    inputs:
+      branch:
+        description: 'Branch to build from'
+        required: true
+        default: 'main'
 
 jobs:
   build-and-push:
@@ -12,6 +15,8 @@ jobs:
     steps:
       - name: Check out the code
         uses: actions/checkout@v4.2.0
+        with:
+          ref: ${{ github.event.inputs.branch }} # Use the selected branch
 
       # Đọc phiên bản từ file .csproj của API
       - name: Get version from API .csproj

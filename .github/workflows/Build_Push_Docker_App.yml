@@ -1,18 +1,24 @@
 ﻿name: WebApp Build and Push docker image
 
 on:
-  push:  # Automatically run on commit
-    branches:
-      - main  # Chỉ chạy trên nhánh chính
+  workflow_dispatch:  # Allow manual trigger with inputs
+    inputs:
+      branch:
+        description: 'Branch to build from'
+        required: true
+        default: 'main'
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out the code
         uses: actions/checkout@v4.2.0
+        with:
+          ref: ${{ github.event.inputs.branch }} #
         
-      # Read version from APP's .csproj file
+      # Read the version from APP's .csproj file
       - name: Get version from APP .csproj
         id: get_version_app
         run: |
