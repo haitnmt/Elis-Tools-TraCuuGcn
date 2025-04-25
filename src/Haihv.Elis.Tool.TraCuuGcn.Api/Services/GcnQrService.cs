@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using System.Text.Json;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
@@ -247,15 +248,14 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayCh
     {
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial)) 
-            return new Result<bool>(new ArgumentNullException(nameof(serial)));
+            return new Result<bool>(new NoSerialException());
         try
         {
             var count = 0;
             var connectionSql = await connectionElisData.GetConnectionAsync(serial);
             if (connectionSql is null)
             {
-                logger.Warning("Không tìm thấy thông tin kết nối cơ sở dữ liệu: {Serial}", serial);
-                return new Result<bool>(new ValueIsNullException("Không tìm thấy thông tin kết nối cơ sở dữ liệu!"));
+                throw new NoConnectionDataElisException(serial);
             }
 
             serial = serial.ToLower();
@@ -304,7 +304,7 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayCh
                     // Rollback transaction
                     await transaction.RollbackAsync(cancellationToken);
                     logger.Error(e, "Lỗi khi xóa thông tin Mã QR: {Serial}", serial);
-                    return new Result<bool>(e);
+                    throw new DataElisException(e);
                 }
             }
 

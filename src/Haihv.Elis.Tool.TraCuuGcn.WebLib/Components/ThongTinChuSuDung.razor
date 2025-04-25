@@ -1,0 +1,108 @@
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+@if (HasGiayChungNhan)
+{
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h6">Thông tin chủ sử dụng</MudText>
+            @if (_isLoading)
+            {
+                <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+            }
+            else if (_chuSuDungInfos.Count == 0)
+            {
+                <MudAlert Severity="Severity.Error">
+                    Không tìm thấy thông tin chủ sử dụng
+                </MudAlert>
+            }
+            else
+            {
+                if (_chuSuDungInfos.Count > 1)
+                {
+                    <MudText Typo="Typo.caption">
+                        Các chủ sử dụng đất:
+                    </MudText>
+                }
+
+                @foreach (var chuSuDungInfo in _chuSuDungInfos)
+                {
+                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="7">
+                                <MudText Typo="Typo.body1">
+                                    @chuSuDungInfo.ChuSuDung.Ten;
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="5">
+                                <MudText Typo="Typo.body1">
+                                    @chuSuDungInfo.ChuSuDung.GiayTo
+                                </MudText>
+                            </MudItem>
+                            @if (chuSuDungInfo.ChuSuDungQuanHe != null)
+                            {
+                                <MudItem xs="7">
+                                    <MudText Typo="Typo.body1">
+                                        @chuSuDungInfo.ChuSuDungQuanHe.Ten;
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="5">
+                                    <MudText Typo="Typo.body1">
+                                        @chuSuDungInfo.ChuSuDungQuanHe.GiayTo
+                                    </MudText>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                }
+            }
+        </MudCardContent>
+    </MudCard>
+}
+
+@inject IChuSuDungServices ChuSuDungServices
+@inject ISnackbar SnackbarService
+
+@code {
+    [Parameter] public string? Serial { get; set; }
+    [Parameter] public string? SoDinhDanh { get; set; }
+    [Parameter] public bool HasGiayChungNhan { get; set; }
+    private List<ChuSuDungInfo> _chuSuDungInfos = [];
+    private string? _serial;
+    private bool _isLoading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!HasGiayChungNhan || (Serial == _serial && _chuSuDungInfos.Count > 0)) return;
+        _serial = Serial;
+        if (string.IsNullOrWhiteSpace(_serial))
+        {
+            HasGiayChungNhan = false;
+            StateHasChanged();
+        }
+        else
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_serial)) return;
+        _isLoading = true;
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            (_chuSuDungInfos, var message) = await ChuSuDungServices.GetChuSuDungInfoAsync(_serial, SoDinhDanh);
+            if (!string.IsNullOrWhiteSpace(message) && _chuSuDungInfos.Count == 0)
+                SnackbarService.Add(message, Severity.Warning);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+
+}

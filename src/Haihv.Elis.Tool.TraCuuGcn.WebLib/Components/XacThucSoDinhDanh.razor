@@ -1,0 +1,57 @@
+﻿<MudAlert Severity="Severity.Info">
+    @if (_processingGetPermissions)
+    {
+        <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+    }
+    else
+    {
+        <MudText Typo="Typo.body1">
+            Vui lòng cung cấp thông tin của người sử dụng đất, chủ sở hữu tài sản gắn liền với đất
+            trên Giấy chứng nhận:
+        </MudText>
+        <MudTextField T="string"
+                      Value="_soDinhDanh"
+                      Label="Số định danh"
+                      ValueChanged="SoDinhDanhChangedAsync"
+                      HelperText="CCCD, Căn cước, CMND, CMQĐ, Đăng ký kinh doanh, Số giấy tờ, ..."/>
+        <MudButton Color="Color.Inherit">
+            <MudText>Xác nhận</MudText>
+        </MudButton>
+    }
+</MudAlert>
+
+@inject IChuSuDungServices ChuSuDungServices
+@inject ISnackbar SnackbarService
+
+@code {
+    [Parameter] public string Serial { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string?> SoDinhDanhChanged { get; set; }
+    private string? _soDinhDanh;
+
+    private bool _processingGetPermissions;
+    
+    private async Task SoDinhDanhChangedAsync(string? soDinhDanh)
+    {
+        if (string.IsNullOrWhiteSpace(soDinhDanh)) return;
+        if (!string.Equals(soDinhDanh, _soDinhDanh, StringComparison.OrdinalIgnoreCase))
+        {
+            // Chuẩn bị kiểm tra quyền
+            _processingGetPermissions = true;
+            StateHasChanged();
+            var (success, message) = await ChuSuDungServices.GetHasReadPermissionAsync(Serial, soDinhDanh);
+            if (!success)
+            {
+                SnackbarService.Add("Không có quyền truy cập thông tin", Severity.Warning);
+            }
+
+            if (!string.IsNullOrWhiteSpace(message))
+                Console.WriteLine($"GetHasReadPermissionAsync: [{message}]");
+
+            _soDinhDanh = success ? soDinhDanh : null;
+            await SoDinhDanhChanged.InvokeAsync(_soDinhDanh);
+            _processingGetPermissions = false;
+            StateHasChanged();
+        }
+    }
+
+}

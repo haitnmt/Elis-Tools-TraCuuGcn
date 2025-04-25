@@ -1,8 +1,8 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
-using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Caching.Hybrid;
 using Exception = System.Exception;
@@ -21,24 +21,12 @@ public class ThuaDatService(
     /// <param name="serial"> Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    public async Task<Result<List<ThuaDat>>> GetResultAsync(string serial = "",
+    public async Task<Result<List<ThuaDat>>> GetResultAsync(string? serial,
         CancellationToken cancellationToken = default)
     {
-        serial = serial.ChuanHoa() ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(serial))
-        {
-            return new Result<List<ThuaDat>>(new ArgumentException("Tham số truy vấn không hợp lệ!"));
-        }
-        var cacheKey = CacheSettings.KeyThuaDat(serial);
         try
         {
-            var thuaDats = await hybridCache.GetOrCreateAsync(cacheKey,
-                async cancel => await GetThuaDatInDatabaseAsync(serial, cancel),
-                tags: [serial],
-                cancellationToken: cancellationToken);
-            return thuaDats.Count == 0 ? 
-                new Result<List<ThuaDat>>(new ValueIsNullException("Không tìm thấy thông tin thửa đất!")) : 
-                thuaDats;
+            return await GetAsync(serial, cancellationToken);
         }
         catch (Exception exception)
         {
@@ -51,12 +39,12 @@ public class ThuaDatService(
     /// <param name="serial"> Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    public async Task<List<ThuaDat>> GetAsync(string serial = "", CancellationToken cancellationToken = default)
+    public async Task<List<ThuaDat>> GetAsync(string? serial, CancellationToken cancellationToken = default)
     {
         serial = serial.ChuanHoa() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(serial))
         {
-            return [];
+            throw new NoSerialException();
         }
         var cacheKey = CacheSettings.KeyThuaDat(serial);
         try
@@ -70,7 +58,7 @@ public class ThuaDatService(
         catch (Exception exception)
         {
             logger.Error(exception, "Lỗi khi lấy thông tin Thửa đất theo Serial: {Serial}", serial);
-            return [];
+            throw;
         }
     }
 
@@ -89,7 +77,7 @@ public class ThuaDatService(
     /// <param name="serial"> Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken"> Token hủy bỏ tác vụ không bắt buộc.</param>
     /// <returns>Kết quả chứa thông tin Thửa đất hoặc lỗi nếu không tìm thấy.</returns>
-    public async Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(string serial = "",
+    private async Task<List<ThuaDat>> GetThuaDatInDatabaseAsync(string? serial,
         CancellationToken cancellationToken = default)
     {
         serial = serial.ChuanHoa() ?? string.Empty;
@@ -141,8 +129,9 @@ public class ThuaDatService(
             var nguonGocService = new NguonGocService(connectionString, logger);
             foreach (var thuaDatToBanDo in thuaDatToBanDos)
             {
-                if (!int.TryParse(thuaDatToBanDo.maDvhc.ToString(), out int maDvhc)) return [];
-                if (!long.TryParse(thuaDatToBanDo.MaThuaDat.ToString(), out long maThuaDat)) return [];
+                var maThuaDat = 0L;
+                if (!int.TryParse(thuaDatToBanDo.maDvhc.ToString(), out int maDvhc) ||
+                    !long.TryParse(thuaDatToBanDo.MaThuaDat.ToString(), out maThuaDat)) return [];
                 string diaChi = thuaDatToBanDo.DiaChi;
                 diaChi =
                     $"{(string.IsNullOrWhiteSpace(diaChi) ? "" : $"{diaChi}, ")}{await GetDiaChiByMaDvhcAsync(maDvhc, connectionString, cancellationToken)}";

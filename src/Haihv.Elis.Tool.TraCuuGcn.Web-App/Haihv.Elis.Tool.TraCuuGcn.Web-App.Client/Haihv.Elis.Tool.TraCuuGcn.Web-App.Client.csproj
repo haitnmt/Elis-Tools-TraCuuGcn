@@ -10,8 +10,8 @@
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.04.15.2</AssemblyVersion>
-        <FileVersion>2025.04.15.2</FileVersion>
+        <AssemblyVersion>2025.04.25.1</AssemblyVersion>
+        <FileVersion>2025.04.25.1</FileVersion>
         <NeutralLanguage>vi-VN</NeutralLanguage>
     </PropertyGroup>
 
@@ -20,10 +20,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.3" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.4" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.4" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\Haihv.Elis.Tool.TraCuuGcn.Api.Uri\Haihv.Elis.Tool.TraCuuGcn.Api.Uri.csproj" />
       <ProjectReference Include="..\..\Haihv.Elis.Tool.TraCuuGcn.WebLib\Haihv.Elis.Tool.TraCuuGcn.WebLib.csproj" />
     </ItemGroup>
 

@@ -1,11 +1,8 @@
 using System.Text;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Authenticate;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Endpoints;
+using Carter;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
-using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+using Haihv.Elis.Tool.TraCuuGcn.Extensions;
 using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,41 +18,22 @@ builder.Services.AddOpenApi();
 // Add Serilog
 builder.AddLogToElasticsearch();
 
-// Configure Redis
-var redisConnectionString = builder.Configuration["Redis:ConnectionString"];
 // Add Caching
-builder.Services.AddCache(redisConnectionString);
+builder.AddCache();
 
-// Add Jwt
-builder.Services.AddSingleton(
-    _ => new TokenProvider(builder.Configuration["Jwt:SecretKey"]!,
-        builder.Configuration["Jwt:Issuer"]!,
-        builder.Configuration["Jwt:Audience"]!,
-        builder.Configuration.GetValue<int>("Jwt:ExpireMinutes")));
+var openIdConnectConfig = builder.Configuration.GetSection("OpenIdConnect");
+var authority = openIdConnectConfig["Authority"];
+var audience = openIdConnectConfig["Audience"];
 
-// Add service Authentication and Authorization for Identity Server
-builder.Services.AddAuthorizationBuilder();
-
-// Cấu hình Authentication với nhiều JwtScheme
-var jwtTokenSettings = new JwtTokenSettings();
-builder.Configuration.GetSection("JwtTokenSettings").Bind(jwtTokenSettings);
-builder.Services.AddAuthentication(options =>
+builder.Services.AddAuthentication()
+    .AddJwtBearer("Bearer", jwtOptions =>
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            IssuerSigningKeys = jwtTokenSettings.SecretKeys.Select(key =>
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))).ToList(),
-            ValidIssuers = jwtTokenSettings.Issuers,
-            ValidAudiences = jwtTokenSettings.Audiences,
-            ClockSkew = TimeSpan.Zero,
-        };
+        jwtOptions.Authority = authority;
+        jwtOptions.Audience = audience;
+        jwtOptions.RequireHttpsMetadata = true;
     });
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IPermissionService, PermissionService>();
 // Add ConnectionElisData
 builder.Services.AddSingleton<IConnectionElisData, ConnectionElisData>();
 
@@ -83,8 +61,6 @@ builder.Services.AddSingleton<IGeoService, GeoService>();
 // Add SearchService
 builder.Services.AddSingleton<ISearchService, SearchService>();
 
-// Add AuthenticationService
-builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 builder.Services.AddSingleton<ICheckIpService, CheckIpService>();
 
 // Add BackgroundService
@@ -106,10 +82,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
-
-#pragma warning disable SYSLIB0014
-System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls;
-#pragma warning restore SYSLIB0014
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+builder.Services.AddCarter();
 
 var app = builder.Build();
 
@@ -119,16 +94,16 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Thêm middleware xử lý exception toàn cục
+app.UseGlobalExceptionHandler();
+
 app.UseHttpsRedirection();
 
 // Use Cors
 app.UseCors();
 
-// Use Middleware
-app.MapEndPoints();
-
-// Thêm Endpoint kiểm tra ứng dụng hoạt động
-app.MapGet("/health", () => Results.Ok("OK")).WithName("GetHealth");
+app.MapDefaultEndpoints();
+app.MapCarter();
 
 // Authentication and Authorization
 app.UseAuthentication();

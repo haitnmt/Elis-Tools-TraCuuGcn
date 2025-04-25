@@ -1,0 +1,531 @@
+﻿@using Haihv.Elis.Tool.TraCuuGcn.Models
+
+@if (!_dataLoaded)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(_error) || _giayChungNhanInfo == null)
+    {
+        <MudAlert Severity="Severity.Error">
+            @(string.IsNullOrWhiteSpace(_error) ? "Không có thông tin" : _error)
+        </MudAlert>
+        <MudButton EndIcon="@Icons.Material.Filled.Refresh"
+                   Color="Color.Secondary"
+                   Variant="Variant.Text"
+                   OnClick="LoadDataAsync">Thử lại
+        </MudButton>
+    }
+    else
+    {
+        <MudStack>
+            <MudCard>
+                <MudCardContent>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween">
+                        <MudText Typo="Typo.h6">Thông tin Giấy chứng nhận</MudText>
+                        @if (UserInfo?.IsLocalAccount ?? false)
+                        {
+                            <MudTooltip Text="Làm mới thông tin">
+                                <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                               Size="Size.Small"
+                                               OnClick="RefreshData"/>
+                            </MudTooltip>
+                        }
+                    </MudStack>
+                    <MudPaper Class="pa-4" Outlined="true" Elevation="1">
+                        <MudGrid>
+                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.DonVi))
+                            {
+                                <MudItem xs="12">
+                                    <MudField Label="Đơn vị cấp Giấy chứng nhận [Mã đơn vị]" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.DonVi
+                                    </MudField>
+                                </MudItem>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.MaHoSo))
+                            {
+                                <MudItem xs="12">
+                                    <MudField Label="Mã hồ sơ thủ tục hành chính" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.MaHoSo
+                                    </MudField>
+                                </MudItem>
+                            }
+                            @if (_giayChungNhanInfo.KhoiTaoQr.HasValue && _giayChungNhanInfo.KhoiTaoQr.Value > new DateTime(1900, 1, 1))
+                            {
+                                <MudItem xs="12" md="6">
+                                    @if (_giayChungNhanInfo.KhoiTaoQr.Value > new DateTime(2025, 1, 1))
+                                    {
+                                        <MudField Label="Thời điểm tạo mã QR" Variant="Variant.Text">
+                                            @_giayChungNhanInfo.KhoiTaoQr.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                        </MudField>
+                                    }
+                                    else
+                                    {
+                                        <MudField Label="Thời điểm tạo mã QR" Variant="Variant.Text" Error="true"
+                                                  ErrorText="Thời gian không hợp lệ">
+                                            @_giayChungNhanInfo.KhoiTaoQr.Value.ToString("dd/MM/yyyy HH:mm:ss")
+                                        </MudField>
+                                    }
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudField Label="Phần mềm in Giấy chứng nhận" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.PhanMemInGcn
+                                    </MudField>
+                                </MudItem>
+                            }
+                            <MudItem xs="12" md="6">
+                                <MudField Label="Số phát hành (Serial)" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.Serial
+                                </MudField>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudField Label="Mã Giấy chứng nhận" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.MaGiayChungNhan
+                                </MudField>
+                            </MudItem>
+                            @*<MudItem xs="12" md="6" xl="4">
+                                <MudField Label="Người ký" Variant="Variant.Text">
+                                    @_giayChungNhanInfo.NguoiKy
+                                </MudField>
+                            </MudItem>*@
+                            @if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
+                            {
+                                <MudItem xs="12" md="6" xl="4">
+                                    <MudField Label="Ngày ký" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.NgayKy?.ToString("dd/MM/yyyy")
+                                    </MudField>
+                                </MudItem>
+                            }
+                            @if (!string.IsNullOrWhiteSpace(_giayChungNhanInfo.SoVaoSo))
+                            {
+                                <MudItem xs="12" md="6" xl="4">
+                                    <MudField Label="Số vào sổ" Variant="Variant.Text">
+                                        @_giayChungNhanInfo.SoVaoSo
+                                    </MudField>
+                                </MudItem>
+                                @if ((UserInfo?.IsLocalAccount ?? false) &&
+                                     _giayChungNhanInfo.NgayVaoSo.HasValue &&
+                                     _giayChungNhanInfo.NgayVaoSo.Value > new DateTime(1993, 1, 1))
+                                {
+                                    <MudItem xs="12" md="6" xl="4">
+                                        <MudField Label="Ngày vào sổ" Variant="Variant.Text">
+                                            @_giayChungNhanInfo.NgayVaoSo?.ToString("dd/MM/yyyy")
+                                        </MudField>
+                                    </MudItem>
+                                }
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                    @if (_giayChungNhanInfo.MaGcnElis <= 0)
+                    {
+                        <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
+                            <MudAlert Severity="Severity.Error">
+                                Không tìm thấy thông tin Thửa đất!
+                            </MudAlert>
+                            <MudButton EndIcon="@Icons.Material.Filled.Refresh"
+                                       FullWidth="true"
+                                       Color="Color.Secondary"
+                                       Variant="Variant.Text"
+                                       OnClick="LoadDataAsync">Thử lại
+                            </MudButton>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        @if (UserInfo?.IsLocalAccount ?? false)
+                        {
+                            @if (_processingGetPermissionsCanUpdate)
+                            {
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+                                <MudAlert Severity="Severity.Info">
+                                    Đang kiểm tra quyền cập nhật thông tin Giấy chứng nhận
+                                </MudAlert>
+                            }
+
+                            @if (_permissionsCanUpdate)
+                            {
+                                <MudStack Row="true"
+                                          Justify="Justify.SpaceBetween"
+                                          AlignItems="AlignItems.Stretch"
+                                          Class="mt-2">
+                                    <MudButton Color="Color.Primary"
+                                               FullWidth="true"
+                                               Disabled="@(!_permissionsCanUpdate ||
+                                                         !_giayChungNhanInfo.HasGiayChungNhan)"
+                                               StartIcon="@Icons.Material.Filled.Update"
+                                               OnClick="UpdateGiayChungNhanAsync">
+                                        Cập nhật thông tin
+                                    </MudButton>
+                                    <MudButton Color="Color.Error"
+                                               FullWidth="true"
+                                               Disabled="!_permissionsCanUpdate"
+                                               StartIcon="@Icons.Material.Filled.Delete"
+                                               OnClick="XoaQrAsync">
+                                        Xóa Mã QR
+                                    </MudButton>
+                                </MudStack>
+                            }
+                        }
+                        else
+                        {
+                            @if (!_thuaDatLoaded)
+                            {
+                                <MudProgressLinear Color="Color.Primary" Indeterminate="true"/>
+                            }
+                            else
+                            {
+                                foreach (var thuaDatPublic in _thuaDatPublic)
+                                {
+                                    <MudPaper Class="pa-4 mt-4" Outlined="true" Elevation="1">
+                                        <MudGrid>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Tờ bản đồ" Variant="Variant.Text">
+                                                    @thuaDatPublic.ToBanDo
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Thửa đất số" Variant="Variant.Text">
+                                                    @thuaDatPublic.ThuaDatSo
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="6" lg="4">
+                                                <MudField Label="Diện tích" Variant="Variant.Text">
+                                                    @thuaDatPublic.DienTich
+                                                </MudField>
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <MudField Label="Địa chỉ" Variant="Variant.Text">
+                                                    @thuaDatPublic.DiaChi
+                                                </MudField>
+                                            </MudItem>
+                                            @if (!string.IsNullOrWhiteSpace(thuaDatPublic.GhiChu))
+                                            {
+                                                <MudItem xs="12">
+                                                    <MudField Label="Ghi chú" Variant="Variant.Text">
+                                                        @thuaDatPublic.GhiChu
+                                                    </MudField>
+                                                </MudItem>
+                                            }
+                                        </MudGrid>
+                                    </MudPaper>
+                                }
+                            }
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudStack>
+    }
+}
+
+@inject IDialogService DialogService
+@inject ISnackbar SnackbarService
+@inject IGiayChungNhanServices GiayChungNhanServices
+@inject IThuaDatServices ThuaDatServices
+@inject ICacheService CacheService
+
+@code {
+
+    // Parameters
+    [Parameter] public string? Query { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public UserInfo? UserInfo { get; set; }
+    [Parameter] public EventCallback<string?> ErrorChanged { get; set; }
+    [Parameter] public string? Serial { get; set; }
+    [Parameter] public EventCallback<string?> SerialChanged { get; set; }
+    [Parameter] public EventCallback<string> DonViChanged { get; set; }
+    [Parameter] public EventCallback<bool> HasGiayChungNhanChanged { get; set; }
+    [Parameter] public EventCallback<bool> RefreshDataChanged { get; set; }
+
+    // State variables
+    private string? _query;
+    private GiayChungNhanInfo? _giayChungNhanInfo;
+    private List<ThuaDatPublic> _thuaDatPublic = [];
+    private string? _error;
+    private bool _dataLoaded;
+    private bool _thuaDatLoaded = true;
+    private bool _permissionsCanUpdate;
+    private UserInfo? _userInfo;
+    private bool _processingGetPermissionsCanUpdate;
+
+    /// <summary>
+    /// Xử lý khi tham số thay đổi
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        // Kiểm tra thay đổi trạng thái người dùng LDAP
+        if (_userInfo?.Email != UserInfo?.Email)
+        {
+            _userInfo = UserInfo;
+
+            // Nếu đã tải dữ liệu, kiểm tra lại quyền
+            if (_dataLoaded)
+                await GetGetPermissionsCanUpdate();
+        }
+
+        // Kiểm tra thay đổi query tìm kiếm
+        if (!string.IsNullOrWhiteSpace(Query) && Query != _query)
+        {
+            _query = Query;
+            await LoadDataAsync();
+        }
+    }
+
+    /// <summary>
+    /// Xóa cache thông tin GCN theo serial
+    /// </summary>
+    /// <param name="serial">Số serial của GCN</param>
+    /// <returns>True nếu xóa thành công, False nếu có lỗi</returns>
+    private async Task<bool> ClearCache(string serial)
+    {
+        var (success, message) = await CacheService.DeleteCacheAsync(serial);
+        if (!string.IsNullOrWhiteSpace(message))
+            SnackbarService.Add(message, success ? Severity.Info : Severity.Warning);
+        return success;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        // Kiểm tra query có giá trị không
+        if (string.IsNullOrWhiteSpace(_query))
+        {
+            return;
+        }
+
+        // Reset trạng thái
+        _error = null;
+        _dataLoaded = false;
+        StateHasChanged();
+        await DonViChanged.InvokeAsync(string.Empty);
+        _giayChungNhanInfo = null;
+        try
+        {
+            // Lấy thông tin GCN
+            _giayChungNhanInfo = await GiayChungNhanServices.GetGiayChungNhanInfoAsync(_query);
+
+            // Kiểm tra kết quả
+            if (_giayChungNhanInfo is null)
+            {
+                _error = "Không có thông tin Giấy chứng nhận";
+            }
+        }
+        catch (Exception e)
+        {
+            _error = "Lỗi khi tải thông tin Giấy chứng nhận";
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            // Cập nhật trạng thái
+            _dataLoaded = true;
+            StateHasChanged();
+
+            // Xử lý kết quả
+            if (_giayChungNhanInfo != null)
+            {
+                // Nếu Serial thay đổi, cập nhật thông tin liên quan
+                if (Serial != _giayChungNhanInfo.Serial)
+                {
+                    Serial = _giayChungNhanInfo.Serial;
+
+                    // Cập nhật các thông tin liên quan
+                    await SerialChanged.InvokeAsync(Serial);
+                    if (UserInfo?.IsLocalAccount ?? false)
+                    {
+                        await GetGetPermissionsCanUpdate();
+                    }
+                    else
+                    {
+                        await LoadThuaDatAsync();
+                    }
+
+                    // await AuthService.SetSerialElis(Serial);
+                    await HasGiayChungNhanChanged.InvokeAsync(_giayChungNhanInfo.HasGiayChungNhan);
+                }
+
+                // Cập nhật thông tin đơn vị
+                await DonViChanged.InvokeAsync(_giayChungNhanInfo.DonVi);
+            }
+            else
+            {
+                // Nếu không có thông tin GCN, reset Serial
+                Serial = null;
+                await SerialChanged.InvokeAsync(Serial);
+            }
+        }
+    }
+
+    private async Task LoadThuaDatAsync()
+    {
+        // Nếu không có Serial hoặc không có GCN, không cần tải thông tin thửa đất
+        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial) || !_giayChungNhanInfo.HasGiayChungNhan)
+        {
+            return;
+        }
+        // Reset dữ liệu
+        _thuaDatPublic = [];
+        _thuaDatLoaded = false;
+        StateHasChanged();
+        try
+        {
+            (_thuaDatPublic, var message) = await ThuaDatServices.GetThuaDatPublicAsync(_giayChungNhanInfo.Serial);
+            if (_thuaDatPublic.Count == 0 && !string.IsNullOrWhiteSpace(message))
+                SnackbarService.Add(message, Severity.Warning);
+            _thuaDatLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            throw;
+        }
+    }
+
+    private async Task GetGetPermissionsCanUpdate()
+    {
+        _permissionsCanUpdate = false;
+        // Kiểm tra điều kiện tiên quyết
+        if ((!UserInfo?.IsLocalAccount ?? false) || string.IsNullOrWhiteSpace(Serial))
+        {
+            return;
+        }
+
+        // Kiểm tra thông tin GCN
+        if (_giayChungNhanInfo is null ||
+            !(_giayChungNhanInfo.HasMaQr || _giayChungNhanInfo.HasGiayChungNhan))
+        {
+            return;
+        }
+
+        // Kiểm tra ngày ký
+        if (_giayChungNhanInfo.NgayKy > new DateTime(1993, 1, 1))
+        {
+            SnackbarService.Add("Giấy chứng nhận đã ký không có quyền cập nhật thông tin", Severity.Warning);
+            return;
+        }
+
+        // Chuẩn bị kiểm tra quyền
+        _processingGetPermissionsCanUpdate = true;
+        StateHasChanged();
+        var (success, message) = await GiayChungNhanServices.GetHasUpdatePermissionAsync(Serial);
+        if (!success)
+        {
+            SnackbarService.Add("Không có quyền cập nhật Giấy chứng nhận", Severity.Warning);
+        }
+
+        if (!string.IsNullOrWhiteSpace(message))
+            Console.WriteLine($"GetHasUpdatePermissionAsync: [{message}]");
+        
+        _permissionsCanUpdate = success;
+        _processingGetPermissionsCanUpdate = false;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Làm mới dữ liệu bằng cách xóa cache và thông báo cho component cha
+    /// </summary>
+    private async Task RefreshData()
+    {
+        if (!string.IsNullOrWhiteSpace(Serial))
+        {
+            // Xóa cache
+            var success = await ClearCache(Serial);
+
+            // Thông báo cho component cha để làm mới dữ liệu
+            await RefreshDataChanged.InvokeAsync(true);
+
+            // Hiển thị thông báo kết quả (có thể bổ sung)
+            if (!success)
+            {
+                SnackbarService.Add("Có lỗi khi làm mới dữ liệu", Severity.Warning);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Hiển thị dialog xóa mã QR và xử lý kết quả
+    /// </summary>
+    private async Task XoaQrAsync()
+    {
+        // Tạo tham số cho dialog
+        var parameters = new DialogParameters<XoaQrDialog> { { x => x.Serial, Serial! } };
+
+        // Cấu hình tùy chọn dialog
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            CloseButton = true
+        };
+
+        // Hiển thị dialog
+        var xoaQReference = await DialogService.ShowAsync<XoaQrDialog>(null, parameters, options);
+
+        // Xử lý kết quả
+        var result = await xoaQReference.Result;
+        if (result is not null && !result.Canceled)
+        {
+            // Nếu xác nhận xóa, làm mới dữ liệu
+            await RefreshData();
+        }
+        else
+        {
+            // Nếu hủy, cập nhật UI
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Hiển thị dialog cập nhật thông tin GCN và xử lý kết quả
+    /// </summary>
+    private async Task UpdateGiayChungNhanAsync()
+    {
+        // Kiểm tra thông tin Serial
+        if (string.IsNullOrWhiteSpace(_giayChungNhanInfo?.Serial))
+        {
+            SnackbarService.Add("Không có thông tin Số phát hành (Serial)", Severity.Warning);
+            return;
+        }
+
+        // Tạo đối tượng pháp lý GCN để truyền vào dialog
+        var phapLyGiayChungNhan = new PhapLyGiayChungNhan
+        {
+            MaGcn = _giayChungNhanInfo.MaGcnElis,
+            Serial = _giayChungNhanInfo.Serial,
+            NgayKy = _giayChungNhanInfo.NgayKy,
+            NguoiKy = _giayChungNhanInfo.NguoiKy,
+            SoVaoSo = _giayChungNhanInfo.SoVaoSo,
+        };
+
+        // Tạo tham số cho dialog
+        var parameters = new DialogParameters<UpdateGiayChungNhanDialog>
+        {
+            { x => x.PhapLyGiayChungNhan, phapLyGiayChungNhan },
+            { x => x.MinNgayKy, _giayChungNhanInfo.KhoiTaoQr is null ? null : _giayChungNhanInfo.KhoiTaoQr!.Value.Date }
+        };
+
+        // Cấu hình tùy chọn dialog
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            CloseButton = true
+        };
+
+        // Hiển thị dialog
+        var dialogReference = await DialogService.ShowAsync<UpdateGiayChungNhanDialog>(null, parameters, options);
+
+        // Xử lý kết quả
+        var result = await dialogReference.Result;
+        if (result is not null && !result.Canceled)
+        {
+            // Nếu xác nhận cập nhật, làm mới dữ liệu
+            await RefreshData();
+        }
+        else
+        {
+            // Nếu hủy, cập nhật UI
+            StateHasChanged();
+        }
+    }
+
+}

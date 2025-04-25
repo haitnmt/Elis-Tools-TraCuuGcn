@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
@@ -49,7 +50,9 @@ public sealed class GiayChungNhanService(
                        },
                        tags: tags,
                        cancellationToken: cancellationToken) ?? 
-                   new Result<GiayChungNhan>(new ValueIsNullException("Không tìm thấy thông tin Giấy chứng nhận!"));
+                   new Result<GiayChungNhan>(string.IsNullOrWhiteSpace(serial) ?
+                       new GiayChungNhanNotFoundException(maVach) :
+                       new GiayChungNhanNotFoundException(serial));
         }
         catch (Exception e)
         {
@@ -74,11 +77,6 @@ public sealed class GiayChungNhanService(
         var maVachString = maVach > 0 ? maVach.ToString("0000000000000") : "-111";
         try
         {
-            var giayChungNhan = string.IsNullOrWhiteSpace(serial) ? null : 
-                await hybridCache.GetOrCreateAsync(CacheSettings.KeyGiayChungNhan(serial),
-                    _ => ValueTask.FromResult<GiayChungNhan?>(null),
-                    cancellationToken: cancellationToken);
-            if (giayChungNhan is not null) return giayChungNhan;
             var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
             foreach (var (connectionName, _, elisConnectionString, _, _) in connectionElis)
             {
@@ -108,7 +106,7 @@ public sealed class GiayChungNhanService(
                               (SoSerial IS NOT NULL AND LEN(SoSerial) > 0 AND (LOWER(LTRIM(RTRIM(SoSerial))) = {serialLowerCase})) OR 
                               (MaVach = {maVachString})
                      """);
-                giayChungNhan = await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
+                var giayChungNhan = await query.QueryFirstOrDefaultAsync<GiayChungNhan?>(cancellationToken: cancellationToken);
                 if (giayChungNhan is null) continue;
                 serial = giayChungNhan.Serial.ChuanHoa();
                 if (string.IsNullOrWhiteSpace(serial)) continue;

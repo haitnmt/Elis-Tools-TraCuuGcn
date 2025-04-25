@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
 using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 
@@ -12,7 +13,7 @@ internal static class AppSettingsEndpoints
     /// <param name="app">Ứng dụng web.</param>
     public static void MapAppSettingsEndpoints(this WebApplication app)
     {
-        app.MapGet("/api/appsettings", GetAsync)
+        app.MapGet(SettingUri.GetAppSetting, GetAsync)
             .WithName("GetAsync");
     }
 
@@ -21,36 +22,31 @@ internal static class AppSettingsEndpoints
     /// </summary>
     /// <param name="appSettingsService">Dịch vụ cấu hình ứng dụng.</param>
     /// <returns></returns>
-    private static IResult GetAsync(AppSettingsService appSettingsService)
+    private static async Task<IResult> GetAsync(IAppSettingsService appSettingsService)
     {
-        return Results.Ok(appSettingsService.AppSettings);
+        return Results.Ok(await appSettingsService.GetAppSettingAsync());
     }
 }
-internal static class AppSettingsExtension
+
+internal class ServerAppSettingsService(HybridCache hybridCache, IConfiguration configuration): IAppSettingsService
 {
     private const string SettingsDemoKey = "IsDemo";
     private const string SettingsApiEndpointKey = "ApiEndpoint";
-    private const string SettingsAuthEndpointKey = "AuthEndpoint";
-    internal static void AddAppSettingsServices(this WebApplicationBuilder builder)
-    {
-        var appSettings = builder.Configuration.GetAppSettingsAsync().Result;
-        builder.Services.AddScoped<AppSettingsService>(_ => new AppSettingsService(appSettings));
-    }
-
-    internal static async Task<AppSettings> GetAppSettingsAsync(this IMemoryCache memoryCache,
-        IConfiguration configuration)
+    
+    public async Task<AppSettings> GetAppSettingAsync(CancellationToken cancellationToken = default)
     {
         const string cacheKey = "AppSettings";
-        return await memoryCache.GetOrCreateAsync(cacheKey, _ => configuration.GetAppSettingsAsync()) ?? new AppSettings();
+        return await hybridCache.GetOrCreateAsync(cacheKey,
+            async token => await GetAppSettingsAsyncFromConfiguration(token), 
+            cancellationToken: cancellationToken);
     }
 
-    private static async Task<AppSettings> GetAppSettingsAsync(this IConfiguration configuration)
+    private  async Task<AppSettings> GetAppSettingsAsyncFromConfiguration(CancellationToken cancellationToken = default)
     {
         var apiEndpoint = configuration[SettingsApiEndpointKey];
         var appSettings = new AppSettings
         {
             ApiEndpoint = apiEndpoint,
-            AuthEndpoint = configuration[SettingsAuthEndpointKey],
             IsDemoVersion = configuration[SettingsDemoKey]?.ToLower() == "true",
             AppVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString()
         };
@@ -59,10 +55,10 @@ internal static class AppSettingsExtension
         var httpClient = new HttpClient { BaseAddress = new Uri(apiEndpoint) };
         try
         {
-            var response = await httpClient.GetAsync("/api/version");
+            var response = await httpClient.GetAsync(SettingUri.GetApiVersion, cancellationToken);
             if (response.IsSuccessStatusCode)
             {            
-                var apiVersion = await response.Content.ReadAsStringAsync();
+                var apiVersion = await response.Content.ReadAsStringAsync(cancellationToken);
                 apiVersion = apiVersion.Trim().Trim('"');
                 appSettings.ApiVersion = apiVersion;
             }
@@ -72,5 +68,13 @@ internal static class AppSettingsExtension
             Console.WriteLine(e);
         }
         return appSettings;
+    }
+}
+
+internal static class AppSettingsExtension
+{
+    internal static void AddServerAppSettingsServices(this WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<IAppSettingsService, ServerAppSettingsService>();
     }
 }

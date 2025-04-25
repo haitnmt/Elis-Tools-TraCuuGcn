@@ -1,0 +1,25 @@
+﻿@using System.Reflection
+@if(!string.IsNullOrWhiteSpace(_version))
+{
+    <MudText Typo="Typo.caption">
+        @_version
+    </MudText>
+}
+@code 
+{
+    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
+    [Inject] private IAppSettingsService AppSettingsService { get; set; } = null!;
+    [Inject] ISnackbar Snackbar { get; set; } = null!;
+
+    private AppSettings? _appSettings = null!;
+    private string? _version;
+    protected override async Task OnInitializedAsync()
+    {
+        _appSettings = await AppSettingsService.GetAppSettingAsync();
+        var appVersion = _appSettings.AppVersion ?? Assembly.GetExecutingAssembly().GetName().Version!.ToString();
+        var phienBan = _appSettings.IsDemoVersion ? "Phiên bản thử nhiệm" : "Phiên bản";
+        _version = string.IsNullOrWhiteSpace(_appSettings.ApiVersion) ?
+            $"{phienBan}: {appVersion}" :
+            $"{phienBan}: {appVersion} - {_appSettings.ApiVersion}" ;
+    }
+}

@@ -1,0 +1,70 @@
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IUserServices UserServices
+
+<AuthorizeView>
+    <Authorized>
+        <MudStack Row="true">
+            <MudText>
+               Xin chào @_userInfo?.DisplayName
+            </MudText>
+            <form action="authentication/logout" method="post">
+                <AntiforgeryToken />
+                <input type="hidden" name="ReturnUrl" value="@_currentUrl" />
+                <MudTooltip Text="Đăng xuất">
+                    <MudIconButton Icon="@Icons.Material.Filled.Logout" Size="Size.Small" Color="Color.Inherit"
+                                   ButtonType="ButtonType.Submit" />
+                </MudTooltip>
+            </form>
+        </MudStack>
+    </Authorized>
+    <NotAuthorized>
+        <MudButton Color="Color.Inherit" Href="@($"authentication/login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}")">
+            <MudText>Đăng nhập</MudText>
+        </MudButton>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string? _currentUrl;
+    private UserInfo? _userInfo;
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                _userInfo = await UserServices.GetUserInfoAsync();
+                StateHasChanged();
+            }
+        }
+        catch (Exception)
+        {
+            _userInfo = null;
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

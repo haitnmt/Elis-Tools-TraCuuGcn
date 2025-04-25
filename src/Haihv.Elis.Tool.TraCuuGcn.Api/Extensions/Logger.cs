@@ -54,7 +54,7 @@ public static class Logger
         var configuration = builder.Configuration.GetSection(sectionName);
         var uris = (from stringUri in configuration.GetSection(uriKey).GetChildren()
                     where !string.IsNullOrWhiteSpace(stringUri.Value)
-                    select new Uri(stringUri.Value!)).ToList();
+                    select new System.Uri(stringUri.Value!)).ToList();
         var token = configuration[tokenKey] ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(token))
         {
@@ -79,7 +79,7 @@ public static class Logger
     /// <param name="authorizationHeader">Header xác thực cho Elasticsearch.</param>
     /// <returns>Cấu hình logger.</returns>
     private static LoggerConfiguration CreateLoggerConfiguration(this IHostApplicationBuilder builder,
-        ICollection<Uri>? uris = null,
+        ICollection<System.Uri>? uris = null,
         AuthorizationHeader? authorizationHeader = null)
     {
         var loggerConfiguration = new LoggerConfiguration()
@@ -110,7 +110,7 @@ public static class Logger
     /// <param name="apiToken">API token xác thực Elasticsearch.</param>
     /// <returns>Cấu hình logger.</returns>
     private static LoggerConfiguration CreateLoggerConfiguration(this IHostApplicationBuilder builder,
-        ICollection<Uri> uris,
+        ICollection<System.Uri> uris,
         string apiToken)
         => CreateLoggerConfiguration(builder, uris, new ApiKey(apiToken));
 
@@ -123,7 +123,7 @@ public static class Logger
     /// <param name="password">Mật khẩu cho xác thực cơ bản.</param>
     /// <returns>Cấu hình logger.</returns>
     private static LoggerConfiguration CreateLoggerConfiguration(this IHostApplicationBuilder builder,
-        ICollection<Uri> uris,
+        ICollection<System.Uri> uris,
         string username, string password)
         => CreateLoggerConfiguration(builder, uris, new BasicAuthentication(username, password));
     

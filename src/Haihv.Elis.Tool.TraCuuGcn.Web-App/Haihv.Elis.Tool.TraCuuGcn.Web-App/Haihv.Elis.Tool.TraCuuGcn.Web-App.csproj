@@ -8,15 +8,21 @@
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.04.15.2</AssemblyVersion>
-        <FileVersion>2025.04.15.2</FileVersion>
+        <AssemblyVersion>2025.04.25.1</AssemblyVersion>
+        <FileVersion>2025.04.25.1</FileVersion>
         <NeutralLanguage>vi-VN</NeutralLanguage>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.2.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.4" />
+        <PackageReference Include="Microsoft.Extensions.ServiceDiscovery.Yarp" Version="9.2.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.2.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.2.0" />
+        <ProjectReference Include="..\..\ Haihv.Elis.Tool.TraCuuGcn.Extensions\Haihv.Elis.Tool.TraCuuGcn.Extensions.csproj" />
         <ProjectReference Include="..\..\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\Haihv.Elis.Tool.TraCuuGcn.Web-App.Client\Haihv.Elis.Tool.TraCuuGcn.Web-App.Client.csproj" />
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.4" />
     </ItemGroup>
        
     <ItemGroup>

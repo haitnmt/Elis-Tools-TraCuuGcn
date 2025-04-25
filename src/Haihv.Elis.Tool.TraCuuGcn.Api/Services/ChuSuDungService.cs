@@ -1,4 +1,5 @@
-﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+﻿using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
@@ -34,13 +35,13 @@ public sealed class ChuSuDungService(
         try
         {
             var tenChuSuDung = await hybridCache.GetOrCreateAsync(cacheKey,
-                
+
                 cancel => GetTenChuSuDungInDataAsync(serial, soDinhDanh, cancel),
-                tags:[serial],
+                tags: [serial],
                 cancellationToken: cancellationToken);
-            return string.IsNullOrWhiteSpace(tenChuSuDung) ? 
-                new Result<AuthChuSuDung>(new ValueIsNullException("Không tìm thấy chủ sử dụng!")) : 
-                new AuthChuSuDung(serial, soDinhDanh, tenChuSuDung);
+            return string.IsNullOrWhiteSpace(tenChuSuDung)
+                ? new Result<AuthChuSuDung>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"))
+                : new AuthChuSuDung(serial, soDinhDanh, tenChuSuDung);
         }
         catch (Exception exception)
         {
@@ -97,61 +98,15 @@ public sealed class ChuSuDungService(
             logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {SoDDinhDanh}", soDinhDanh);
             throw;
         }
+
         return null;
     }
-
-    /// <summary>
-    /// Lưu thông tin chủ sử dụng vào cache.
-    /// </summary>
-    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
-    /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>Thông tin chủ sử dụng hoặc null nếu không tìm thấy.</returns>
-    public async Task SetCacheAuthChuSuDungAsync(
-        string? serial,
+    
+    public async Task<List<long>> GetMaChuSuDungAsync(string? serial = null,
         CancellationToken cancellationToken = default)
     {
-        try
-        {
-            serial = serial.ChuanHoa();
-            if (string.IsNullOrWhiteSpace(serial)) return;
-            var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
-            foreach (var connection in connectionElis)
-            {
-                await using var dbConnection = connection.ElisConnectionString.GetConnection();
-                var query = dbConnection.SqlBuilder(
-                    $"""
-                              SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
-                              SELECT DISTINCT 
-                                  COALESCE(CSD.SoDinhDanh1, CSD.SoDinhDanh2) AS SoDinhDanh,
-                                  COALESCE(CSD.Ten1, CSD.Ten2) AS HoVaTen
-                              FROM ChuSuDung CSD
-                                  INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                              WHERE UPPER(GCN.SoSerial) = {serial}
-                                  AND NULLIF(COALESCE(CSD.SoDinhDanh1, CSD.SoDinhDanh2), '') IS NOT NULL
-                                  AND NULLIF(COALESCE(CSD.Ten1, CSD.Ten2), '') IS NOT NULL
-                              """);
-                var chuSuDungDatas = (await query.QueryAsync<dynamic>(cancellationToken: cancellationToken)).ToList();
-                if (chuSuDungDatas.Count == 0) continue;
-                foreach (var chuSuDungData in chuSuDungDatas)
-                {
-                    string soDinhDanh = chuSuDungData.SoDinhDanh.ToString();
-                    string hoVaTen = chuSuDungData.HoVaTen.ToString();
-                    if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(hoVaTen)) continue;
-                    var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
-                    await hybridCache.SetAsync(cacheKey, hoVaTen, tags: [serial], cancellationToken: cancellationToken);
-                }
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {Serial}", serial);
-        }
-    }
-
-    public async Task<List<long>> GetMaChuSuDungAsync(string? serial = null, CancellationToken cancellationToken = default)
-    {
         // Lấy danh sách chủ sử dụng theo Serial
-        var dsChuSuDung = await GetAsync(serial, cancellationToken);
+        var dsChuSuDung = await GetInDatabaseAsync(serial, cancellationToken);
 
         // Trả về danh sách các mã chủ sử dụng
         return dsChuSuDung.Select(x => x.MaChuSuDung).ToList();
@@ -161,7 +116,7 @@ public sealed class ChuSuDungService(
     #endregion
 
     #region Lấy thông tin chủ sử dụng
-    
+
     /// <summary>
     /// Lấy thông tin chủ sử dụng và quan hệ chủ sử dụng.
     /// </summary>
@@ -173,27 +128,55 @@ public sealed class ChuSuDungService(
     {
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial))
-            return new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
+            return new Result<List<ChuSuDungInfo>>(new NoSerialException());
+        try
+        {
+            return await GetAsync(serial, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            return new Result<List<ChuSuDungInfo>>(e);
+        }
+    }
+
+    public async Task<List<ChuSuDungInfo>> GetAsync(string? serial = null,
+        CancellationToken cancellationToken = default)
+    {
+        serial = serial.ChuanHoa();
+        if (string.IsNullOrWhiteSpace(serial))
+            throw new NoSerialException();
         var cacheKey = CacheSettings.KeyChuSuDung(serial);
-        var chuSuDungs = await hybridCache.GetOrCreateAsync(cacheKey,
-            async cancel => await GetAsync(serial, cancel),
+        var chuSuDungElis = await hybridCache.GetOrCreateAsync(cacheKey,
+            async cancel => await GetInDatabaseAsync(serial, cancel),
             tags: [serial],
             cancellationToken: cancellationToken);
-        return chuSuDungs.Count > 0 ? 
-            chuSuDungs : 
-            new Result<List<ChuSuDungInfo>>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"));
+        if (chuSuDungElis.Count == 0)
+            throw new ChuSuDungNotFoundException(serial);
+        var chuSuDungInfos = new List<ChuSuDungInfo>();
+        foreach (var chuSuDungData in chuSuDungElis)
+        {
+            var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
+            if (chuSuDung is null) continue;
+            var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
+            chuSuDungInfos.Add(new ChuSuDungInfo(
+                chuSuDungData.MaChuSuDung,
+                chuSuDung,
+                chuSuDungQuanHe));
+        }
+
+        return chuSuDungInfos;
     }
-    
-    public async Task<List<ChuSuDungInfo>> GetAsync(
+
+    public async Task<List<ChuSuDungElis>> GetInDatabaseAsync(
         string? serial = null, CancellationToken cancellationToken = default)
     {
-        List<ChuSuDungInfo> chuSuDungInfos = [];
+        List<ChuSuDungElis> chuSuDungElis = [];
         serial = serial.ChuanHoa();
-        if (string.IsNullOrWhiteSpace(serial)) return chuSuDungInfos;
+        if (string.IsNullOrWhiteSpace(serial)) return chuSuDungElis;
         try
         {
             var connection = await connectionElisData.GetConnectionAsync(serial);
-            if (connection is null) return chuSuDungInfos;
+            if (connection is null) return chuSuDungElis;
             await using var dbConnection = connection.ElisConnectionString.GetConnection();
             var query = dbConnection.SqlBuilder(
                 $"""
@@ -218,115 +201,85 @@ public sealed class ChuSuDungService(
                             INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
                        WHERE (GCN.SoSerial IS NOT NULL AND LEN(GCN.SoSerial) > 0 AND UPPER(GCN.SoSerial) = {serial})
                  """);
-            var chuSuDungDatas = (await query.QueryAsync<ChuSuDungData>(cancellationToken: cancellationToken)).ToList();
-            if (chuSuDungDatas.Count == 0) return chuSuDungInfos;
-            foreach (var chuSuDungData in chuSuDungDatas)
-            {
-                var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
-                if (chuSuDung is null) continue;
-                var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
-                chuSuDungInfos.Add(new ChuSuDungInfo(
-                    chuSuDungData.MaChuSuDung, 
-                    chuSuDung, 
-                    chuSuDungQuanHe));
-            }
-
-            if (chuSuDungInfos.Count <= 0) return chuSuDungInfos;
+            chuSuDungElis = (await query.QueryAsync<ChuSuDungElis>(cancellationToken: cancellationToken)).ToList();
+            if (chuSuDungElis.Count == 0) return chuSuDungElis;
             var cacheKey = CacheSettings.KeyChuSuDung(serial);
-            _ = hybridCache.SetAsync(cacheKey, chuSuDungInfos, tags: [serial], cancellationToken: cancellationToken).AsTask();
+            _ = hybridCache.SetAsync(cacheKey, chuSuDungElis, tags: [serial], cancellationToken: cancellationToken)
+                .AsTask();
+            return chuSuDungElis;
         }
         catch (Exception exception)
         {
             logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {Serial}", serial);
-            throw;
+            throw new ChuSuDungSqlException(serial, exception);
         }
-        return chuSuDungInfos;
     }
 
-    private record ChuSuDungData(
-        long MaChuSuDung,
-        int MaDoiTuong,
-        string Ten,
-        string SoDinhDanh,
-        int LoaiSdd,
-        int GioiTinh,
-        string DiaChi,
-        int MaQuocTich,
-        string Ten2,
-        string SoDinhDanh2,
-        int LoaiSdd2,
-        int GioiTinh2,
-        string QuanHe,
-        string DiaChi2,
-        int MaQuocTich2
-    );
-    
-    private async Task<ChuSuDung?> GetChuSuDungAsync(ChuSuDungData chuSuDungData)
+    private async Task<ChuSuDung?> GetChuSuDungAsync(ChuSuDungElis chuSuDungElis)
     {
-        if (string.IsNullOrWhiteSpace(chuSuDungData.Ten)) return null;
-        var ten = chuSuDungData.MaDoiTuong switch
+        if (string.IsNullOrWhiteSpace(chuSuDungElis.Ten)) return null;
+        var ten = chuSuDungElis.MaDoiTuong switch
         {
-            16 => chuSuDungData.GioiTinh switch
+            16 => chuSuDungElis.GioiTinh switch
             {
-                1 => $"Ông {chuSuDungData.Ten}",
-                0 => $"Bà {chuSuDungData.Ten}",
-                _ => chuSuDungData.Ten
+                1 => $"Ông {chuSuDungElis.Ten}",
+                0 => $"Bà {chuSuDungElis.Ten}",
+                _ => chuSuDungElis.Ten
             },
-            _ => chuSuDungData.Ten
+            _ => chuSuDungElis.Ten
         };
-        var giayTo = chuSuDungData.MaDoiTuong switch
+        var giayTo = chuSuDungElis.MaDoiTuong switch
         {
-            16 => chuSuDungData.LoaiSdd switch
+            16 => chuSuDungElis.LoaiSdd switch
             {
-                1 => $"CMND: {chuSuDungData.SoDinhDanh}",
-                2 => $"CMQĐ: {chuSuDungData.SoDinhDanh}",
-                3 => $"Hộ chiếu: {chuSuDungData.SoDinhDanh}",
-                4 => $"Giấy khai sinh: {chuSuDungData.SoDinhDanh}",
-                5 => $"CCCD: {chuSuDungData.SoDinhDanh}",
-                6 => $"CMSQ: {chuSuDungData.SoDinhDanh}",
-                7 => $"CC: {chuSuDungData.SoDinhDanh}",
-                _ => chuSuDungData.SoDinhDanh
+                1 => $"CMND: {chuSuDungElis.SoDinhDanh}",
+                2 => $"CMQĐ: {chuSuDungElis.SoDinhDanh}",
+                3 => $"Hộ chiếu: {chuSuDungElis.SoDinhDanh}",
+                4 => $"Giấy khai sinh: {chuSuDungElis.SoDinhDanh}",
+                5 => $"CCCD: {chuSuDungElis.SoDinhDanh}",
+                6 => $"CMSQ: {chuSuDungElis.SoDinhDanh}",
+                7 => $"CC: {chuSuDungElis.SoDinhDanh}",
+                _ => chuSuDungElis.SoDinhDanh
             },
-            _ => chuSuDungData.SoDinhDanh
+            _ => chuSuDungElis.SoDinhDanh
         };
-        var quocTich = await GetQuocTichAsync(chuSuDungData.MaQuocTich) ?? string.Empty;
+        var quocTich = await GetQuocTichAsync(chuSuDungElis.MaQuocTich) ?? string.Empty;
         return new ChuSuDung(
             ten,
             giayTo,
-            chuSuDungData.DiaChi,
+            chuSuDungElis.DiaChi,
             quocTich
         );
     }
 
-    private async Task<ChuSuDungQuanHe?> GetChuSuDungQuanHeAsync(ChuSuDungData chuSuDungData)
+    private async Task<ChuSuDungQuanHe?> GetChuSuDungQuanHeAsync(ChuSuDungElis chuSuDungElis)
     {
-        if (string.IsNullOrWhiteSpace(chuSuDungData.Ten2)) return null;
-        var quanHe = chuSuDungData.QuanHe;
+        if (string.IsNullOrWhiteSpace(chuSuDungElis.Ten2)) return null;
+        var quanHe = chuSuDungElis.QuanHe;
         quanHe = string.IsNullOrWhiteSpace(quanHe)
-            ? $"{(chuSuDungData.MaDoiTuong == 16 ? $"{(chuSuDungData.GioiTinh2 == 1 ? "chồng" : "vợ")}" : "")}"
+            ? $"{(chuSuDungElis.MaDoiTuong == 16 ? $"{(chuSuDungElis.GioiTinh2 == 1 ? "chồng" : "vợ")}" : "")}"
             : quanHe;
-        var ten = quanHe is "chồng" or "vợ" ? $"Và {quanHe} {chuSuDungData.Ten2}" : $"{quanHe} {chuSuDungData.Ten2}";
-        var giayTo = chuSuDungData.MaDoiTuong switch
+        var ten = quanHe is "chồng" or "vợ" ? $"Và {quanHe} {chuSuDungElis.Ten2}" : $"{quanHe} {chuSuDungElis.Ten2}";
+        var giayTo = chuSuDungElis.MaDoiTuong switch
         {
-            16 => chuSuDungData.LoaiSdd2 switch
+            16 => chuSuDungElis.LoaiSdd2 switch
             {
-                1 => $"CMND: {chuSuDungData.SoDinhDanh2}",
-                2 => $"CMQĐ: {chuSuDungData.SoDinhDanh2}",
-                3 => $"Hộ chiếu: {chuSuDungData.SoDinhDanh2}",
-                4 => $"Giấy khai sinh: {chuSuDungData.SoDinhDanh2}",
-                5 => $"CCCD: {chuSuDungData.SoDinhDanh2}",
-                6 => $"CMSQ: {chuSuDungData.SoDinhDanh2}",
-                7 => $"CC: {chuSuDungData.SoDinhDanh2}",
-                _ => chuSuDungData.SoDinhDanh2
+                1 => $"CMND: {chuSuDungElis.SoDinhDanh2}",
+                2 => $"CMQĐ: {chuSuDungElis.SoDinhDanh2}",
+                3 => $"Hộ chiếu: {chuSuDungElis.SoDinhDanh2}",
+                4 => $"Giấy khai sinh: {chuSuDungElis.SoDinhDanh2}",
+                5 => $"CCCD: {chuSuDungElis.SoDinhDanh2}",
+                6 => $"CMSQ: {chuSuDungElis.SoDinhDanh2}",
+                7 => $"CC: {chuSuDungElis.SoDinhDanh2}",
+                _ => chuSuDungElis.SoDinhDanh2
             },
-            _ => chuSuDungData.SoDinhDanh2
+            _ => chuSuDungElis.SoDinhDanh2
         };
-        var quoctich = await GetQuocTichAsync(chuSuDungData.MaQuocTich2) ?? string.Empty;
+        var quoctich = await GetQuocTichAsync(chuSuDungElis.MaQuocTich2) ?? string.Empty;
         return new ChuSuDungQuanHe(
             ten,
             giayTo,
-            string.IsNullOrWhiteSpace(chuSuDungData.DiaChi2) ? 
-                chuSuDungData.DiaChi : chuSuDungData.DiaChi2,
+            string.IsNullOrWhiteSpace(chuSuDungElis.DiaChi2) ? chuSuDungElis.DiaChi : chuSuDungElis.DiaChi2,
             quoctich
         );
     }
@@ -381,3 +334,20 @@ public sealed class ChuSuDungService(
 
     #endregion
 }
+public record ChuSuDungElis(
+    long MaChuSuDung,
+    int MaDoiTuong,
+    string Ten,
+    string SoDinhDanh,
+    int LoaiSdd,
+    int GioiTinh,
+    string DiaChi,
+    int MaQuocTich,
+    string Ten2,
+    string SoDinhDanh2,
+    int LoaiSdd2,
+    int GioiTinh2,
+    string QuanHe,
+    string DiaChi2,
+    int MaQuocTich2
+);

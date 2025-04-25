@@ -1,0 +1,152 @@
+@using Haihv.Elis.Tool.TraCuuGcn.Models
+
+@if (HasGiayChungNhan)
+{
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Success" Indeterminate="true"/>
+    }
+    else if (_taiSans.Count > 0)
+    {
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Thông tin tài sản gắn liền với đất</MudText>
+                <MudExpansionPanels MultiExpansion="true">
+                    @foreach (var (taiSan, index) in _taiSans.Select((value, i) => (value, i + 1)))
+                    {
+                        <MudExpansionPanel Expanded="@(index == 1)"
+                                           Text="@(_taiSans.Count > 1 ? $"Tên tài sản thứ {index}: {taiSan.TenTaiSan}" : $"Tên tài sản: {taiSan.TenTaiSan}")">
+                            <MudGrid Spacing="2">
+                                @if (taiSan.DienTichXayDung > 0)
+                                {
+                                    <MudItem xs="6" lg="4">
+                                        <MudField Label="Diện tích xây dựng" Variant="Variant.Text">
+                                            @taiSan.DienTichXayDung m²
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (taiSan.DienTichSan > 0)
+                                {
+                                    <MudItem xs="6" lg="4">
+                                        <MudField Label="Diện tích sàn" Variant="Variant.Text">
+                                            @taiSan.DienTichSan m²
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.SoTang))
+                                {
+                                    <MudItem xs="6" lg="4">
+                                        <MudField Label="Số tầng" Variant="Variant.Text">
+                                            @taiSan.SoTang
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.CapHang) || !string.IsNullOrWhiteSpace(taiSan.NamHoanThanhXayDung))
+                                {
+                                    <MudFlexBreak/>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.CapHang))
+                                {
+                                    <MudItem xs="6" lg="6">
+                                        <MudField Label="Cấp hạng" Variant="Variant.Text">
+                                            @taiSan.CapHang
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.NamHoanThanhXayDung))
+                                {
+                                    <MudItem xs="6" lg="6">
+                                        <MudField Label="Năm hoàn thành" Variant="Variant.Text">
+                                            @taiSan.NamHoanThanhXayDung
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.KetCau))
+                                {
+                                    <MudItem xs="12">
+                                        <MudField Label="Kết cấu" Variant="Variant.Text">
+                                            @taiSan.KetCau
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.HinhThucSoHuu))
+                                {
+                                    <MudItem xs="12">
+                                        <MudField Label="Hình thức sở hữu" Variant="Variant.Text">
+                                            @taiSan.HinhThucSoHuu
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.ThoiHanSoHuu))
+                                {
+                                    <MudItem xs="12">
+                                        <MudField Label="Thời hạn sở hữu" Variant="Variant.Text">
+                                            @taiSan.ThoiHanSoHuu
+                                        </MudField>
+                                    </MudItem>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(taiSan.GhiChu))
+                                {
+                                    <MudItem xs="12">
+                                        <MudField Label="Ghi chú" Variant="Variant.Text">
+                                            @taiSan.GhiChu
+                                        </MudField>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                        </MudExpansionPanel>
+                    }
+                </MudExpansionPanels>
+            </MudCardContent>
+        </MudCard>
+    }
+}
+@inject ITaiSanServices TaiSanServices
+
+@code {
+    [Parameter] public bool HasGiayChungNhan { get; set; }
+    [Parameter] public string? SoDinhDanh { get; set; }
+    [Parameter] public string? Serial { get; set; }
+    [Parameter] public EventCallback<int> CountChanged { get; set; }
+    private List<TaiSan> _taiSans = [];
+    private string? _serial;
+    private bool _isLoading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!HasGiayChungNhan || Serial == _serial) return;
+        _serial = Serial;
+        if (string.IsNullOrWhiteSpace(_serial))
+        {
+            HasGiayChungNhan = false;
+            StateHasChanged();
+        }
+        else
+        {
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_serial)) return;
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            (_taiSans, var message) = await TaiSanServices.GetTaiSanAsync(_serial, SoDinhDanh);
+            if (!string.IsNullOrWhiteSpace(message) && _taiSans.Count == 0)
+                Console.WriteLine(message);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+}
