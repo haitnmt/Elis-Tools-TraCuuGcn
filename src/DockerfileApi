@@ -9,7 +9,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj", "Haihv.Elis.Tool.TraCuuGcn.Api/"]
 COPY ["Haihv.Elis.Tool.TraCuuGcn.Models/Haihv.Elis.Tool.TraCuuGcn.Models.csproj", "Haihv.Elis.Tool.TraCuuGcn.Models/"]
-COPY ["Haihv.Elis.Tool.TraCuuGcn.Extensions/Haihv.Elis.Tool.TraCuuGcn.Extensions.csproj", "Haihv.Elis.Tool.TraCuuGcn.Extensions/"]
+COPY [" Haihv.Elis.Tool.TraCuuGcn.Extensions/Haihv.Elis.Tool.TraCuuGcn.Extensions.csproj", "Haihv.Elis.Tool.TraCuuGcn.Extensions/"]
 COPY ["Haihv.Elis.Tool.TraCuuGcn.Api.Uri/Haihv.Elis.Tool.TraCuuGcn.Api.Uri.csproj", "Haihv.Elis.Tool.TraCuuGcn.Api.Uri/"]
 COPY ["ServiceDefaults/ServiceDefaults.csproj", "ServiceDefaults/"]
 RUN dotnet restore "./Haihv.Elis.Tool.TraCuuGcn.Api/Haihv.Elis.Tool.TraCuuGcn.Api.csproj"
