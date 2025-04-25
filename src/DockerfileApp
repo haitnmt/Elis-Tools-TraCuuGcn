@@ -12,7 +12,7 @@ COPY ["Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.Clien
 COPY ["Haihv.Elis.Tool.TraCuuGcn.WebLib/Haihv.Elis.Tool.TraCuuGcn.WebLib.csproj", "Haihv.Elis.Tool.TraCuuGcn.WebLib/"]
 COPY ["Haihv.Elis.Tool.TraCuuGcn.Models/Haihv.Elis.Tool.TraCuuGcn.Models.csproj", "Haihv.Elis.Tool.TraCuuGcn.Models/"]
 COPY ["Haihv.Elis.Tool.TraCuuGcn.Extensions/Haihv.Elis.Tool.TraCuuGcn.Extensions.csproj", "Haihv.Elis.Tool.TraCuuGcn.Extensions/"]
-COPY ["Haihv.Elis.Tool.TraCuuGcn.Uri/Haihv.Elis.Tool.TraCuuGcn.Api.Uri.csproj", "Haihv.Elis.Tool.TraCuuGcn.Uri/"]
+COPY ["Haihv.Elis.Tool.TraCuuGcn.Uri/Haihv.Elis.Tool.TraCuuGcn.Uri.csproj", "Haihv.Elis.Tool.TraCuuGcn.Uri/"]
 COPY ["ServiceDefaults/ServiceDefaults.csproj", "ServiceDefaults/"]
 RUN dotnet restore "./Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App/Haihv.Elis.Tool.TraCuuGcn.Web-App.csproj"
 COPY . .
