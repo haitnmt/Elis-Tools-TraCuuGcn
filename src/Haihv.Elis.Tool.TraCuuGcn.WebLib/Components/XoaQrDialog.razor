@@ -48,41 +48,36 @@
 </AuthorizeView>
 
 @inject ISnackbar SnackbarService
-
+@inject IGiayChungNhanServices GiayChungNhanServices
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter]
     public string Serial { get; set; } = string.Empty;
-    private const string UrlDeleteMaQr = "elis/delete-qr";
     private bool _processing;
 
     private string? _serial;
     private bool _disabledXoaQr = true;
-    private HttpClient? _httpClient = null;
     
 
     private async Task XoaQr(MouseEventArgs arg)
     {
-        if (_httpClient is null) return;
-        if (string.IsNullOrWhiteSpace(_serial) || _serial != Serial)
+        if (string.IsNullOrWhiteSpace(_serial))
         {
-            SnackbarService.Add("Số phát hành không chính xác", Severity.Error);
             return;
         }
         _processing = true;
-        var url = $"{UrlDeleteMaQr}?serial={_serial}";
         try
         {
-            var response = await _httpClient.DeleteAsync(url);
-            if (response.IsSuccessStatusCode)
+            var response = await GiayChungNhanServices.DeleteMaQrAsync(_serial);
+            if (response.success)
             {
                 SnackbarService.Add("Xóa thành công", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
-            else
+            else if (string.IsNullOrWhiteSpace(response.error))
             {
-                SnackbarService.Add($"Xóa không thành công: {await response.Content.ReadAsStringAsync()}", Severity.Error);
+                SnackbarService.Add($"Xóa không thành công: {response.error}", Severity.Error);
             }
             
         }

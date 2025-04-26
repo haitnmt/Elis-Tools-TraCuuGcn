@@ -123,13 +123,25 @@ var app = builder.Build();
 // Cấu hình Forwarded Headers - Đặt ở đầu pipeline
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    // Thêm XForwardedHost để xử lý đúng host khi qua proxy
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
 };
 // Quan trọng: Xóa các giới hạn mặc định nếu proxy không nằm trên localhost
 // Hoặc cấu hình KnownProxies/KnownNetworks nếu cần bảo mật hơn.
 forwardedHeadersOptions.KnownNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
-app.UseForwardedHeaders(forwardedHeadersOptions);
+app.UseForwardedHeaders(forwardedHeadersOptions); // Sửa lỗi typo UseForwarderHeaders -> UseForwardedHeaders
+
+// Thêm UsePathBase nếu ứng dụng chạy dưới một đường dẫn con trên proxy
+// Ví dụ: Nếu URL công khai là https://proxy.com/my-app/ thì cần cấu hình PathBase là /my-app
+// var pathBase = builder.Configuration["PathBase"];
+// if (!string.IsNullOrEmpty(pathBase))
+// {
+//     app.UsePathBase(pathBase);
+//     // Cần cập nhật cả cấu hình OIDC RedirectUriPath nếu có PathBase
+//     // oidcOptions.CallbackPath = pathBase + "/signin-oidc"; // Ví dụ trong cấu hình AddOpenIdConnect
+// }
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

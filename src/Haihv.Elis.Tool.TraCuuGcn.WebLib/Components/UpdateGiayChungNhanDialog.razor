@@ -132,12 +132,12 @@
 </AuthorizeView>
 
 @inject ISnackbar SnackbarService
+@inject IGiayChungNhanServices GiayChungNhanServices
 @code {
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public DateTime? MinNgayKy { get; set; }
     [Parameter] public PhapLyGiayChungNhan? PhapLyGiayChungNhan { get; set; }
-    private const string UrlUpdateGiayChungNhan = "elis/update-gcn";
     private string? _nguoiKy;
     private DateTime? _ngayKy = DateTime.Now;
     private DateTime? _ngayVaoSo = DateTime.Now;
@@ -145,7 +145,6 @@
     private bool _processing;
     private string? _serial;
     private bool _disabledUpdateButton = true;
-    private HttpClient? _httpClient;
     private MudDatePicker _ngayKyPicker = null!;
     private MudDatePicker _ngayVaoSoPicker = null!;
     
@@ -243,16 +242,15 @@
             PhapLyGiayChungNhan.NguoiKy = _nguoiKy;
             PhapLyGiayChungNhan.SoVaoSo = _soVaoSo;
             PhapLyGiayChungNhan.NgayVaoSo = _ngayVaoSo;
-            if (_httpClient is null) return;
-            var response = await _httpClient.PostAsJsonAsync(UrlUpdateGiayChungNhan, PhapLyGiayChungNhan);
-            if (response.IsSuccessStatusCode)
+            var response = await GiayChungNhanServices.UpdateGiayChungNhanAsync(PhapLyGiayChungNhan);
+            if (response.success)
             {
                 SnackbarService.Add("Cập nhật Giấy chứng nhận thành công", Severity.Success);
                 MudDialog.Close(DialogResult.Ok(true));
             }
-            else
+            else if (!string.IsNullOrWhiteSpace(response.error))
             {
-                SnackbarService.Add($"Cập nhật Giấy chứng nhận không thành công: {await response.Content.ReadAsStringAsync()}", Severity.Error);
+                SnackbarService.Add($"Cập nhật Giấy chứng nhận không thành công: {response.error}", Severity.Error);
             }
             
         }
