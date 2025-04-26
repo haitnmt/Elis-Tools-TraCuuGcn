@@ -1,0 +1,13 @@
+﻿<form action="authentication/logout" method="post">
+    <AntiforgeryToken/>
+    <input type="hidden" name="ReturnUrl" value="@CurrentUrl"/>
+    <MudTooltip Text="Đăng xuất">
+        <MudIconButton Icon="@Icons.Material.Filled.Logout" Size="Size.Small" Color="Color.Inherit"
+                       ButtonType="ButtonType.Submit"/>
+    </MudTooltip>
+</form>
+
+@code {
+    [Parameter]
+    public string? CurrentUrl { get; set;}
+}

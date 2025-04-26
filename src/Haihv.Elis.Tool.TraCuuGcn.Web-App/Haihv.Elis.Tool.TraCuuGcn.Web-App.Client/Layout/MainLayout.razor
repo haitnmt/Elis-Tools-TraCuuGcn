@@ -1,6 +1,5 @@
 @inherits LayoutComponentBase
 @attribute [StreamRendering]
-@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Components
 @* Required *@
 <MudThemeProvider/>
 <MudPopoverProvider/>
@@ -9,8 +8,6 @@
 
 @* Needed for snackbars *@
 <MudSnackbarProvider/>
-
-<StorageSyncInitializer/>
 
 <MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode"/>
 
@@ -21,23 +18,12 @@
             <MudAvatar Class="mr-2">
                 <MudImage Src="./logo.png"></MudImage>
             </MudAvatar>
-            <MudHidden Breakpoint="Breakpoint.SmAndDown">
-                <MudText Typo="Typo.h6">
+                <MudText Typo="Typo.subtitle1">
                     Tra cứu thông tin Giấy chứng nhận
                 </MudText>
-            </MudHidden>
-            <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudStack Spacing="0">
-                    <MudText Typo="Typo.subtitle2">
-                        Tra cứu thông tin
-                    </MudText>
-                    <MudText Typo="Typo.subtitle2">
-                        Giấy chứng nhận
-                    </MudText>
-                </MudStack>
-            </MudHidden>
             <MudSpacer/>
-            <LogInOrOut/>
+            <LogInOrOut CurrentUrl="@_currentUrl"
+                        UserInfo="_userInfo"/>
             <MudToggleIconButton @bind-Toggled="@_isDarkMode"
                                  Icon="@Icons.Material.Filled.DarkMode"
                                  Color="@Color.Error"
@@ -77,8 +63,6 @@ else
         </MudAlert>
     </MudStack>
 }
-
-
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

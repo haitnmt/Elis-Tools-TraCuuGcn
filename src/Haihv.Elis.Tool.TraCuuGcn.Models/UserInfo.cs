@@ -9,6 +9,7 @@ public class UserInfo
     public string DisplayName { get; set; } = string.Empty;
     public bool EmailVerified { get; set; }
     public bool IsLocalAccount { get; set; }
+    public bool HasUpdatePermission { get; set; }
     public List<string> Roles { get; set; } = [];
        
 }

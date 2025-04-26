@@ -36,6 +36,7 @@ internal class ServerAppSettingsService(HybridCache hybridCache, IConfiguration 
     public async Task<AppSettings> GetAppSettingAsync(CancellationToken cancellationToken = default)
     {
         const string cacheKey = "AppSettings";
+        
         return await hybridCache.GetOrCreateAsync(cacheKey,
             async token => await GetAppSettingsAsyncFromConfiguration(token), 
             cancellationToken: cancellationToken);

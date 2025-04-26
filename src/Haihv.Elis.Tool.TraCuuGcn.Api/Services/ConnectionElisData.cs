@@ -80,6 +80,13 @@ public interface IConnectionElisData
     /// Tên nhóm có quyền cập nhật.
     /// </returns>
     Task<string?> GetUpdateGroupName(string? serial, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Lấy danh sách tên nhóm có quyền cập nhật
+    /// </summary>
+    /// <returns>
+    /// Danh sách tên nhóm có quyền cập nhật.
+    /// </returns>
+    IEnumerable<string> GetUpdateGroupName();
 }
 
 /// <summary>
@@ -234,6 +241,11 @@ public sealed partial class ConnectionElisData(
         if (string.IsNullOrWhiteSpace(serial)) return null;
         var connectionSql = await GetConnectionAsync(serial);
         return connectionSql?.UpdateGroupName;
+    }
+
+    public IEnumerable<string> GetUpdateGroupName()
+    {
+        return ConnectionElis.Select(x => x.UpdateGroupName);
     }
 
     /// <summary>

@@ -48,7 +48,7 @@ public static class GetUserInfo
             var userInfo = user.GetUserInfo();
             
             userInfo.IsLocalAccount = permissionService.IsLocalUser(user);
-            
+            userInfo.HasUpdatePermission = permissionService.HasUpdatePermission(user);
             // Ghi log thành công
             logger.Information("{Email} Lấy thông tin cá nhân thành công ", userInfo.Email);
             

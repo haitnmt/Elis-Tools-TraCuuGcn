@@ -52,8 +52,6 @@ builder.Services.AddSingleton<IThuaDatService, ThuaDatService>();
 builder.Services.AddSingleton<ITaiSanService, TaiSanService>();
 // Add HttpClient for SDE API
 builder.Services.AddHttpClient("SdeApi");
-// Add HttpClient for LDAP API
-builder.Services.AddHttpClient("LdapApi");
 
 // Add GeoService
 builder.Services.AddSingleton<IGeoService, GeoService>();
@@ -64,7 +62,7 @@ builder.Services.AddSingleton<ISearchService, SearchService>();
 builder.Services.AddSingleton<ICheckIpService, CheckIpService>();
 
 // Add BackgroundService
-builder.Services.AddHostedService<ClearCacheService>();
+builder.Services.AddHostedService<RemoveCacheByElisAuditLogService>();
 
 // Configure CORS
 var frontendUrls = builder.Configuration.GetSection("FrontendUrl").Get<string[]>();

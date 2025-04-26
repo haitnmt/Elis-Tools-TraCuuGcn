@@ -9,7 +9,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 /// </remarks>
 /// <param name="connectionElisData">Đối tượng kết nối dữ liệu ELIS.</param>
 /// <param name="logger">Đối tượng ghi log.</param>
-public class ClearCacheService(IConnectionElisData connectionElisData, ILogger logger) : BackgroundService
+public class RemoveCacheByElisAuditLogService(IConnectionElisData connectionElisData, ILogger logger) : BackgroundService
 {
     /// <summary>
     /// Số giây chờ giữa các lần xóa cache.

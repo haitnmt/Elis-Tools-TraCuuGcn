@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using ZiggyCreatures.Caching.Fusion;
+using ZiggyCreatures.Caching.Fusion.Backplane.StackExchangeRedis;
 using ZiggyCreatures.Caching.Fusion.Serialization.SystemTextJson;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Extensions;
@@ -16,7 +18,6 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Extensions;
 /// </remarks>
 public static class HybridCachingExtensions
 {
-    private const string RedisConnectionName = "RedisConnectionName";
 
     /// <summary>
     /// Đăng ký và cấu hình hệ thống cache kết hợp cho ứng dụng.
@@ -37,68 +38,67 @@ public static class HybridCachingExtensions
 
         // Đăng ký memory cache - luôn được sử dụng làm cache tầng 1
         builder.Services.AddMemoryCache();
-        var cacheName = builder.Configuration.GetCacheName(redisConnectionName);
+        var redisCacheName = builder.Configuration.GetRedisCacheName(redisConnectionName);
+        var instanceName = builder.Configuration.GetInstanceName() ?? "fusionCache";
         // Khởi tạo FusionCache builder
-        var fusionCacheBuilder = builder.Services.AddFusionCache();
+        var fusionCacheBuilder = builder.Services.AddFusionCache(instanceName);
         
         fusionCacheBuilder.WithSerializer(new FusionCacheSystemTextJsonSerializer());
+        // Cấu hình các tùy chọn mặc định cho FusionCache
+        var defaultEntryOptions = new FusionCacheEntryOptions
+        {
+            Duration = TimeSpan.FromSeconds(30),
+            // FAILSAFE OPTIONS
+            IsFailSafeEnabled = true,
+            FailSafeMaxDuration = TimeSpan.FromHours(12),
+            FailSafeThrottleDuration = TimeSpan.FromSeconds(30),
+            
+            // JITTERING
+            JitterMaxDuration = TimeSpan.FromSeconds(2)
+            
+        };
         // Nếu có cung cấp chuỗi kết nối Redis, cấu hình thêm distributed cache
-        if (!string.IsNullOrWhiteSpace(cacheName))
+        if (!string.IsNullOrWhiteSpace(redisCacheName))
         {
             // Đăng ký Redis distributed cache
-            builder.AddRedisDistributedCache(cacheName);
-            // Resolve IDistributedCache thông qua Dependency Injection và cấu hình cho FusionCache
-            fusionCacheBuilder.WithDistributedCache(provider =>
-                provider.GetRequiredService<IDistributedCache>());
-        }
-
-        var defaultEntryOptions = new FusionCacheEntryOptions
+            builder.AddRedisDistributedCache(redisCacheName);
+            var redis = builder.Services.BuildServiceProvider().GetService<IConnectionMultiplexer>();
+            if (redis == null)
+            {
+                return;
+            }
+            // Cấu hình FusionCache với Redis
+            fusionCacheBuilder.WithDistributedCache(new RedisCache(
+                new RedisCacheOptions
                 {
-                    Duration = TimeSpan.FromSeconds(30),
-                    DistributedCacheDuration = TimeSpan.FromDays(1),
-                    // FAILSAFE OPTIONS
-                    IsFailSafeEnabled = true,
-                    FailSafeMaxDuration = TimeSpan.FromHours(12),
-                    FailSafeThrottleDuration = TimeSpan.FromSeconds(30),
-                    
-                    // DISTRIBUTED CACHE OPTIONS
-                    DistributedCacheSoftTimeout = TimeSpan.FromSeconds(1),
-                    DistributedCacheHardTimeout = TimeSpan.FromSeconds(2),
-                    AllowBackgroundDistributedCacheOperations = true,
-                    // JITTERING
-                    JitterMaxDuration = TimeSpan.FromSeconds(2)
-                };
-            
+                    Configuration = redis.Configuration,
+                }))
+                .WithBackplane(
+                    new RedisBackplane(new RedisBackplaneOptions
+                        { Configuration = redis.Configuration })
+                );
+            defaultEntryOptions.DistributedCacheDuration = TimeSpan.FromDays(1);
+            defaultEntryOptions.DistributedCacheSoftTimeout = TimeSpan.FromSeconds(1);
+            defaultEntryOptions.DistributedCacheHardTimeout = TimeSpan.FromSeconds(2);
+            defaultEntryOptions.AllowBackgroundDistributedCacheOperations = true;
+        }
+        
+        // CUSTOM LOG LEVELS
+        fusionCacheBuilder.WithOptions(options =>
+        {
+            options.DistributedCacheCircuitBreakerDuration = TimeSpan.FromSeconds(2);
 
+            // CUSTOM LOG LEVELS
+            options.FailSafeActivationLogLevel = LogLevel.Debug;
+            options.SerializationErrorsLogLevel = LogLevel.Warning;
+            options.DistributedCacheSyntheticTimeoutsLogLevel = LogLevel.Debug;
+            options.DistributedCacheErrorsLogLevel = LogLevel.Error;
+            options.FactorySyntheticTimeoutsLogLevel = LogLevel.Debug;
+            options.FactoryErrorsLogLevel = LogLevel.Error;
+            options.CacheKeyPrefix = $"{instanceName}:";
+        });
         fusionCacheBuilder.DefaultEntryOptions = defaultEntryOptions;
-        fusionCacheBuilder.TryWithAutoSetup();
         // Hoàn tất cấu hình FusionCache như một hybrid cache
         fusionCacheBuilder.AsHybridCache();
-    }
-
-    /// <summary>
-    /// Lấy tên cache từ cấu hình ứng dụng hoặc thông qua tham số đầu vào.
-    /// </summary>
-    /// <param name="configuration">
-    /// Cấu hình ứng dụng (IConfiguration) để lấy thông tin từ các khóa được thiết lập.
-    /// </param>
-    /// <param name="redisConnectionName">
-    /// Tên của chuỗi kết nối Redis được chỉ định. Nếu cung cấp, tên này sẽ được ưu tiên.
-    /// </param>
-    /// <returns>
-    /// Tên cache được lấy từ input hoặc từ cấu hình ứng dụng. Kết quả có thể là null nếu không tìm thấy giá trị phù hợp.
-    /// </returns>
-    private static string? GetCacheName(this IConfiguration configuration, string? redisConnectionName = null)
-    {
-        if (!string.IsNullOrWhiteSpace(redisConnectionName))
-            return redisConnectionName;
-        // Configure Redis
-        var cacheName = configuration["Aspire:CacheName"];
-        if (string.IsNullOrWhiteSpace(cacheName) &&
-            !string.IsNullOrWhiteSpace(configuration.GetConnectionString(RedisConnectionName)))
-        {
-            cacheName = RedisConnectionName;
-        }
-        return cacheName;
     }
 }

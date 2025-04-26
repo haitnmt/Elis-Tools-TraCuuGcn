@@ -386,7 +386,7 @@ else
     {
         _permissionsCanUpdate = false;
         // Kiểm tra điều kiện tiên quyết
-        if ((!UserInfo?.IsLocalAccount ?? false) || string.IsNullOrWhiteSpace(Serial))
+        if ((!UserInfo?.HasUpdatePermission ?? false) || string.IsNullOrWhiteSpace(Serial))
         {
             return;
         }
@@ -409,9 +409,10 @@ else
         _processingGetPermissionsCanUpdate = true;
         StateHasChanged();
         var (success, message) = await GiayChungNhanServices.GetHasUpdatePermissionAsync(Serial);
+        
         if (!success)
         {
-            SnackbarService.Add("Không có quyền cập nhật Giấy chứng nhận", Severity.Warning);
+            SnackbarService.Add($"Không có quyền cập nhật Giấy chứng nhận có số phát hành: {Serial}", Severity.Warning);
         }
 
         if (!string.IsNullOrWhiteSpace(message))

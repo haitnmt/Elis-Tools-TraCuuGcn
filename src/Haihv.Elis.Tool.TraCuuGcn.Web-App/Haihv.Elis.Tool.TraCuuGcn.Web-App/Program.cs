@@ -13,14 +13,18 @@ using MudBlazor.Services;
 using ServiceDefaults;
 using Yarp.ReverseProxy.Transforms;
 using Microsoft.AspNetCore.HttpOverrides;
+using ZiggyCreatures.Caching.Fusion;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-
 // Add Caching
 builder.AddCache();
 
+// Add services Data Protection sử dụng Redis
+builder.AddDataProtection();
+
+// Add services OpenIdConnect
 var oidcConfig = builder.Configuration.GetSection("OpenIdConnect");
 const string oidcScheme = LoginLogoutEndpointRouteBuilderExtensions.OidcSchemeName;
 // Add services to the container.
@@ -126,21 +130,12 @@ var forwardedHeadersOptions = new ForwardedHeadersOptions
     // Thêm XForwardedHost để xử lý đúng host khi qua proxy
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
 };
+
 // Quan trọng: Xóa các giới hạn mặc định nếu proxy không nằm trên localhost
 // Hoặc cấu hình KnownProxies/KnownNetworks nếu cần bảo mật hơn.
 forwardedHeadersOptions.KnownNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
-app.UseForwardedHeaders(forwardedHeadersOptions); // Sửa lỗi typo UseForwarderHeaders -> UseForwardedHeaders
-
-// Thêm UsePathBase nếu ứng dụng chạy dưới một đường dẫn con trên proxy
-// Ví dụ: Nếu URL công khai là https://proxy.com/my-app/ thì cần cấu hình PathBase là /my-app
-// var pathBase = builder.Configuration["PathBase"];
-// if (!string.IsNullOrEmpty(pathBase))
-// {
-//     app.UsePathBase(pathBase);
-//     // Cần cập nhật cả cấu hình OIDC RedirectUriPath nếu có PathBase
-//     // oidcOptions.CallbackPath = pathBase + "/signin-oidc"; // Ví dụ trong cấu hình AddOpenIdConnect
-// }
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -182,5 +177,6 @@ app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
 app.MapAppSettingsEndpoints();
 
 app.MapGroup("/authentication").MapLoginAndLogout();
+
 
 app.Run();

@@ -30,6 +30,13 @@ public interface IPermissionService
     /// <exception cref="NoSerialException">Ném ra khi số Serial không hợp lệ</exception>
     /// <exception cref="NoUpdateGiayChungNhanException">Ném ra khi Giấy chứng nhận đã được ký</exception>
     Task<bool> HasUpdatePermission(ClaimsPrincipal user, string? serial, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kiểm tra người dùng có quyền cập nhật Giấy chứng nhận hay không
+    /// </summary>
+    /// <param name="user">Đối tượng ClaimsPrincipal chứa thông tin người dùng</param>
+    /// <returns>Task kết quả trả về True nếu có quyền cập nhật, ngược lại là False</returns>
+    bool HasUpdatePermission(ClaimsPrincipal user);
     
     /// <summary>
     /// Kiểm tra người dùng có quyền đọc thông tin Giấy chứng nhận hay không
@@ -102,6 +109,17 @@ public class PermissionService(IConfiguration configuration,
         
         // Ném ra ngoại lệ nếu Giấy chứng nhận đã được ký
         throw new NoUpdateGiayChungNhanException(serial);
+    }
+    /// <summary>
+    /// Kiểm tra người dùng có quyền cập nhật Giấy chứng nhận hay không
+    /// </summary>
+    /// <param name="user">Đối tượng ClaimsPrincipal chứa thông tin người dùng</param>
+    /// <returns>Task kết quả trả về True nếu có quyền cập nhật, ngược lại là False</returns>
+    public bool HasUpdatePermission(ClaimsPrincipal user)
+    {
+        // Lấy tên nhóm có quyền cập nhật Giấy chứng nhận
+        var groupNamesList = connectionElisData.GetUpdateGroupName().ToList();
+        return groupNamesList.Any(user.HasPermission);
     }
     
     /// <summary>
