@@ -1,22 +1,24 @@
 @using Haihv.Elis.Tool.TraCuuGcn.Models
+@using Haihv.Elis.Tool.TraCuuGcn.WebLib.Services
 
+@implements IDisposable
 <AuthorizeView>
     <Authorized>
         <MudStack Row="true">
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <MudText>
-                    Xin chào, @UserInfo?.DisplayName
+                    Xin chào, @_userInfo?.DisplayName
                 </MudText>
             </MudHidden>
             <MudHidden Breakpoint="Breakpoint.MdAndUp">
-                <MudTooltip Text="@($"Xin chào, {UserInfo?.DisplayName}")"
+                <MudTooltip Text="@($"Xin chào, {_userInfo?.DisplayName}")"
                             Color="Color.Default"
                             Placement="Placement.Bottom">
                     <MudIcon Icon="@Icons.Material.Filled.Person"
                              Size="Size.Small"/>
                 </MudTooltip>
             </MudHidden>
-            <LogOut CurrentUrl="@CurrentUrl"/>
+            <LogOut CurrentUrl="@_currentUrl"/>
         </MudStack>
     </Authorized>
     <NotAuthorized>
@@ -27,9 +29,45 @@
 </AuthorizeView>
 
 @inject NavigationManager NavigationManager
+@inject IUserServices UserServices
+@inject AuthenticationStateProvider AuthStateProvider
 @code {
-    [Parameter]
-    public string? CurrentUrl { get; set;}
-    [Parameter]
-    public UserInfo? UserInfo { get; set;}
+    private string? _currentUrl;
+
+    private UserInfo? _userInfo;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await base.OnInitializedAsync();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            if (authState.User.Identity?.IsAuthenticated == true)
+            {
+                _userInfo = await UserServices.GetUserInfoAsync();
+            }
+        }
+        catch (Exception)
+        {
+            _userInfo = null;
+        }
+        StateHasChanged();
+    }
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+
 }

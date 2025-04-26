@@ -1,4 +1,4 @@
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @attribute [StreamRendering]
 @* Required *@
 <MudThemeProvider/>
@@ -34,13 +34,11 @@
                 </MudStack>
             </MudHidden>
             <MudSpacer/>
-            <LogInOrOut CurrentUrl="@_currentUrl"
-                        UserInfo="_userInfo"/>
+            <LogInOrOut/>
             <MudToggleIconButton @bind-Toggled="@_isDarkMode"
                                  Icon="@Icons.Material.Filled.DarkMode"
                                  Color="@Color.Error"
                                  Size="Size.Small"
-                                 title=@(_isDarkMode ? "On" : "Off")
                                  ToggledIcon="@Icons.Material.Filled.LightMode" ToggledColor="@Color.Default"/>
             <MudIconButton
                 Icon="@Icons.Custom.Brands.GitHub"
