@@ -18,9 +18,21 @@
             <MudAvatar Class="mr-2">
                 <MudImage Src="./logo.png"></MudImage>
             </MudAvatar>
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <MudText Typo="Typo.subtitle1">
                     Tra cứu thông tin Giấy chứng nhận
                 </MudText>
+            </MudHidden>
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudStack Spacing="0">
+                    <MudText Typo="Typo.subtitle2">
+                        Tra cứu thông tin
+                    </MudText>
+                    <MudText Typo="Typo.subtitle2">
+                        Giấy chứng nhận
+                    </MudText>
+                </MudStack>
+            </MudHidden>
             <MudSpacer/>
             <LogInOrOut CurrentUrl="@_currentUrl"
                         UserInfo="_userInfo"/>

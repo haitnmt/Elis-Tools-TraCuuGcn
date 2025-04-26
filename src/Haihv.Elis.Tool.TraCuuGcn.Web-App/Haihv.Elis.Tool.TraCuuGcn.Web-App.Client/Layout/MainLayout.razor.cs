@@ -10,8 +10,6 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Web_App.Client.Layout;
 public partial class MainLayout
 {
     [Inject]
-    private IDialogService DialogService { get; set; } = null!;
-    [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
     private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
@@ -22,7 +20,6 @@ public partial class MainLayout
     private bool _isDarkMode;
     private MudThemeProvider _mudThemeProvider = null!;
     private bool _isInitialized;
-    private bool _toggleInfoMenu;
     private string? _currentUrl;
     private UserInfo? _userInfo;
     protected override async Task OnInitializedAsync()
