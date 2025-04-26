@@ -12,6 +12,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using ServiceDefaults;
 using Yarp.ReverseProxy.Transforms;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,15 +111,25 @@ builder.Services.AddHttpClient<IGiayChungNhanServices, ServerGiayChungNhanServic
 builder.Services.AddHttpClient<ICacheService, ServerCacheServices>(
     client => client.BaseAddress = clientBaseAddress);
 builder.Services.AddHttpClient<IThuaDatServices, ServerThuaDatService>(
-    client=> client.BaseAddress = clientBaseAddress);
+    client => client.BaseAddress = clientBaseAddress);
 builder.Services.AddHttpClient<IChuSuDungServices, ServerChuSuDungService>(
-    client=> client.BaseAddress = clientBaseAddress);
+    client => client.BaseAddress = clientBaseAddress);
 builder.Services.AddHttpClient<ITaiSanServices, ServerTaiSanService>(
-    client=> client.BaseAddress = clientBaseAddress);
+    client => client.BaseAddress = clientBaseAddress);
 
 
 var app = builder.Build();
 
+// Cấu hình Forwarded Headers - Đặt ở đầu pipeline
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+// Quan trọng: Xóa các giới hạn mặc định nếu proxy không nằm trên localhost
+// Hoặc cấu hình KnownProxies/KnownNetworks nếu cần bảo mật hơn.
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

@@ -10,8 +10,8 @@
         <AssemblyName>$(AssemblyName.Replace(' ', '_'))</AssemblyName>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.04.25.1</AssemblyVersion>
-        <FileVersion>2025.04.25.1</FileVersion>
+        <AssemblyVersion>2025.04.26.1</AssemblyVersion>
+        <FileVersion>2025.04.26.1</FileVersion>
         <NeutralLanguage>vi-VN</NeutralLanguage>
     </PropertyGroup>
 
