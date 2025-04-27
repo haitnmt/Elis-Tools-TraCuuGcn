@@ -1,15 +1,15 @@
 ﻿@inherits LayoutComponentBase
 @attribute [StreamRendering]
 @* Required *@
-<MudThemeProvider/>
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode"/>
+
+@* Needed for Popover *@
 <MudPopoverProvider/>
 @* Needed for dialogs *@
 <MudDialogProvider/>
 
 @* Needed for snackbars *@
 <MudSnackbarProvider/>
-
-<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode"/>
 
 @if (_isInitialized)
 {
@@ -80,3 +80,17 @@ else
     <span class="dismiss">🗙</span>
 </div>
 
+@code
+{
+    private const string UrlGitHub = "https://github.com/haitnmt/";
+    private bool _isDarkMode = true;
+    private MudThemeProvider _mudThemeProvider = null!;
+    private bool _isInitialized;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+        _isInitialized = true;
+        StateHasChanged();
+    }
+}

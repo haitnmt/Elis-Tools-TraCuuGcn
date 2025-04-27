@@ -6,13 +6,13 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <Copyright>vpdkbacninh.vn | haihv.vn</Copyright>
-        <AssemblyVersion>2025.04.26.1</AssemblyVersion>
-        <FileVersion>2025.04.26.1</FileVersion>
+        <AssemblyVersion>2025.04.27.1</AssemblyVersion>
+        <FileVersion>2025.04.27.1</FileVersion>
         <NeutralLanguage>vi-VN</NeutralLanguage>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.2.0" />
+        <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.2.1" />
         <PackageReference Include="Carter" Version="9.0.0" />
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="InterpolatedSql.Dapper" Version="2.3.0" />
@@ -21,9 +21,9 @@
         <PackageReference Include="MediatR" Version="12.5.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
-        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
         <PackageReference Include="Elastic.Serilog.Sinks" Version="8.12.3" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.8.0" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.9.0" />
         <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
         <PackageReference Include="Serilog.Extensions" Version="8.0.3" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />

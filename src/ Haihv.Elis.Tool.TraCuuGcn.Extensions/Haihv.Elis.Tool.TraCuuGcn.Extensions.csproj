@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.2.0" />
+      <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.2.1" />
       <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="9.0.4" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.4" />
       <PackageReference Include="ZiggyCreatures.FusionCache.Backplane.StackExchangeRedis" Version="2.2.0" />
