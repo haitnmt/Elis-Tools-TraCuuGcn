@@ -54,22 +54,20 @@ public static class HybridCachingExtensions
             AllowBackgroundDistributedCacheOperations = true,
             // FAILSAFE OPTIONS
             IsFailSafeEnabled = true,
-            FailSafeMaxDuration = TimeSpan.FromHours(12),
             FailSafeThrottleDuration = TimeSpan.FromSeconds(30),
             // JITTERING
             JitterMaxDuration = TimeSpan.FromSeconds(2)
         };
         var cacheOptions = new FusionCacheOptions
         {
-            // CUSTOM LOG LEVELS
-            FactorySyntheticTimeoutsLogLevel = LogLevel.Debug,
-            FactoryErrorsLogLevel = LogLevel.Error,
-            // Cấu hình các tùy chọn cho Redis cache
             DistributedCacheCircuitBreakerDuration = TimeSpan.FromSeconds(2),
-            // Cấu hình thời gian chờ cho Redis cache
-            DistributedCacheSyntheticTimeoutsLogLevel = LogLevel.Debug,
-            DistributedCacheErrorsLogLevel = LogLevel.Error,
-            FailSafeActivationLogLevel = LogLevel.Debug,
+            // CUSTOM LOG LEVELS
+            
+            FactorySyntheticTimeoutsLogLevel = LogLevel.Warning,
+            FactoryErrorsLogLevel = LogLevel.Warning,
+            DistributedCacheSyntheticTimeoutsLogLevel = LogLevel.Warning,
+            DistributedCacheErrorsLogLevel = LogLevel.Warning,
+            FailSafeActivationLogLevel = LogLevel.Warning,
             SerializationErrorsLogLevel = LogLevel.Warning,
             // Cấu hình cache key prefix
             CacheKeyPrefix = $"{instanceName}:"
@@ -97,6 +95,7 @@ public static class HybridCachingExtensions
                     new RedisBackplane(new RedisBackplaneOptions
                         { Configuration = redis.Configuration })
                 );
+            defaultEntryOptions.FailSafeMaxDuration = TimeSpan.FromDays(7);
             defaultEntryOptions.DistributedCacheDuration = TimeSpan.FromDays(7);
             
         }
@@ -110,6 +109,7 @@ public static class HybridCachingExtensions
                 throw new InvalidOperationException("Không thể khởi tạo DistributedCache");
             }
             fusionCacheBuilder.WithDistributedCache(distributed);
+            defaultEntryOptions.FailSafeMaxDuration = TimeSpan.FromHours(12);
             defaultEntryOptions.DistributedCacheDuration = TimeSpan.FromHours(12);
         }
         // Cấu hình các tùy chọn mặc định cho FusionCache
