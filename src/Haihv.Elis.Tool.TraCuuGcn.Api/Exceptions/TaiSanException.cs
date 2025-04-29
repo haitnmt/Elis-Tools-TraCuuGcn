@@ -13,7 +13,7 @@ public class TaiSanNotFoundException : TraCuuGcnException
     /// <param name="serial">Số phát hành của Giấy chứng nhận.</param>
     /// <param name="innerException">Exception gốc (nếu có).</param>
     public TaiSanNotFoundException(string serial, Exception? innerException = null)
-        : base($"Không tìm thấy tài sản với số phát hành Giấy chứng nhận: {serial}.", HttpStatusCode.NoContent, "TAI_SAN_NOT_FOUND",
+        : base($"Không tìm thấy tài sản với số phát hành Giấy chứng nhận: {serial}.", HttpStatusCode.NotFound, "TAI_SAN_NOT_FOUND",
             innerException)
     {
     }

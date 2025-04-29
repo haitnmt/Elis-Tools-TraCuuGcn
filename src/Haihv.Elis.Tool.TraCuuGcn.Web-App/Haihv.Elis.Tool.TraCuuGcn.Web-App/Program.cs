@@ -13,7 +13,6 @@ using MudBlazor.Services;
 using ServiceDefaults;
 using Yarp.ReverseProxy.Transforms;
 using Microsoft.AspNetCore.HttpOverrides;
-using ZiggyCreatures.Caching.Fusion;
 
 var builder = WebApplication.CreateBuilder(args);
 

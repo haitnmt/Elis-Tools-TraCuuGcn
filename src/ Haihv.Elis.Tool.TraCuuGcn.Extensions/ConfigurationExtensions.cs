@@ -4,8 +4,8 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Extensions;
 
 internal static class ConfigurationExtensions
 {
-    private const string RedisConnectionNameKey = "RedisConnectionName";
-    private const string AspireCacheNameKey = "Aspire:CacheName";
+    private const string ConnectionStringsKey = "ConnectionStrings";
+    private const string RedisConnectionNameKey = "Cache";
     private const string InstanceNameKey = "InstanceName";
     /// <summary>
     /// Lấy tên cache từ cấu hình ứng dụng hoặc thông qua tham số đầu vào.
@@ -23,14 +23,8 @@ internal static class ConfigurationExtensions
     {
         if (!string.IsNullOrWhiteSpace(redisConnectionName))
             return redisConnectionName;
-        // Configure Redis
-        var cacheName = configuration[AspireCacheNameKey];
-        if (string.IsNullOrWhiteSpace(cacheName) &&
-            !string.IsNullOrWhiteSpace(configuration.GetConnectionString(RedisConnectionNameKey)))
-        {
-            cacheName = RedisConnectionNameKey;
-        }
-        return cacheName;
+        var section = configuration.GetSection($"{ConnectionStringsKey}:{RedisConnectionNameKey}");
+        return !section.Exists() ? null : RedisConnectionNameKey; // Ưu tiên Aspire Host Redis
     }
     /// <summary>
     /// Lấy tên cache từ cấu hình ứng dụng hoặc thông qua tham số đầu vào.

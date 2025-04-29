@@ -4,7 +4,7 @@
 @implements IDisposable
 <AuthorizeView>
     <Authorized>
-        <MudStack Row="true">
+        <MudStack Row="true" Spacing="0">
             <MudHidden Breakpoint="Breakpoint.SmAndDown">
                 <MudText>
                     Xin chào, @_userInfo?.DisplayName
@@ -14,8 +14,9 @@
                 <MudTooltip Text="@($"Xin chào, {_userInfo?.DisplayName}")"
                             Color="Color.Default"
                             Placement="Placement.Bottom">
-                    <MudIcon Icon="@Icons.Material.Filled.Person"
-                             Size="Size.Small"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Person" 
+                                   Color="Color.Inherit"
+                                   Size="Size.Small"/>
                 </MudTooltip>
             </MudHidden>
             <LogOut CurrentUrl="@_currentUrl"/>
