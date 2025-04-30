@@ -1,151 +1,49 @@
-﻿# Tracuugcn Web API
+﻿# Hệ thống tra cứu Giấy chứng nhận theo QRCode - API
 
-Dịch vụ Web API để tra cứu thông tin Giấy chứng nhận từ cơ sở dữ liệu địa chính trên nền phần mềm ELIS SQL
+## Lưu ý cấu hình bắt buộc
 
-## Dịch vụ
-
-### Web API
-
-- **Image**: `haitnmt/tracuugcn-api`
-- **Ports**: Exposed on `8089`, mapped to container port `8089`
-- **Volume**: Tệp cấu hình `api-setting` được gắn vào `/app/appsettings.json`
-- **Replicas**: 2 (Có thể sử dụng nếu cần thiết)
+**ConnectionStrings.Cache** (bắt buộc):
+- Cần cấu hình kết nối đến Redis hoặc Valkey cho API.
+- Nếu không cấu hình trường này, hệ thống sẽ không hoạt động.
+- Ví dụ cấu hình:
+  - "ConnectionStrings": { "Cache": "localhost:6379" } (Redis hoặc Valkey Connection String)
 
 ## Cấu hình
 
-Đảm bảo bạn có tệp `appsettings.json` trong cùng thư mục với tệp `docker-compose.yml`.
+Hệ thống sử dụng file `appsettings.json` và `appsettings.Development.json` để cấu hình. Các trường bắt buộc (ghi rõ trong ngoặc):
 
-## Sử dụng
+- **ConnectionStrings.Cache** (bắt buộc): Kết nối Redis/Valkey.
+- **OpenIdConnect.Authority** (bắt buộc): Địa chỉ máy chủ OpenID Connect.
+- **OpenIdConnect.Audience** (bắt buộc): Định danh ứng dụng (clientId) dùng cho xác thực API.
+- **ElisSql.Databases** (bắt buộc): Danh sách các kết nối đến cơ sở dữ liệu ELIS SQL.
+- **ElisSql.ApiSde** (bắt buộc): URL của API SDE.
+- **FrontendUrl** (bắt buộc): URL của ứng dụng web.
+- **BackendUrl** (bắt buộc): URL của API.
+- **UserAdmins** (bắt buộc): Danh sách các tài khoản admin.
+- **InstanceName** (bắt buộc): Tên định danh instance API.
 
-Để khởi động các dịch vụ, chạy lệnh:
+> **Lưu ý:**
+> - `appsettings.Development.json` dùng cho môi trường phát triển, có thể khác với `appsettings.json` (production).
+> - Đảm bảo trường `ConnectionStrings.Cache` luôn có mặt và hợp lệ ở cả hai file cấu hình.
+> - Nếu không cấu hình cache, ứng dụng sẽ không thể khởi động.
 
-```sh
-docker-compose up -d
-```
-
-Để dừng các dịch vụ, chạy lệnh:
-
-```sh
-docker-compose down
-```
-
-## Mở rộng
-
-Để mở rộng dịch vụ `web-api`, chạy lệnh:
-
-```sh
-docker-compose up -d --scale web-api=<số_lượng_bản_sao>
-```
-
-Thay `<số_lượng_bản_sao>` bằng số lượng bản sao mong muốn.
-
-## Ví dụ Docker Compose
-
-Dưới đây là ví dụ về tệp `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-
-services:
-  web-api:
-    image: haitnmt/tracuugcn-api
-    ports:
-      - "8089:8089"
-    volumes:
-      - type: config
-        source: api-setting
-        target: /app/appsettings.json
-        volume:
-          nocopy: true
-
-configs:
-  api-setting:
-    file: ./appsettings.json
-```
-
-## appsettings.json mẫu:
+## Tham khảo cấu hình mẫu
 ```json
 {
-  "Serilog": {
-    "Using": [
-      "Serilog.Sinks.Console"
-    ],
-    "MinimumLevel": {
-      "Default": "Information",
-      "Override": {
-        "Microsoft": "Information",
-        "System": "Information",
-        "Microsoft.AspNetCore": "Warning",
-        "Microsoft.AspNetCore.Hosting.Diagnostics": "Warning",
-        "Microsoft.AspNetCore.Routing": "Warning",
-        "Microsoft.AspNetCore.Mvc": "Warning"
-      }
-    },
-    "WriteTo": [
-      // Ghi log ra tệp nếu cần thiết
-      //      {
-      //        "Name": "File",
-      //        "Args": {
-      //          "path": "Logs/log-.txt",
-      //          "rollingInterval": "Day",
-      //          "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj} {NewLine}{Exception}"
-      //        }
-      //      },
-      {
-        "Name": "Console",
-        "Args": {
-          "outputTemplate": "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj} {NewLine}{Exception}"
-        }
-      }
-    ],
-    "Enrich": [
-      "FromLogContext",
-      "WithMachineName",
-      "WithEnvironmentName"
-    ]
+  "ConnectionStrings": {
+    "Cache": "localhost:6379"
   },
-  // Ghi log ra Elasticsearch (Nếu có)
-  //  "Elasticsearch": {
-  //    "Uris": [
-  //      "https://localhost:9200",
-  //      "https://192.168.1.1:9200"
-  //    ],
-  //    "Token": "--==",
-  //    "Namespace": "Elis-TraCuuGcn"
-  //  },
-  // Sử dụng Cache Redis (nếu có), mặc định chỉ lưu cache trong Memory
-  //  "Redis": {
-  //    "ConnectionString": "localhost:6379,user=admin,password=admin@Sa-123"
-  //  },
-  "JwtTokenSettings": {
-    "SecretKeys": ["SecretKey"],
-    "Issuers": ["https://localhost:5001"],
-    "Audiences": ["https://localhost:5001"]
+  "OpenIdConnect": {
+    "Authority": "https://sso.example.com/realms/your-realm",
+    "Audience": "account"
   },
-  // Cấu hình các kết nối đến dữ liệu ELIS SQL
   "ElisSql": {
-    "Databases": [
-      {
-        "Name": "elis",
-        "MaDvhc": "127",
-        "ElisConnectionString": "Server=localhost;Database=elis;User Id=sa;Password=admin@Sa-123;TrustServerCertificate=True;",
-        "SdeDatabase": "sde"
-      }
-    ],
-    // Cấu hình để kết nối đến dịch vụ lấy thông tin vị trí thửa từ SDE
+    "Databases": [ ... ],
     "ApiSde": "http://localhost:8151"
   },
-  "AllowedHosts": "*",
-  "FrontendUrl": [
-    "https://tracuugcn.tentinh.gov.vn/"
-  ],
-  "BackendUrl": "https://api-tracuugcn.tentinh.gov.vn",
-  "UserAdmin": [
-    "admin"
-  ]
+  "FrontendUrl": ["https://your-frontend-url/"],
+  "BackendUrl": "https://your-backend-url/",
+  "UserAdmins": ["admin@example.com"],
+  "InstanceName": "TraCuuGcn-Api"
 }
 ```
-
-## Giấy phép
-
-Dự án này được cấp phép theo Giấy phép MIT.

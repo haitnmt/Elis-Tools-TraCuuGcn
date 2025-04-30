@@ -25,6 +25,8 @@ Dự án được xây dựng theo kiến trúc microservices với các thành 
 
 ### 4. Thư viện chung
 - Models (Haihv.Elis.Tool.TraCuuGcn.Models): Chứa các model dữ liệu dùng chung
+- Uri (Haihv.Elis.Tool.TraCuuGcn.Uri): Chứa các URI dùng chung cho API và Web App
+- Extensions (Haihv.Elis.Tool.TraCuuGcn.Extensions): Chứa các extension method dùng chung
 - WebLib (Haihv.Elis.Tool.TraCuuGcn.WebLib): Cung cấp các component và service dùng chung cho ứng dụng web
 
 ## Tính năng chính
@@ -57,7 +59,7 @@ Dự án được xây dựng theo kiến trúc microservices với các thành 
 
 ### Triển khai
 - Docker và Docker Compose
-- Redis (tùy chọn, cho caching)
+- Redis hoặc Valkey (cho caching)
 - Elasticsearch (tùy chọn, cho logging)
 
 ## Tính năng
@@ -119,25 +121,25 @@ docker-compose up -d
 
 ## Cấu hình
 
-Hệ thống sử dụng file `appsettings.json` để cấu hình. Dưới đây là một số cấu hình quan trọng:
+Hệ thống sử dụng file `appsettings.json` và `appsettings.Development.json` để cấu hình. Dưới đây là một số cấu hình quan trọng (bắt buộc phải có các trường trong ngoặc):
 
-### API
-- `OpenIdConnect.Authority`: Địa chỉ máy chủ OpenID Connect (ví dụ: https://sso.example.com/realms/your-realm)
-- `OpenIdConnect.Audience`: Định danh ứng dụng (clientId) dùng cho xác thực API
-- `ElisSql.Databases`: Danh sách các kết nối đến cơ sở dữ liệu ELIS SQL
-- `ElisSql.ApiSde`: URL của API SDE
-- `Redis.ConnectionString`: Kết nối đến Redis (nếu sử dụng)
-- `FrontendUrl`: URL của ứng dụng web
-- `BackendUrl`: URL của API
-- `UserAdmin`: Danh sách các tài khoản admin
+- **ConnectionStrings.Cache** (bắt buộc): Kết nối Redis/Valkey.
+- **OpenIdConnect.Authority** (bắt buộc): Địa chỉ máy chủ OpenID Connect (ví dụ: https://sso.example.com/realms/your-realm)
+- **OpenIdConnect.ClientId/Audience** (bắt buộc): Định danh ứng dụng (clientId) dùng cho xác thực API/Web App.
+- **OpenIdConnect.ClientSecret** (nếu cần): ClientSecret của ứng dụng web.
+- **OpenIdConnect.ResponseType** (bắt buộc): Loại response (thường là "code").
+- **OpenIdConnect.Scope** (bắt buộc): Các scope cần thiết (ví dụ: "openid profile email").
+- **ElisSql.Databases** (bắt buộc với API): Danh sách các kết nối đến cơ sở dữ liệu ELIS SQL.
+- **ElisSql.ApiSde** (bắt buộc với API): URL của API SDE.
+- **FrontendUrl** (bắt buộc với API): URL của ứng dụng web.
+- **BackendUrl/ApiEndpoint** (bắt buộc): URL của API.
+- **UserAdmins** (bắt buộc với API): Danh sách các tài khoản admin.
+- **IsDemo** (tùy chọn): Bật/tắt chế độ demo (true/false).
 
-### Web App
-- `OpenIdConnect.Authority`: Địa chỉ máy chủ OpenID Connect
-- `OpenIdConnect.ClientId`: ClientId của ứng dụng web
-- `OpenIdConnect.ClientSecret`: ClientSecret của ứng dụng web (nếu cần)
-- `OpenIdConnect.ResponseType`: Loại response (thường là "code")
-- `OpenIdConnect.Scope`: Các scope cần thiết (ví dụ: "openid profile email")
-- `ApiEndpoint`: URL của API
+> **Lưu ý:**
+> - `appsettings.Development.json` dùng cho môi trường phát triển, có thể khác với `appsettings.json` (production).
+> - Đảm bảo trường `ConnectionStrings.Cache` luôn có mặt và hợp lệ ở cả hai file cấu hình.
+> - Nếu không cấu hình cache, ứng dụng sẽ không thể khởi động.
 
 ## Giấy phép
 
