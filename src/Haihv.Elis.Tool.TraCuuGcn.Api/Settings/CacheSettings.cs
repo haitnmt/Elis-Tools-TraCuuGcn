@@ -20,5 +20,10 @@ public static class CacheSettings
     public static string KeySearch(string query) => $"Search-Query:{query.ChuanHoa()}";
     public static string KeyToaDoThua(string serial) => $"ToaDoThua:{serial}";
     public static string KeyTaiSan(string serial) => $"TaiSan:{serial}";
-    
+    public static string KeyHasReadPermission(string email, string serial)
+        => $"HasReadPermission:{email}:{serial}";
+    public static string KeyReadCount(string email)
+        => $"HasReadPermission:{email}:Count";
+    public static string KeyReadLock(string email)
+        => $"HasReadPermission:{email}:Lock";
 }

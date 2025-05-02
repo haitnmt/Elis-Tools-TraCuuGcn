@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
+using Microsoft.Extensions.Caching.Hybrid;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 
@@ -58,10 +60,12 @@ public interface IPermissionService
 /// khi truy cập và thao tác với Giấy chứng nhận
 /// </remarks>
 /// <param name="configuration">Đối tượng cấu hình ứng dụng</param>
+/// <param name="hybridCache">Dịch vụ cache hỗn hợp</param>
 /// <param name="connectionElisData">Dịch vụ kết nối ELIS Data</param>
 /// <param name="giayChungNhanService">Dịch vụ quản lý Giấy chứng nhận</param>
 /// <param name="chuSuDungService">Dịch vụ quản lý thông tin chủ sở hữu</param>
 public class PermissionService(IConfiguration configuration, 
+    HybridCache hybridCache,
     IConnectionElisData connectionElisData,
     IGiayChungNhanService giayChungNhanService,
     IChuSuDungService chuSuDungService) : IPermissionService
@@ -135,33 +139,93 @@ public class PermissionService(IConfiguration configuration,
     {
         // Kiểm tra số Serial có hợp lệ hay không
         if (string.IsNullOrWhiteSpace(serial)) throw new NoSerialException();
-        
         // Người dùng nội bộ luôn có quyền đọc
         if (IsLocalUser(user)) return true;
-        
+        var email = user.GetEmail();
+        var cacheKey = CacheSettings.KeyHasReadPermission(email, serial);
+        List<string> tags = [email, serial];
+        return await hybridCache.GetOrCreateAsync(cacheKey,
+            cancel => CheckFirstHasReadPermission( email, serial, soDinhDanh, cancel),
+            tags: tags, 
+            cancellationToken: cancellationToken);
+    }
+
+    private const int MaxCount = 5;
+
+    /// <summary>
+    /// Kiểm tra quyền đọc thông tin Giấy chứng nhận
+    /// </summary>
+    /// <param name="email">Địa chỉ email của người dùng</param>
+    /// <param name="serial">Số Serial của Giấy chứng nhận.</param>
+    /// <param name="soDinhDanh">Số định danh của người dùng.</param>
+    /// <param name="cancellationToken">Token hủy thao tác (tùy chọn)</param>
+    /// <returns>True nếu có quyền đọc, ngược lại là False</returns>
+    private async ValueTask<bool> CheckFirstHasReadPermission(string email, string serial,
+        string? soDinhDanh = null, CancellationToken cancellationToken = default)
+    {
         // Nếu không có số định danh, không cho phép đọc
         if (string.IsNullOrWhiteSpace(soDinhDanh)) return false;
         
-        // Lấy danh sách chủ sở hữu của Giấy chứng nhận
-        var chuSuDungs = await chuSuDungService.GetInDatabaseAsync(serial, cancellationToken);
+        // Lấy danh sách chủ sở dụng của Giấy chứng nhận
+        var chuSuDungs = await chuSuDungService.GetAsync(serial, cancellationToken);
+        
+        // Nếu không có chủ sở hữu nào, không cho phép đọc
+        if (chuSuDungs.Count == 0) return false;
         
         // Chuẩn hóa số định danh để so sánh
         soDinhDanh = soDinhDanh.Trim();
         
         // Kiểm tra số định danh có thuộc danh sách chủ sở hữu không
-        foreach (var chuSuDung in chuSuDungs)
-        {   
-            // So sánh số định danh chính
-            if (chuSuDung.SoDinhDanh.Trim().Equals(soDinhDanh, StringComparison.OrdinalIgnoreCase))
-                return true;
-                
-            // Kiểm tra nếu số định danh có trong số định danh phụ
-            if (chuSuDung.SoDinhDanh2.Trim().Contains(soDinhDanh, StringComparison.OrdinalIgnoreCase))
-                return true;
+        if (!chuSuDungs.Any(chuSuDung =>
+                chuSuDung.SoDinhDanh.Trim().Equals(soDinhDanh, StringComparison.OrdinalIgnoreCase) ||
+                chuSuDung.SoDinhDanh2.Trim().Equals(soDinhDanh, StringComparison.OrdinalIgnoreCase)))
+        {
+            _ = GetOrSetReadLock(email, setLock: true, cancellationToken: cancellationToken);
+            return false;
         }
-        
+        _ = GetOrSetReadLock(email, clearLock: true, cancellationToken: cancellationToken);
+        return await CheckReadCount(email, cancellationToken);
+
         // Không tìm thấy số định danh trong danh sách chủ sở hữu
-        return false;
     }
-    
+
+    private async Task<bool> CheckReadCount(string email, CancellationToken cancellationToken = default)
+    {
+        // Lấy số lần đọc từ cache
+        var key = CacheSettings.KeyReadCount(email);
+        var count = await hybridCache.GetOrCreateAsync(key, _ => ValueTask.FromResult(0), cancellationToken: cancellationToken);
+        // Nếu số lần đọc lớn hơn hoặc bằng MaxCount, không cho phép đọc
+        if (count >= MaxCount)
+            return false;
+        // Tăng số lần đọc lên 1
+        var cacheOption = new HybridCacheEntryOptions
+        {
+            Expiration = TimeSpan.FromDays(1),
+        };
+        await hybridCache.SetAsync(key, count + 1, 
+            options: cacheOption, 
+            tags: [email], 
+            cancellationToken: cancellationToken);
+        return true;
+    }
+
+    private async Task<bool> GetOrSetReadLock(string email, bool setLock = false, bool clearLock = false, CancellationToken cancellationToken = default)
+    {
+        var key = CacheSettings.KeyReadLock(email);
+        var timeSpan = await hybridCache.GetOrCreateAsync(key, _ => ValueTask.FromResult(-1500), cancellationToken: cancellationToken);
+        if (setLock)
+            timeSpan += 300; // Thời gian khóa là 5 phút
+        else if (clearLock)
+            timeSpan = -1500;
+        // Nếu thời gian khóa nhỏ hơn hoặc bằng 0, không cho phép đọc
+        var cacheOption = new HybridCacheEntryOptions
+            {
+                Expiration = TimeSpan.FromSeconds(Math.Abs(timeSpan))
+            };
+        await hybridCache.SetAsync(key, timeSpan, 
+            options: cacheOption, 
+            tags: [email], 
+            cancellationToken: cancellationToken);
+        return timeSpan > 0;
+    }
 }

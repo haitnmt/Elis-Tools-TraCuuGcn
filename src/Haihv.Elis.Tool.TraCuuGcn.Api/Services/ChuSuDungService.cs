@@ -131,7 +131,21 @@ public sealed class ChuSuDungService(
             return new Result<List<ChuSuDungInfo>>(new NoSerialException());
         try
         {
-            return await GetAsync(serial, cancellationToken);
+            var chuSuDungElis = await GetAsync(serial, cancellationToken);
+            if (chuSuDungElis.Count == 0)
+                throw new ChuSuDungNotFoundException(serial);
+            var chuSuDungInfos = new List<ChuSuDungInfo>();
+            foreach (var chuSuDungData in chuSuDungElis)
+            {
+                var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
+                if (chuSuDung is null) continue;
+                var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
+                chuSuDungInfos.Add(new ChuSuDungInfo(
+                    chuSuDungData.MaChuSuDung,
+                    chuSuDung,
+                    chuSuDungQuanHe));
+            }
+            return chuSuDungInfos;
         }
         catch (Exception e)
         {
@@ -139,32 +153,17 @@ public sealed class ChuSuDungService(
         }
     }
 
-    public async Task<List<ChuSuDungInfo>> GetAsync(string? serial = null,
+    public async Task<List<ChuSuDungElis>> GetAsync(string? serial = null,
         CancellationToken cancellationToken = default)
     {
         serial = serial.ChuanHoa();
         if (string.IsNullOrWhiteSpace(serial))
             throw new NoSerialException();
         var cacheKey = CacheSettings.KeyChuSuDung(serial);
-        var chuSuDungElis = await hybridCache.GetOrCreateAsync(cacheKey,
+        return await hybridCache.GetOrCreateAsync(cacheKey,
             async cancel => await GetInDatabaseAsync(serial, cancel),
             tags: [serial],
             cancellationToken: cancellationToken);
-        if (chuSuDungElis.Count == 0)
-            throw new ChuSuDungNotFoundException(serial);
-        var chuSuDungInfos = new List<ChuSuDungInfo>();
-        foreach (var chuSuDungData in chuSuDungElis)
-        {
-            var chuSuDung = await GetChuSuDungAsync(chuSuDungData);
-            if (chuSuDung is null) continue;
-            var chuSuDungQuanHe = await GetChuSuDungQuanHeAsync(chuSuDungData);
-            chuSuDungInfos.Add(new ChuSuDungInfo(
-                chuSuDungData.MaChuSuDung,
-                chuSuDung,
-                chuSuDungQuanHe));
-        }
-
-        return chuSuDungInfos;
     }
 
     public async Task<List<ChuSuDungElis>> GetInDatabaseAsync(
