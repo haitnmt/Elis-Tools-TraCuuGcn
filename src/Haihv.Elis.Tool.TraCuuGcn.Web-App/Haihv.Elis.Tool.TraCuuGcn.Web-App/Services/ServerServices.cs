@@ -1,4 +1,6 @@
 ﻿using System.Net.Http.Headers;
+using Haihv.Elis.Tool.TraCuuGcn.Extensions;
+using Haihv.Elis.Tool.TraCuuGcn.WebApp.Extensions;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.WebLib.Services;
@@ -56,8 +58,13 @@ internal abstract class ServerServices(HttpClient httpClient, IHttpContextAccess
                           throw new InvalidOperationException(
                               "No HttpContext available from the IHttpContextAccessor!");
         var requestMessage = new HttpRequestMessage(method, uri);
+
+        // Gắn tiêu đề X-Forwarded-For với địa chỉ IP của client
+        requestMessage.Headers.TryAddWithoutValidation("X-Forwarded-For", httpContext.GetIpAddress());
+        // Lấy access_token từ ngữ cảnh hiện tại
         var accessToken = await httpContext.GetTokenAsync("access_token");
         if (string.IsNullOrWhiteSpace(accessToken)) return requestMessage;
+        // Gắn tiêu đề Authorization với Bearer token
         requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         return requestMessage;
     }

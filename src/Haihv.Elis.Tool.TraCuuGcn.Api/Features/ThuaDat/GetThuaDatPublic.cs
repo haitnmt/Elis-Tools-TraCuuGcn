@@ -3,6 +3,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
+using Haihv.Elis.Tool.TraCuuGcn.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
