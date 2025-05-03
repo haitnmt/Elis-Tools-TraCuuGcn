@@ -27,10 +27,9 @@ public static class GetHasReadPermission
             var serial = request.Serial;
             if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
             {
-                logger.Error("{Email} Xác minh thông tin theo Số định danh không thành công thành công: {Url} {Serial}",
+                logger.Error("{Email} Xác minh thông tin theo Số định danh không thành công thành công: {Url}",
                     email,
-                    url,
-                    serial);
+                    url);
                 throw new UnauthorizedAccessException();
             }
             logger.Information("{Email} Xác minh thông tin theo Số định danh thành công thành công: {Url} {Serial}",

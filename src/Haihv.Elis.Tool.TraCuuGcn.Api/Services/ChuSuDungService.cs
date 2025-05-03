@@ -3,7 +3,6 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Settings;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using InterpolatedSql.Dapper;
-using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.Extensions.Caching.Hybrid;
 using Newtonsoft.Json;
@@ -16,92 +15,14 @@ public sealed class ChuSuDungService(
     ILogger logger,
     HybridCache hybridCache) : IChuSuDungService
 {
-    #region Xác thực chủ sử dụng
+    #region Lấy thông tin chủ sử dụng
 
     /// <summary>
-    /// Lấy thông tin chủ sử dụng theo số định danh.
+    /// Lấy danh sách mã chủ sử dụng (\MaChuSuDung\) theo số Serial của Giấy chứng nhận.
     /// </summary>
-    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
-    /// <param name="soDinhDanh">Số định danh.</param>
+    /// <param name="serial">Số Serial của Giấy chứng nhận.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>Kết quả chứa thông tin chủ sử dụng hoặc lỗi.</returns>
-    public async Task<Result<AuthChuSuDung>> GetResultAuthChuSuDungAsync(string? serial = null,
-        string? soDinhDanh = null, CancellationToken cancellationToken = default)
-    {
-        serial = serial?.ChuanHoa();
-        if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial))
-            return new Result<AuthChuSuDung>(new ValueIsNullException("Số định danh không hợp lệ!"));
-        var cacheKey = CacheSettings.KeyAuthentication(serial, soDinhDanh);
-        try
-        {
-            var tenChuSuDung = await hybridCache.GetOrCreateAsync(cacheKey,
-
-                cancel => GetTenChuSuDungInDataAsync(serial, soDinhDanh, cancel),
-                tags: [serial],
-                cancellationToken: cancellationToken);
-            return string.IsNullOrWhiteSpace(tenChuSuDung)
-                ? new Result<AuthChuSuDung>(new ValueIsNullException("Không tìm thấy chủ sử dụng!"))
-                : new AuthChuSuDung(serial, soDinhDanh, tenChuSuDung);
-        }
-        catch (Exception exception)
-        {
-            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {SoDDinhDanh}", soDinhDanh);
-            return new Result<AuthChuSuDung>(exception);
-        }
-    }
-
-    /// <summary>
-    /// Lấy thông tin chủ sử dụng từ cơ sở dữ liệu theo số định danh và giấy chứng nhận.
-    /// </summary>
-    /// <param name="serial"> Số Serial của Giấy chứng nhận.</param>
-    /// <param name="soDinhDanh">Số định danh.</param>
-    /// <param name="cancellationToken">Token hủy bỏ.</param>
-    /// <returns>
-    /// Tên chủ sử dụng hoặc null nếu không tìm thấy.
-    /// </returns>
-    private async ValueTask<string?> GetTenChuSuDungInDataAsync(
-        string? serial = null,
-        string? soDinhDanh = null,
-        CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrWhiteSpace(soDinhDanh) || string.IsNullOrWhiteSpace(serial))
-            return null;
-        try
-        {
-            serial = serial.ChuanHoa();
-            var connectionElis = await connectionElisData.GetAllConnectionAsync(serial);
-            foreach (var connection in connectionElis)
-            {
-                await using var dbConnection = connection.ElisConnectionString.GetConnection();
-                var query = dbConnection.SqlBuilder(
-                    $"""
-                     SELECT TOP(1) HoVaTen
-                     FROM (SELECT DISTINCT CSD.Ten1 AS HoVaTen
-                           FROM ChuSuDung CSD
-                                INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                            WHERE LOWER(CSD.SoDinhDanh1) = LOWER({soDinhDanh}) AND UPPER(GCN.SoSerial) = {serial}
-                           UNION
-                           SELECT DISTINCT CSD.Ten2 AS HoVaTen
-                           FROM ChuSuDung CSD
-                                INNER JOIN GCNQSDD GCN ON CSD.MaChuSuDung = GCN.MaChuSuDung
-                            WHERE LOWER(CSD.SoDinhDanh2) = LOWER({soDinhDanh}) AND UPPER(GCN.SoSerial) = {serial}
-                            ) AS CSD
-                     """);
-                var tenChuSuDung =
-                    await query.QueryFirstOrDefaultAsync<string?>(cancellationToken: cancellationToken);
-                if (string.IsNullOrWhiteSpace(tenChuSuDung)) continue;
-                return tenChuSuDung;
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.Error(exception, "Lỗi khi truy vấn dữ liệu chủ sử dụng từ cơ sở dữ liệu, {SoDDinhDanh}", soDinhDanh);
-            throw;
-        }
-
-        return null;
-    }
-    
+    /// <returns>Danh sách mã chủ sử dụng.</returns>
     public async Task<List<long>> GetMaChuSuDungAsync(string? serial = null,
         CancellationToken cancellationToken = default)
     {
@@ -110,12 +31,7 @@ public sealed class ChuSuDungService(
 
         // Trả về danh sách các mã chủ sử dụng
         return dsChuSuDung.Select(x => x.MaChuSuDung).ToList();
-
     }
-
-    #endregion
-
-    #region Lấy thông tin chủ sử dụng
 
     /// <summary>
     /// Lấy thông tin chủ sử dụng và quan hệ chủ sử dụng.
@@ -145,6 +61,7 @@ public sealed class ChuSuDungService(
                     chuSuDung,
                     chuSuDungQuanHe));
             }
+
             return chuSuDungInfos;
         }
         catch (Exception e)
@@ -333,6 +250,7 @@ public sealed class ChuSuDungService(
 
     #endregion
 }
+
 public record ChuSuDungElis(
     long MaChuSuDung,
     int MaDoiTuong,

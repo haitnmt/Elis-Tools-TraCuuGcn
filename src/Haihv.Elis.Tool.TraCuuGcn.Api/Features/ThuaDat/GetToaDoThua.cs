@@ -72,6 +72,7 @@ public static class GetToaDoThua
             // Lấy thông tin email và URL để ghi log
             var email = user.GetEmail();
             var url = httpContext.Request.GetDisplayUrl();
+            var isLocal =permissionService.IsLocalUser(user);
             
             // Lấy thông tin tọa độ thửa đất từ service
             var result = await geoService.GetResultAsync(serial, cancellationToken);
@@ -81,10 +82,10 @@ public static class GetToaDoThua
                 // Xử lý khi lấy thông tin thành công
                 coordinates =>
                 {
-                    logger.Information("{Email} Lấy thông tin toạ độ thửa thành công {Url} {Serial}",
+                    logger.Information("{Email} Lấy thông tin toạ độ thửa thành công {Url} {IsLocal}",
                         email,
                         url,
-                        serial);
+                        isLocal);
                         
                     // Tạo geometry phù hợp với số lượng điểm
                     Geometry geometry;
@@ -114,10 +115,10 @@ public static class GetToaDoThua
                 // Xử lý khi có lỗi
                 ex =>
                 {
-                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin toạ độ thửa: {Url} {Serial}",
+                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin toạ độ thửa: {Url} {Message}",
                         email,
                         url,
-                        serial);
+                        ex.Message);
                     throw ex;
                 });
         }

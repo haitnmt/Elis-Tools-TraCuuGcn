@@ -61,8 +61,10 @@ public interface IGcnQrService
     Task<Result<bool>> DeleteMaQrAsync(string? serial = null, CancellationToken cancellationToken = default);
 }
 
-public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayChungNhanService giayChungNhanService,
-    ILogger logger, HybridCache hybridCache) : IGcnQrService
+public sealed class GcnQrService(IConnectionElisData connectionElisData, 
+    IGiayChungNhanService giayChungNhanService,
+    ILogger logger, 
+    HybridCache hybridCache) : IGcnQrService
 {
     private readonly List<ConnectionSql> _connectionElis = connectionElisData.ConnectionElis;
 
@@ -223,7 +225,6 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayCh
         }
         catch (Exception e)
         {
-            Console.WriteLine(e);
             logger.Error(e, "Lỗi khi lấy thông tin Tên đơn vị từ file: {FilePath}{MaDonVi}",
                 filePath,
                 maDonVi);
@@ -315,7 +316,6 @@ public sealed class GcnQrService(IConnectionElisData connectionElisData, IGiayCh
             }
             // Xóa cache
             _ = hybridCache.RemoveByTagAsync(serial, cancellationToken: cancellationToken).AsTask();
-            logger.Information("Xóa thông tin Mã QR thành công: {Serial}", serial);
             return true;
         } 
         catch (Exception e)

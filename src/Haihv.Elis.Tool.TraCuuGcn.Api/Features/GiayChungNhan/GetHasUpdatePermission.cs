@@ -34,8 +34,8 @@ public static class GetHasUpdatePermission
             // Kiểm tra quyền cập nhật, ném ngoại lệ nếu không có quyền
             if (await permissionService.HasUpdatePermission(user, serial,
                     cancellationToken)) return true;
-            logger.Warning("{Email} không có quyền cập nhật Giấy chứng nhận {Url} {Serial}", 
-                email, url, serial);
+            logger.Warning("{Email} không có quyền cập nhật Giấy chứng nhận {Url}", 
+                email, url);
             throw new UnauthorizedAccessException();
         }
     }

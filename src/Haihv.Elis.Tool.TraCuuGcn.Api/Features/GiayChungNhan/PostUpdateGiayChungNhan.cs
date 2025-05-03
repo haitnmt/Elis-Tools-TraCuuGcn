@@ -77,10 +77,9 @@ public static class PostUpdateGiayChungNhan
                 succ =>
                 {
                     // Ghi log thành công
-                    logger.Information("{Email} cập nhật thông tin Giấy chứng nhận thành công: {Url}{Serial}",
+                    logger.Information("{Email} cập nhật thông tin Giấy chứng nhận thành công: {Url}",
                     email,
-                        url,
-                        serial);
+                        url);
                     // Tạo thông điệp log
                     var message = $"""
                                    Cập nhật thông tin Giấy chứng nhận: Serial {request.PhapLyGiayChungNhan.Serial} |
@@ -103,10 +102,10 @@ public static class PostUpdateGiayChungNhan
                 ex =>
                 {
                     // Ghi log lỗi và ném lại ngoại lệ
-                    logger.Error(ex, "Lỗi khi cập nhật thông tin Giấy chứng nhận: {Url}{Email}{Serial}",
-                        url,
+                    logger.Error(ex, "{Email} cập nhật thông tin Giấy chứng nhận không thành công: {Url} {Message}",
                         email,
-                        serial);
+                        url,
+                        ex.Message);
                     throw ex;
                 });
         }

@@ -1,15 +1,15 @@
-﻿using Elastic.Ingest.Elasticsearch;
+﻿using System.Reflection;
+using Elastic.Ingest.Elasticsearch;
 using Elastic.Ingest.Elasticsearch.DataStreams;
 using Elastic.Serilog.Sinks;
 using Elastic.Transport;
 using Serilog;
-using System.Reflection;
 
 namespace Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 
 public static class Logger
 {
-    private const string DefaultIndexName = "Elis-TraCuuGcn";
+    private const string DefaultIndexName = "TraCuuGcn";
 
     /// <summary>
     /// Thêm cấu hình ghi log vào Elasticsearch.
@@ -20,7 +20,7 @@ public static class Logger
     /// <param name="tokenKey">Khóa cấu hình cho API token của Elasticsearch (mặc định là "Elasticsearch:encoded").</param>
     /// <param name="usernameKey">Khóa cấu hình cho tên người dùng của Elasticsearch (mặc định là "Elasticsearch:username").</param>
     /// <param name="passwordKey">Khóa cấu hình cho mật khẩu của Elasticsearch (mặc định là "Elasticsearch:password").</param>
-    public static void AddLogToElasticsearch(this WebApplicationBuilder builder,
+    public static void AddLogger(this WebApplicationBuilder builder,
         string sectionName = "Elasticsearch", string uriKey = "Uris",
         string? tokenKey = null, string? usernameKey = null, string? passwordKey = null)
     {
@@ -127,13 +127,4 @@ public static class Logger
         string username, string password)
         => CreateLoggerConfiguration(builder, uris, new BasicAuthentication(username, password));
     
-}
-public class LogInfo
-{
-    public string ClientIp { get; set; } = string.Empty;
-    public string? Username { get; set; }
-    public string UserAgent { get; set; } = string.Empty;
-    public string Url { get; set; } = string.Empty;
-    public string? HashBody { get; set; }
-    public string? QueryString { get; set; }
 }

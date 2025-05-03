@@ -83,10 +83,9 @@ public static class DeleteMaQr
                     if (succ)
                     {
                         // Ghi log thành công
-                        logger.Information("{Email}Xóa mã QR thành công: {Url} {Serial}",
+                        logger.Information("{Email} Xóa mã QR thành công: {Url}",
                             email,
-                            url,
-                            serial);
+                            url);
                             
                         // Ghi log vào ELIS Data
                         logElisDataServices.WriteLogToElisDataAsync(serial, email, url,
@@ -99,18 +98,19 @@ public static class DeleteMaQr
                     else
                     {                    
                         // Ghi log cảnh báo khi xóa không thành công
-                        logger.Warning("Xóa mã QR không thành công: {Url}{MaDinhDanh}",
-                        url,
-                        email);
+                        logger.Warning("{Email} Xóa mã QR không thành công: {Url}",
+                            email,
+                            url);
                     }
                     return succ;
                 },
                 ex =>
                 {
                     // Ghi log lỗi
-                    logger.Error(ex, "Lỗi khi xóa mã QR: {Url}{MaDinhDanh}",
+                    logger.Error(ex, "{Email} Xóa mã QR không thành công: {Url} {Message}",
+                        email,
                         url,
-                        email);
+                        ex.Message);
                     return false;
                 });
         }

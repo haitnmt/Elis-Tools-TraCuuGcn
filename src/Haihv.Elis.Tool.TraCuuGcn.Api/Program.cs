@@ -16,7 +16,7 @@ Console.OutputEncoding = Encoding.UTF8;
 builder.Services.AddOpenApi();
 
 // Add Serilog
-builder.AddLogToElasticsearch();
+builder.AddLogger();
 
 // Add Caching
 builder.AddCache();

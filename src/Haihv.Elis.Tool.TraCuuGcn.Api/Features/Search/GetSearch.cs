@@ -3,6 +3,7 @@ using Haihv.Elis.Tool.TraCuuGcn.Api.Exceptions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Uri;
+using Haihv.Elis.Tool.TraCuuGcn.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Models;
 using MediatR;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -27,6 +28,7 @@ public static class GetSearch
     public class Handler(ISearchService searchService,
         IThuaDatService thuaDatService,
         IChuSuDungService chuSuDungService,
+        IPermissionService permissionService,
         ITaiSanService taiSanService,
         IGeoService geoService,
         ILogger logger,
@@ -47,8 +49,17 @@ public static class GetSearch
             // Lấy thông tin từ HttpContext để ghi log
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-            var ipAddress = httpContext.GetIpAddress();
-            var email = httpContext.User.GetEmail();
+            var user = httpContext.User;
+            var email = user.GetEmail();
+            var isLocal = false;
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                email = httpContext.GetIpAddress();
+            }
+            else
+            {
+                isLocal = permissionService.IsLocalUser(user);
+            }
             var url = httpContext.Request.GetDisplayUrl();
             var query = request.Search;
             
@@ -60,19 +71,19 @@ public static class GetSearch
                 // Xử lý khi tìm kiếm thành công
                 info =>
                 {
-                    logger.Information("Tìm kiếm thông tin thành công: {Url}{ClientIp}{Email}",
+                    logger.Information("{Email} Tìm kiếm thông tin thành công: {Url} {IsLocal} ",
+                        email,
                         url,
-                        ipAddress, 
-                        email);
+                        isLocal);
                     
                     // Kiểm tra và chuẩn hóa số serial
                     var serial = info.Serial?.ChuanHoa();
                     if (string.IsNullOrWhiteSpace(serial))
                     {
-                        logger.Warning("Không tìm thấy thông tin GCN: {Url}{ClientIp}{Email}",
+                        logger.Warning("{Email} Không tìm thấy thông tin GCN: {Url} {IsLocal} ",
+                            email,
                             url,
-                            ipAddress, 
-                            email);
+                            isLocal);
                         throw new SearchNotFoundException(query);
                     }
                     
@@ -89,10 +100,10 @@ public static class GetSearch
                 // Xử lý khi tìm kiếm thất bại
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi tìm kiếm thông tin: {Url}{ClientIp}{Email}",
+                    logger.Error(ex, "{Email} tìm kiếm thông tin không thành công: {Url} {IsLocal} ",
+                        email,
                         url,
-                        ipAddress, 
-                        email);
+                        isLocal);
                     throw new SearchFailedException(ex.Message);
                 });
         }

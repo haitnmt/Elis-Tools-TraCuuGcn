@@ -57,7 +57,9 @@ public static class GetThuaDat
                 throw new UnauthorizedAccessException();
                 
             // Lấy thông tin email và URL để ghi log
+            // Lấy thông tin email và URL để ghi log
             var email = user.GetEmail();
+            var isLocal = permissionService.IsLocalUser(user);
             var url = httpContext.Request.GetDisplayUrl();
             
             // Lấy thông tin Thửa Đất từ service
@@ -68,10 +70,11 @@ public static class GetThuaDat
                 // Xử lý khi lấy thông tin thành công
                 thuaDats =>
                 {
-                    logger.Information("{Email} Lấy thông tin Thửa Đất thành công: {Url} {Serial}",
+                    logger.Information("{Email} Lấy thông tin Thửa Đất thành công: {Url} {IsLocal}",
                         email,
                         url,
-                        serial);
+                        isLocal);
+
                         
                     // Kiểm tra danh sách thửa đất có dữ liệu hay không
                     if (thuaDats.Count == 0) throw new ThuaDatNotFoundException(serial);
@@ -81,10 +84,10 @@ public static class GetThuaDat
                 // Xử lý khi có lỗi
                 ex =>
                 {
-                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin Thửa Đất: {Url} {Serial}",
+                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin Thửa Đất: {Url} {Message}",
                         email,
                         url,
-                        serial);
+                        ex.Message);
                     throw ex;
                 });
         }

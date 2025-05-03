@@ -27,6 +27,7 @@ public static class GetChuSuDung
                 throw new UnauthorizedAccessException();
             var email = user.GetEmail();
             var url = httpContext.Request.GetDisplayUrl();
+            var isLocal = permissionService.IsLocalUser(user);
             var serial = request.Serial;
             // Lấy thông tin Thửa Đất
             var result = await chuSuDungService.GetResultAsync(serial, cancellationToken);
@@ -34,18 +35,18 @@ public static class GetChuSuDung
             return result.Match(
                 chuSuDung =>
                 {
-                    logger.Information("{Email} lấy thông tin chủ sử dụng thành công: {Url} {Serial}",
+                    logger.Information("{Email} lấy thông tin chủ sử dụng thành công: {Url} {IsLocal}",
                         email,
                         url,
-                        serial);
+                        isLocal);
                     return chuSuDung;
                 },
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi lấy thông tin chủ sử dụng: {Url}{Email}{Serial}",
-                        url,
+                    logger.Error(ex, "{Email} lấy thông tin chủ sử dụng không thành công: {Url} {Message}",
                         email,
-                        serial);
+                        url,
+                        ex.Message);
                     throw ex;
                 });
         }

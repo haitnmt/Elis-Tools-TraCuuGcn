@@ -161,17 +161,34 @@ app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddAdditionalAssemblies(typeof(Haihv.Elis.Tool.TraCuuGcn.Web_App.Client._Imports).Assembly);
 
-app.MapForwarder(GiayChungNhanUri.Search, apiEndpoint);
-app.MapForwarder(ThuaDatUri.GetThuaDatPublic, apiEndpoint);
+app.MapForwarder(GiayChungNhanUri.Search, apiEndpoint, transformBuilder =>
+    {
+        transformBuilder.AddRequestTransform(async transformContext =>
+        {
+            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
+            transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-For", transformContext.HttpContext.Connection.RemoteIpAddress?.ToString());
+        });
+    }).AllowAnonymous();
+app.MapForwarder(ThuaDatUri.GetThuaDatPublic, apiEndpoint, transformBuilder =>
+    {
+        transformBuilder.AddRequestTransform(async transformContext =>
+        {
+            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
+            transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-For", transformContext.HttpContext.Connection.RemoteIpAddress?.ToString());
+        });
+    }).AllowAnonymous();
 
 app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
-{
-    transformBuilder.AddRequestTransform(async transformContext =>
     {
-        var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
-        transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-    });
-}).RequireAuthorization();
+        transformBuilder.AddRequestTransform(async transformContext =>
+        {
+            var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
+            transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-For", transformContext.HttpContext.Connection.RemoteIpAddress?.ToString());
+        });
+    }).RequireAuthorization();
 
 app.MapAppSettingsEndpoints();
 

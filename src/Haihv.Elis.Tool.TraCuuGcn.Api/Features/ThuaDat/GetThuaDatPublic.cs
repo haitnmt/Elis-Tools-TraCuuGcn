@@ -28,6 +28,7 @@ public static class GetThuaDatPublic
     public class Handler(
         ILogger logger,
         IHttpContextAccessor httpContextAccessor,
+        IPermissionService permissionService,
         IThuaDatService thuaDatService) : IRequestHandler<Query, IEnumerable<ThuaDatPublic>>
     {
         /// <summary>
@@ -48,11 +49,21 @@ public static class GetThuaDatPublic
             // Lấy thông tin HttpContext để ghi log
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-                              
-            // Lấy thông tin email và URL để ghi log
-            var email = httpContext.User.GetEmail();
+            
             var url = httpContext.Request.GetDisplayUrl();
             
+            // Lấy thông tin email và URL để ghi log
+            var user = httpContext.User;
+            var email = user.GetEmail();
+            var isLocal = false;
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                email = httpContext.GetIpAddress();
+            }
+            else
+            {
+                isLocal = permissionService.IsLocalUser(user);
+            }
             // Lấy thông tin Thửa Đất từ service
             var result = await thuaDatService.GetResultAsync(serial, cancellationToken);
             
@@ -61,10 +72,10 @@ public static class GetThuaDatPublic
                 // Xử lý khi lấy thông tin thành công
                 thuaDats =>
                 {
-                    logger.Information("Lấy thông tin Thửa Đất công khai thành công: {Url}{Email}{Serial}",
-                        url,
+                    logger.Information("{Email} lấy thông tin Thửa Đất công khai thành công: {Url} {IsLocal}",
                         email,
-                        serial);
+                        url,
+                        isLocal);
                         
                     // Chuyển đổi danh sách thửa đất sang định dạng công khai
                     var thuaDatPublic = thuaDats.Select(x => x.ConvertToThuaDatPublic());
@@ -73,10 +84,10 @@ public static class GetThuaDatPublic
                 // Xử lý khi có lỗi
                 ex =>
                 {
-                    logger.Error(ex, "Lỗi khi lấy thông tin Thửa Đất công khai: {Url}{Email}{Serial}",
-                        url,
+                    logger.Error(ex, "{Email} lấy thông tin Thửa Đất công khai không thành công: {Url} {IsLocal}",
                         email,
-                        serial);
+                        url,
+                        isLocal);
                     throw ex;
                 });
         }

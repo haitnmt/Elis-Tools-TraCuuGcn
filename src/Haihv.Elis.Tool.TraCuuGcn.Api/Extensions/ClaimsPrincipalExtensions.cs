@@ -57,10 +57,10 @@ public static class ClaimsPrincipalExtensions
             Roles = user.GetUserRoles()
         };
     }
-    
+
     public static string GetEmail(this ClaimsPrincipal user)
-     => user.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress") ?? string.Empty;
-    
+        => user.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress") ?? string.Empty;
+
     /// <summary>
     /// Kiểm tra người dùng có quyền/vai trò được chỉ định hay không
     /// </summary>
