@@ -76,19 +76,18 @@ public static class DeleteCache
                 succ =>
                 {
                     // Ghi log thành công
-                    logger.Information("{Email} xóa cache Giấy chứng nhận thành công: {Url}{Serial}",
+                    logger.Information("{Email} xóa cache Giấy chứng nhận thành công: {Url}",
                         email,
-                        url,
-                        serial);
+                        url);
                     return succ;
                 },
                 ex =>
                 {
                     // Ghi log lỗi và ném lại ngoại lệ
-                    logger.Error(ex, "Lỗi khi xóa cache Giấy chứng nhận: {Url}{Email}{Serial}",
-                        url,
+                    logger.Error(ex, "{Email} Lỗi khi xóa cache Giấy chứng nhận: {Url} {Message}",
                         email,
-                        serial);
+                        url,
+                        ex.Message);
                     throw ex;
                 });
         }
