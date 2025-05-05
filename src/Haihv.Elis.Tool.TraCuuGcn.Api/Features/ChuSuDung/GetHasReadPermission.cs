@@ -22,7 +22,12 @@ public static class GetHasReadPermission
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var user = httpContext.User;
-            var email = user.GetEmail();
+            var isLocal = permissionService.IsLocalUser(user);
+            if (!string.IsNullOrWhiteSpace(request.Serial) && isLocal)
+            {
+                return true;
+            }
+            var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
             var serial = request.Serial;
             if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
@@ -32,10 +37,9 @@ public static class GetHasReadPermission
                     url);
                 throw new UnauthorizedAccessException();
             }
-            logger.Information("{Email} Xác minh thông tin theo Số định danh thành công thành công: {Url} {Serial}",
+            logger.Information("{Email} Xác minh thông tin theo Số định danh thành công thành công: {Url}",
                 email,
-                url,
-                serial);
+                url);
             return true;
         }
     }

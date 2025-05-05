@@ -43,14 +43,15 @@ public static class GetUserInfo
             
             // Lấy thông tin người dùng từ Claims
             var user = httpContext.User;
-            
+            var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             // Chuyển đổi thông tin từ Claims thành đối tượng UserInfo
             var userInfo = user.GetUserInfo();
             
             userInfo.IsLocalAccount = permissionService.IsLocalUser(user);
             userInfo.HasUpdatePermission = permissionService.HasUpdatePermission(user);
             // Ghi log thành công
-            logger.Information("{Email} Lấy thông tin cá nhân thành công ", userInfo.Email);
+            logger.Information("{Email} Lấy thông tin cá nhân thành công ", email);
             
             // Trả về thông tin người dùng
             return Task.FromResult(userInfo);

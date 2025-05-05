@@ -55,16 +55,8 @@ public static class GetThuaDatPublic
             
             // Lấy thông tin email và URL để ghi log
             var user = httpContext.User;
-            var email = user.GetEmail();
-            var isLocal = false;
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                email = httpContext.GetIpAddress();
-            }
-            else
-            {
-                isLocal = permissionService.IsLocalUser(user);
-            }
+            var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             // Lấy thông tin Thửa Đất từ service
             var result = await thuaDatService.GetResultAsync(serial, cancellationToken);
             

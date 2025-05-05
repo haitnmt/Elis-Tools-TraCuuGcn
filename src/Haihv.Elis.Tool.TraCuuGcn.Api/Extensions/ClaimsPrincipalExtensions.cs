@@ -57,9 +57,33 @@ public static class ClaimsPrincipalExtensions
             Roles = user.GetUserRoles()
         };
     }
+    
+    public static string GetEmail(this ClaimsPrincipal user, bool isLocalUser = true)
+    {
+        var email = user.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+        if (string.IsNullOrWhiteSpace(email)) return "Khách";
+        // Người dùng nội bộ với email có đuôi là defaultDomain trả về thông tin đầy đủ
+        if (isLocalUser) return email;
+        var emailParts = email.Split('@');
+        if (emailParts.Length < 2) return email;
+        var nameEmailPart = emailParts[0];
+        var domainEmailPart = emailParts[1];
+        
+        // Chỉ giữ lại 3 ký tự đầu tiên của nameEmailPart và thêm vào "***"
+        if (nameEmailPart.Length > 3)
+        {
+            nameEmailPart = nameEmailPart[..3] + "***";
+        }
+        
+        // Loại bỏ 3 ký tự đầu của domainEmailPart và thêm vào "***"
+        if (domainEmailPart.Length > 3)
+        {
+            domainEmailPart = "***" + domainEmailPart[3..];
+        }
+        // trả về email đã được chuẩn hóa
+        return $"{nameEmailPart}@{domainEmailPart}";
+    }
 
-    public static string GetEmail(this ClaimsPrincipal user)
-        => user.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress") ?? string.Empty;
 
     /// <summary>
     /// Kiểm tra người dùng có quyền/vai trò được chỉ định hay không

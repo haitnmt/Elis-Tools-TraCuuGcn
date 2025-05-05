@@ -167,7 +167,6 @@ app.MapForwarder(GiayChungNhanUri.Search, apiEndpoint, transformBuilder =>
         {
             var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
             transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-For", transformContext.HttpContext.GetIpAddress());
         });
     }).AllowAnonymous();
 app.MapForwarder(ThuaDatUri.GetThuaDatPublic, apiEndpoint, transformBuilder =>
@@ -176,7 +175,6 @@ app.MapForwarder(ThuaDatUri.GetThuaDatPublic, apiEndpoint, transformBuilder =>
         {
             var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
             transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-For", transformContext.HttpContext.GetIpAddress());
         });
     }).AllowAnonymous();
 
@@ -186,7 +184,6 @@ app.MapForwarder("/api/{**catch-all}", apiEndpoint, transformBuilder =>
         {
             var accessToken = await transformContext.HttpContext.GetTokenAsync("access_token");
             transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-For", transformContext.HttpContext.GetIpAddress());
         });
     }).RequireAuthorization();
 

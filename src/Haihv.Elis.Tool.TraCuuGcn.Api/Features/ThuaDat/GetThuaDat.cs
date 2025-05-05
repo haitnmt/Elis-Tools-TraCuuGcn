@@ -57,9 +57,8 @@ public static class GetThuaDat
                 throw new UnauthorizedAccessException();
                 
             // Lấy thông tin email và URL để ghi log
-            // Lấy thông tin email và URL để ghi log
-            var email = user.GetEmail();
             var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
             
             // Lấy thông tin Thửa Đất từ service

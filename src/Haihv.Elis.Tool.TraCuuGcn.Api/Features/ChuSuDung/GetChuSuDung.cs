@@ -25,9 +25,11 @@ public static class GetChuSuDung
             var user = httpContext.User;
             if (!await permissionService.HasReadPermission(user, request.Serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
-            var email = user.GetEmail();
+            
             var url = httpContext.Request.GetDisplayUrl();
+            
             var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             var serial = request.Serial;
             // Lấy thông tin Thửa Đất
             var result = await chuSuDungService.GetResultAsync(serial, cancellationToken);

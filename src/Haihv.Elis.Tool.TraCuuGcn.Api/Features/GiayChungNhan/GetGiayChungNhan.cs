@@ -63,8 +63,8 @@ public static class GetGiayChungNhan
             // Kiểm tra tính hợp lệ của số Serial
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-            var email = user.GetEmail();
             var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             // Thực hiện truy vấn thông tin Giấy chứng nhận
             var result = await giayChungNhanService.GetResultAsync(serial, cancellationToken: cancellationToken);
             
@@ -81,10 +81,10 @@ public static class GetGiayChungNhan
             ex =>
             {
                 // Ghi log lỗi và ném lại ngoại lệ
-                logger.Error(ex, "{Email} Lấy thông tin Giấy Chứng Nhận không thành công: {Url} {IsLocal}",
+                logger.Error(ex, "{Email} Lấy thông tin Giấy Chứng Nhận không thành công: {Url} {Message}",
                     email,
                     url,
-                    isLocal);
+                    ex.Message);
                 throw ex;
             });
         }

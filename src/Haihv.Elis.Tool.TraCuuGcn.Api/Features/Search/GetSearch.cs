@@ -50,16 +50,8 @@ public static class GetSearch
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var user = httpContext.User;
-            var email = user.GetEmail();
-            var isLocal = false;
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                email = httpContext.GetIpAddress();
-            }
-            else
-            {
-                isLocal = permissionService.IsLocalUser(user);
-            }
+            var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
             var query = request.Search;
             
@@ -71,7 +63,7 @@ public static class GetSearch
                 // Xử lý khi tìm kiếm thành công
                 info =>
                 {
-                    logger.Information("{Email} Tìm kiếm thông tin thành công: {Url} {IsLocal} ",
+                    logger.Information("{Email} Tìm kiếm thông tin thành công: {Url} {IsLocal}",
                         email,
                         url,
                         isLocal);
@@ -80,7 +72,7 @@ public static class GetSearch
                     var serial = info.Serial?.ChuanHoa();
                     if (string.IsNullOrWhiteSpace(serial))
                     {
-                        logger.Warning("{Email} Không tìm thấy thông tin GCN: {Url} {IsLocal} ",
+                        logger.Warning("{Email} Không tìm thấy thông tin GCN: {Url} {IsLocal}",
                             email,
                             url,
                             isLocal);
@@ -100,10 +92,10 @@ public static class GetSearch
                 // Xử lý khi tìm kiếm thất bại
                 ex =>
                 {
-                    logger.Error(ex, "{Email} tìm kiếm thông tin không thành công: {Url} {IsLocal} ",
+                    logger.Error(ex, "{Email} tìm kiếm thông tin không thành công: {Url} {Message}",
                         email,
                         url,
-                        isLocal);
+                        ex.Message);
                     throw new SearchFailedException(ex.Message);
                 });
         }

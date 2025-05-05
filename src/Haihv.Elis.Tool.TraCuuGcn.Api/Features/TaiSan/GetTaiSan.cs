@@ -61,7 +61,8 @@ public static class GetTaiSan
                 throw new UnauthorizedAccessException();
             
             // Lấy thông tin người dùng và URL hiện tại
-            var email = user.GetEmail();
+            var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
             
             // Lấy danh sách mã thửa đất
@@ -74,10 +75,10 @@ public static class GetTaiSan
             var dsMaThuaDat = await dsMaThuaDatTask;
             if (dsMaThuaDat.Count == 0)
             {
-                logger.Warning("{Email} Không tìm thấy thông tin thửa đất: {Url} {Serial}",
+                logger.Warning("{Email} Không tìm thấy thông tin thửa đất: {Url} {IsLocal}",
                     email,
                     url,
-                    serial);
+                    isLocal);
                 throw new TaiSanNotFoundException(serial);
             }
             
@@ -85,10 +86,10 @@ public static class GetTaiSan
             var dsMaChuSuDung = await dsMaChuSuDungTask;
             if (dsMaChuSuDung.Count == 0)
             {
-                logger.Warning("{Email} Không tìm thấy thông tin chủ sử dụng: {Url} {Serial}",
+                logger.Warning("{Email} Không tìm thấy thông tin chủ sử dụng: {Url} {IsLocal}",
                     email,
                     url,
-                    serial);
+                    isLocal);
                 throw new TaiSanNotFoundException(serial);
             }
             
@@ -102,27 +103,27 @@ public static class GetTaiSan
                     // Nếu có tài sản, trả về danh sách
                     if (taiSan.Count != 0)
                     {
-                        logger.Information("{Email} lấy thông tin tài sản thành công: {Url} {Serial}",
+                        logger.Information("{Email} lấy thông tin tài sản thành công: {Url} {IsLocal}",
                             email,
                             url,
-                            serial);
+                            isLocal);
                         return taiSan;
                     }
                     
                     // Nếu không có tài sản, ghi log và ném ngoại lệ
-                    logger.Warning("{Email} Không tìm thấy thông tin tài sản: {Url} {Serial}",
+                    logger.Warning("{Email} Không tìm thấy thông tin tài sản: {Url} {IsLocal}",
                         email,
                         url,
-                        serial);
+                        isLocal);
                     throw new TaiSanNotFoundException(serial);
                 },
                 ex =>
                 {
                     // Xử lý lỗi khi lấy thông tin tài sản
-                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin tài sản:  {Url} {Serial}",
+                    logger.Error(ex, "{Email} Lỗi khi lấy thông tin tài sản: {Url} {Message}",
                         email,
                         url,
-                        serial);
+                        ex.Message);
                     throw ex;
                 }));
         }

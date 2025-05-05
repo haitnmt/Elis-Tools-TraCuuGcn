@@ -70,9 +70,9 @@ public static class GetToaDoThua
                 throw new UnauthorizedAccessException();
                 
             // Lấy thông tin email và URL để ghi log
-            var email = user.GetEmail();
+            var isLocal = permissionService.IsLocalUser(user);
+            var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
-            var isLocal =permissionService.IsLocalUser(user);
             
             // Lấy thông tin tọa độ thửa đất từ service
             var result = await geoService.GetResultAsync(serial, cancellationToken);
