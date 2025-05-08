@@ -37,7 +37,10 @@ public class ApiTokenAuthenticationHandler : AuthenticationHandler<Authenticatio
             return Task.FromResult(AuthenticateResult.Fail("API Token không hợp lệ"));
         }
 
-        var claims = new[] { new Claim(ClaimTypes.Name, "ApiTokenUser") };
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, "ApiTokenUser"),
+        };
         var identity = new ClaimsIdentity(claims, SchemeName);
         var principal = new ClaimsPrincipal(identity);
         var ticket = new AuthenticationTicket(principal, SchemeName);

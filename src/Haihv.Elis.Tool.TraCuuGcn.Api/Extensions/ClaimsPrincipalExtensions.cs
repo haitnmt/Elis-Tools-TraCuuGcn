@@ -61,6 +61,8 @@ public static class ClaimsPrincipalExtensions
     public static string GetEmail(this ClaimsPrincipal user, bool isLocalUser = true)
     {
         var email = user.FindFirstValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress");
+        if (string.IsNullOrWhiteSpace(email)) 
+            email = user.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
         if (string.IsNullOrWhiteSpace(email)) return "Khách";
         // Người dùng nội bộ với email có đuôi là defaultDomain trả về thông tin đầy đủ
         if (isLocalUser) return email;
