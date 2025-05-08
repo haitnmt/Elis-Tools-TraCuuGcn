@@ -58,24 +58,24 @@ public static class DeleteMaQr
             var serial = request.Serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-                
+
             // Lấy HttpContext, ném ngoại lệ nếu không có
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-                              
+
             // Lấy thông tin người dùng
             var user = httpContext.User;
             var email = user.GetEmail();
-            
+
             // Kiểm tra quyền cập nhật, ném ngoại lệ nếu không có quyền
             if (!await permissionService.HasUpdatePermission(user, serial, cancellationToken))
                 throw new UnauthorizedAccessException();
-            
+
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Thực hiện xóa mã QR
             var result = await gcnQrService.DeleteMaQrAsync(serial, cancellationToken);
-            
+
             // Xử lý kết quả
             return result.Match(
                 succ =>
@@ -86,17 +86,17 @@ public static class DeleteMaQr
                         logger.Information("{Email} Xóa mã QR thành công: {Url}",
                             email,
                             url);
-                            
+
                         // Ghi log vào ELIS Data
                         logElisDataServices.WriteLogToElisDataAsync(serial, email, url,
                             $"Xóa mã QR của Giấy chứng nhận có phát hành (Serial): {serial}",
                             LogElisDataServices.LoaiTacVu.Xoa, cancellationToken);
-                            
+
                         // Xóa cache liên quan
                         _ = hybridCache.RemoveByTagAsync(serial, cancellationToken).AsTask();
                     }
                     else
-                    {                    
+                    {
                         // Ghi log cảnh báo khi xóa không thành công
                         logger.Warning("{Email} Xóa mã QR không thành công: {Url}",
                             email,
@@ -133,7 +133,7 @@ public static class DeleteMaQr
                     var response = await sender.Send(new Query(serial));
                     return response ? Results.Ok("Xóa mã QR thành công!") : Results.BadRequest("Lỗi khi xóa mã QR");
                 })
-                .RequireAuthorization()
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("Cache")
                 .WithName("DeleteMaQr")
                 .WithDescription("Xóa mã QR theo số serial của Giấy chứng nhận")

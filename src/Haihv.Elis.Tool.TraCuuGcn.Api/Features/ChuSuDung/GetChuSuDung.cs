@@ -25,9 +25,9 @@ public static class GetChuSuDung
             var user = httpContext.User;
             if (!await permissionService.HasReadPermission(user, request.Serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
-            
+
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             var isLocal = permissionService.IsLocalUser(user);
             var email = user.GetEmail(isLocal);
             var serial = request.Serial;
@@ -63,7 +63,7 @@ public static class GetChuSuDung
                     var response = await sender.Send(new Query(serial, soDinhDanh));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization()
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("ChuSuDung");
         }
     }

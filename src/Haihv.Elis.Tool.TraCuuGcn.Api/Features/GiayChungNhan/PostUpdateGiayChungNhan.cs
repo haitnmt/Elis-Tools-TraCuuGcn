@@ -25,7 +25,7 @@ public static class PostUpdateGiayChungNhan
     /// </summary>
     /// <param name="PhapLyGiayChungNhan">Thông tin pháp lý cần cập nhật cho Giấy chứng nhận</param>
     public record Command(PhapLyGiayChungNhan PhapLyGiayChungNhan) : IRequest<bool>;
-    
+
     /// <summary>
     /// Xử lý lệnh cập nhật thông tin pháp lý Giấy chứng nhận
     /// </summary>
@@ -66,12 +66,12 @@ public static class PostUpdateGiayChungNhan
             // Kiểm tra quyền cập nhật, ném ngoại lệ nếu không có quyền
             if (!await permissionService.HasUpdatePermission(user, request.PhapLyGiayChungNhan.Serial, cancellationToken))
                 throw new UnauthorizedAccessException();
-            
+
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Thực hiện cập nhật thông tin pháp lý Giấy chứng nhận
             var result = await giayChungNhanService.UpdateAsync(request.PhapLyGiayChungNhan, cancellationToken);
-            
+
             // Xử lý kết quả cập nhật
             return result.Match(
                 succ =>
@@ -91,7 +91,7 @@ public static class PostUpdateGiayChungNhan
                     message = message.Replace("\n", string.Empty).Replace("\r", string.Empty);
 
                     // Ghi log vào ELIS Data
-                    logElisDataServices.WriteLogToElisDataAsync(request.PhapLyGiayChungNhan.Serial, 
+                    logElisDataServices.WriteLogToElisDataAsync(request.PhapLyGiayChungNhan.Serial,
                         email, url, message,
                         cancellationToken: cancellationToken);
 
@@ -110,7 +110,7 @@ public static class PostUpdateGiayChungNhan
                 });
         }
     }
-    
+
     /// <summary>
     /// Cấu hình endpoint cho tính năng cập nhật Giấy chứng nhận
     /// </summary>
@@ -131,7 +131,7 @@ public static class PostUpdateGiayChungNhan
                     var response = await sender.Send(new Command(phapLyGiayChungNhan));
                     return response ? Results.Ok("Cập nhật thành công") : Results.NotFound();
                 })
-                .RequireAuthorization() // Yêu cầu xác thực
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("GiayChungNhan"); // Gắn tag cho Swagger
         }
     }

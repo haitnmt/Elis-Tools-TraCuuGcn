@@ -46,24 +46,24 @@ public static class GetThuaDat
             var serial = request.Serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-                
+
             // Lấy thông tin HttpContext để kiểm tra quyền và ghi log
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var user = httpContext.User;
-            
+
             // Kiểm tra quyền đọc dữ liệu
             if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
-                
+
             // Lấy thông tin email và URL để ghi log
             var isLocal = permissionService.IsLocalUser(user);
             var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Lấy thông tin Thửa Đất từ service
             var result = await thuaDatService.GetResultAsync(serial, cancellationToken);
-            
+
             // Xử lý kết quả trả về
             return result.Match(
                 // Xử lý khi lấy thông tin thành công
@@ -74,10 +74,10 @@ public static class GetThuaDat
                         url,
                         isLocal);
 
-                        
+
                     // Kiểm tra danh sách thửa đất có dữ liệu hay không
                     if (thuaDats.Count == 0) throw new ThuaDatNotFoundException(serial);
-                    
+
                     return thuaDats;
                 },
                 // Xử lý khi có lỗi
@@ -91,7 +91,7 @@ public static class GetThuaDat
                 });
         }
     }
-    
+
     /// <summary>
     /// Định nghĩa các endpoint API cho tính năng lấy thông tin thửa đất.
     /// </summary>
@@ -109,7 +109,7 @@ public static class GetThuaDat
                     var response = await sender.Send(new Query(serial, soDinhDanh));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization() // Yêu cầu xác thực người dùng
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("ThuaDat"); // Gắn tag để nhóm API trong Swagger
         }
     }

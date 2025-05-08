@@ -1,8 +1,10 @@
 using System.Text;
 using Carter;
+using Haihv.Elis.Tool.TraCuuGcn.Api.Authentication;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Extensions;
 using Haihv.Elis.Tool.TraCuuGcn.Api.Services;
 using Haihv.Elis.Tool.TraCuuGcn.Extensions;
+using Microsoft.AspNetCore.Authentication;
 using ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,8 +33,15 @@ builder.Services.AddAuthentication()
         jwtOptions.Authority = authority;
         jwtOptions.Audience = audience;
         jwtOptions.RequireHttpsMetadata = true;
+    })
+    .AddScheme<AuthenticationSchemeOptions, ApiTokenAuthenticationHandler>(
+        ApiTokenAuthenticationHandler.SchemeName, _ => { });
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("BearerOrApiToken", policy =>
+    {
+        policy.AddAuthenticationSchemes("Bearer", "ApiToken");
+        policy.RequireAuthenticatedUser();
     });
-builder.Services.AddAuthorization();
 builder.Services.AddSingleton<IPermissionService, PermissionService>();
 // Add ConnectionElisData
 builder.Services.AddSingleton<IConnectionElisData, ConnectionElisData>();

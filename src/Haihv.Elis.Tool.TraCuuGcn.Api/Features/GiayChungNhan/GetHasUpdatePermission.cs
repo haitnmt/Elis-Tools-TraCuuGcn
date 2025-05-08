@@ -34,7 +34,7 @@ public static class GetHasUpdatePermission
             // Kiểm tra quyền cập nhật, ném ngoại lệ nếu không có quyền
             if (await permissionService.HasUpdatePermission(user, serial,
                     cancellationToken)) return true;
-            logger.Warning("{Email} không có quyền cập nhật Giấy chứng nhận {Url}", 
+            logger.Warning("{Email} không có quyền cập nhật Giấy chứng nhận {Url}",
                 email, url);
             throw new UnauthorizedAccessException();
         }
@@ -59,7 +59,7 @@ public static class GetHasUpdatePermission
                     var response = await sender.Send(new Query(serial));
                     return response ? Results.Ok("Có quyền cập nhật thông tin giấy chứng nhận") : Results.Unauthorized();
                 })
-                .RequireAuthorization() // Yêu cầu xác thực
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("GiayChungNhan"); // Gắn tag cho Swagger
         }
     }

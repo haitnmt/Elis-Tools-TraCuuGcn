@@ -40,24 +40,24 @@ public static class GetUserInfo
             // Lấy HttpContext hiện tại
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-            
+
             // Lấy thông tin người dùng từ Claims
             var user = httpContext.User;
             var isLocal = permissionService.IsLocalUser(user);
             var email = user.GetEmail(isLocal);
             // Chuyển đổi thông tin từ Claims thành đối tượng UserInfo
             var userInfo = user.GetUserInfo();
-            
+
             userInfo.IsLocalAccount = permissionService.IsLocalUser(user);
             userInfo.HasUpdatePermission = permissionService.HasUpdatePermission(user);
             // Ghi log thành công
             logger.Information("{Email} Lấy thông tin cá nhân thành công ", email);
-            
+
             // Trả về thông tin người dùng
             return Task.FromResult(userInfo);
         }
     }
-    
+
     /// <summary>
     /// Định nghĩa endpoint API cho tính năng lấy thông tin người dùng.
     /// </summary>
@@ -75,7 +75,7 @@ public static class GetUserInfo
                     var response = await sender.Send(new Query());
                     return Results.Ok(response);
                 })
-                .RequireAuthorization() // Yêu cầu xác thực người dùng
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("User"); // Gắn tag để nhóm API trong Swagger
         }
     }

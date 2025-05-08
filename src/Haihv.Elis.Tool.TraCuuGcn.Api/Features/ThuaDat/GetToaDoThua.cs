@@ -22,7 +22,7 @@ public static class GetToaDoThua
     /// <param name="Serial">Số phát hành của Giấy chứng nhận.</param>
     /// <param name="SoDinhDanh">Số định danh của chủ sử dụng (tùy chọn).</param>
     public record Query(string Serial, string? SoDinhDanh) : IRequest<Response>;
-    
+
     /// <summary>
     /// Đại diện cho kết quả trả về khi lấy thông tin tọa độ thửa đất.
     /// </summary>
@@ -32,7 +32,7 @@ public static class GetToaDoThua
     /// <param name="TamThuaDats">Tập hợp các đối tượng tâm thửa đất.</param>
     public record Response(FeatureCollectionModel ThuaDats, FeatureCollectionModel NetNhas,
         FeatureCollectionModel LongDuongs, FeatureCollectionModel TamThuaDats);
-    
+
     /// <summary>
     /// Xử lý yêu cầu lấy thông tin tọa độ thửa đất.
     /// </summary>
@@ -57,26 +57,26 @@ public static class GetToaDoThua
             var serial = request.Serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-                
+
             // Lấy thông tin HttpContext để kiểm tra quyền và ghi log
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-                              
+
             // Lấy thông tin người dùng
             var user = httpContext.User;
-            
+
             // Kiểm tra quyền đọc dữ liệu
             if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
-                
+
             // Lấy thông tin email và URL để ghi log
             var isLocal = permissionService.IsLocalUser(user);
             var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Lấy thông tin tọa độ thửa đất từ service
             var result = await geoService.GetResultAsync(serial, cancellationToken);
-            
+
             // Xử lý kết quả trả về
             return result.Match(
                 // Xử lý khi lấy thông tin thành công
@@ -86,7 +86,7 @@ public static class GetToaDoThua
                         email,
                         url,
                         isLocal);
-                        
+
                     // Tạo geometry phù hợp với số lượng điểm
                     Geometry geometry;
                     if (coordinates.Count == 1)
@@ -123,7 +123,7 @@ public static class GetToaDoThua
                 });
         }
     }
-    
+
     /// <summary>
     /// Định nghĩa các endpoint API cho tính năng lấy thông tin tọa độ thửa đất.
     /// </summary>
@@ -141,7 +141,7 @@ public static class GetToaDoThua
                     var response = await sender.Send(new Query(serial, soDinhDanh));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization() // Yêu cầu xác thực người dùng
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("ThuaDat"); // Gắn tag để nhóm API trong Swagger
         }
     }

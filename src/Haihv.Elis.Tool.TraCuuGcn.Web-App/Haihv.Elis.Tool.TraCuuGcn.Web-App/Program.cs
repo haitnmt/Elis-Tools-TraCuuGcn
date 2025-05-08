@@ -18,7 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 // Add Caching
-builder.AddCache();
+builder.AddCache(clearCache: true);
 
 // Add services Data Protection sử dụng Redis
 builder.AddDataProtection();

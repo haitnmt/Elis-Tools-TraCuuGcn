@@ -19,7 +19,6 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Extensions;
 /// </remarks>
 public static class HybridCachingExtensions
 {
-
     /// <summary>
     /// Đăng ký và cấu hình hệ thống cache kết hợp cho ứng dụng.
     /// </summary>
@@ -28,13 +27,16 @@ public static class HybridCachingExtensions
     /// Tên của chuỗi kết nối đến Redis server. Nếu được cung cấp, sẽ được sử dụng làm distributed cache.
     /// Nếu không cung cấp, hệ thống sẽ tìm kiếm cấu hình từ "Aspire:CacheName" hoặc ConnectionString có tên "RedisConnectionName".
     /// </param>
+    /// <param name="clearCache">
+    /// Xác định xem có nên xóa cache hay không. Nếu true, sẽ xóa tất cả các cache hiện có.
+    /// </param>
     /// <remarks>
     /// Phương thức này cấu hình hệ thống cache kết hợp:
     /// - Luôn cấu hình memory cache
     /// - Nếu cung cấp chuỗi kết nối Redis, cấu hình thêm distributed cache với Redis
     /// - Kết hợp cả hai thành một hybrid cache để tối ưu hiệu suất
     /// </remarks>
-    public static void AddCache(this IHostApplicationBuilder builder, string? redisConnectionName = null)
+    public static void AddCache(this IHostApplicationBuilder builder, string? redisConnectionName = null, bool clearCache = false)
     {
 
         // Đăng ký memory cache - luôn được sử dụng làm cache tầng 1
@@ -84,7 +86,14 @@ public static class HybridCachingExtensions
             {
                 throw new InvalidOperationException("Không thể khởi tạo Redis cache");
             }
-
+            
+            // Clear caches
+            if (clearCache)
+            {
+                var database = redis.GetDatabase();
+                database.KeyDelete($"*:{instanceName}:*");
+                database.KeyDelete($"{instanceName}:*");
+            }
             // Cấu hình FusionCache với Redis
             fusionCacheBuilder.WithDistributedCache(new RedisCache(
                     new RedisCacheOptions

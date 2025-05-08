@@ -24,7 +24,7 @@ public static class GetGiayChungNhan
     /// <param name="Serial">Số Serial của Giấy chứng nhận cần truy vấn</param>
     /// <param name="SoDinhDanh">Số định danh của Chủ sử dụng</param>
     public record Query(string Serial, string? SoDinhDanh = null) : IRequest<TraCuuGcn.Models.GiayChungNhan>;
-    
+
     /// <summary>
     /// Xử lý truy vấn thông tin Giấy chứng nhận
     /// </summary>
@@ -53,13 +53,13 @@ public static class GetGiayChungNhan
             // Lấy HttpContext, ném ngoại lệ nếu không có
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
-            
+
             var serial = request.Serial;
             var user = httpContext.User;
             if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Kiểm tra tính hợp lệ của số Serial
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
@@ -67,7 +67,7 @@ public static class GetGiayChungNhan
             var email = user.GetEmail(isLocal);
             // Thực hiện truy vấn thông tin Giấy chứng nhận
             var result = await giayChungNhanService.GetResultAsync(serial, cancellationToken: cancellationToken);
-            
+
             // Xử lý kết quả truy vấn
             return result.Match(giayChungNhan =>
             {
@@ -89,7 +89,7 @@ public static class GetGiayChungNhan
             });
         }
     }
-    
+
     /// <summary>
     /// Cấu hình endpoint cho tính năng lấy thông tin Giấy chứng nhận
     /// </summary>
@@ -110,7 +110,7 @@ public static class GetGiayChungNhan
                     var response = await sender.Send(new Query(serial));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization() // Yêu cầu xác thực
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("GiayChungNhan"); // Gắn tag cho Swagger
         }
     }

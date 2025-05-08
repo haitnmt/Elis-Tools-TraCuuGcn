@@ -53,7 +53,7 @@ public static class GetHasReadPermission
                     var response = await sender.Send(new Query(serial, soDinhDanh));
                     return response ? Results.Ok() : Results.Unauthorized();
                 })
-                .RequireAuthorization()
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("ChuSuDung");
         }
     }

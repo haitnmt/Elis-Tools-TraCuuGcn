@@ -23,7 +23,7 @@ public static class DeleteCache
     /// </summary>
     /// <param name="Serial">Số Serial của Giấy chứng nhận cần xóa cache</param>
     public record Command(string Serial) : IRequest<bool>;
-    
+
     /// <summary>
     /// Xử lý lệnh xóa cache thông tin Giấy chứng nhận
     /// </summary>
@@ -57,20 +57,20 @@ public static class DeleteCache
             var serial = request.Serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-                
+
             // Lấy thông tin người dùng
             var user = httpContext.User;
             var email = user.GetEmail();
-            
+
             // Kiểm tra quyền xóa cache, ném ngoại lệ nếu không có quyền
             if (!permissionService.IsLocalUser(user))
                 throw new UnauthorizedAccessException("Không có quyền xóa cache cho giấy chứng nhận này");
-            
+
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Thực hiện xóa cache thông tin Giấy chứng nhận
             var result = await gcnQrService.DeleteMaQrAsync(serial, cancellationToken);
-            
+
             // Xử lý kết quả xóa cache
             return result.Match(
                 succ =>
@@ -92,7 +92,7 @@ public static class DeleteCache
                 });
         }
     }
-    
+
     /// <summary>
     /// Cấu hình endpoint cho tính năng xóa cache Giấy chứng nhận
     /// </summary>
@@ -113,7 +113,7 @@ public static class DeleteCache
                     var response = await sender.Send(new Command(serial));
                     return response ? Results.Ok("Xóa cache thành công") : Results.NotFound("Không tìm thấy thông tin cache");
                 })
-                .RequireAuthorization() // Yêu cầu xác thực
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("Cache"); // Gắn tag cho Swagger
         }
     }

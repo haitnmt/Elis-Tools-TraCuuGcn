@@ -81,7 +81,13 @@ public class PermissionService(IConfiguration configuration,
     /// <param name="user">Đối tượng ClaimsPrincipal chứa thông tin người dùng</param>
     /// <returns>True nếu là người dùng nội bộ, ngược lại là False</returns>
     public bool IsLocalUser(ClaimsPrincipal user)
-        => user.HasPermission(_roleLocal);
+    {
+        if (user.HasPermission(_roleLocal)) return true;
+        // Kiểm tra có phải là API token hay không
+        var tokenName = user.FindFirstValue(ClaimTypes.Name);
+        return tokenName?.Equals("ApiTokenUser", StringComparison.OrdinalIgnoreCase) == true;
+    }
+    
     
     /// <summary>
     /// Kiểm tra người dùng có quyền cập nhật Giấy chứng nhận hay không

@@ -50,27 +50,27 @@ public static class GetTaiSan
             var serial = request.Serial.ChuanHoa();
             if (string.IsNullOrWhiteSpace(serial))
                 throw new NoSerialException();
-            
+
             // Lấy HttpContext và kiểm tra
             var httpContext = httpContextAccessor.HttpContext
                               ?? throw new InvalidOperationException("HttpContext không khả dụng");
             var user = httpContext.User;
-            
+
             // Kiểm tra quyền truy cập
             if (!await permissionService.HasReadPermission(user, serial, request.SoDinhDanh, cancellationToken))
                 throw new UnauthorizedAccessException();
-            
+
             // Lấy thông tin người dùng và URL hiện tại
             var isLocal = permissionService.IsLocalUser(user);
             var email = user.GetEmail(isLocal);
             var url = httpContext.Request.GetDisplayUrl();
-            
+
             // Lấy danh sách mã thửa đất
             var dsMaThuaDatTask = thuaDatService.GetMaThuaDatAsync(serial, cancellationToken);
-            
+
             // Lấy danh sách mã Chủ sử dụng
             var dsMaChuSuDungTask = chuSuDungService.GetMaChuSuDungAsync(serial, cancellationToken);
-            
+
             // Chờ và kiểm tra kết quả thửa đất
             var dsMaThuaDat = await dsMaThuaDatTask;
             if (dsMaThuaDat.Count == 0)
@@ -81,7 +81,7 @@ public static class GetTaiSan
                     isLocal);
                 throw new TaiSanNotFoundException(serial);
             }
-            
+
             // Chờ và kiểm tra kết quả chủ sử dụng
             var dsMaChuSuDung = await dsMaChuSuDungTask;
             if (dsMaChuSuDung.Count == 0)
@@ -92,7 +92,7 @@ public static class GetTaiSan
                     isLocal);
                 throw new TaiSanNotFoundException(serial);
             }
-            
+
             // Lấy thông tin tài sản dựa trên mã thửa đất và mã chủ sử dụng
             var result = await taiSanService.GetTaiSanAsync(serial, dsMaThuaDat, dsMaChuSuDung);
 
@@ -109,7 +109,7 @@ public static class GetTaiSan
                             isLocal);
                         return taiSan;
                     }
-                    
+
                     // Nếu không có tài sản, ghi log và ném ngoại lệ
                     logger.Warning("{Email} Không tìm thấy thông tin tài sản: {Url} {IsLocal}",
                         email,
@@ -128,7 +128,7 @@ public static class GetTaiSan
                 }));
         }
     }
-    
+
     /// <summary>
     /// Định nghĩa endpoint API để truy vấn thông tin tài sản
     /// </summary>
@@ -146,7 +146,7 @@ public static class GetTaiSan
                     var response = await sender.Send(new Query(serial, soDinhDanh));
                     return Results.Ok(response);
                 })
-                .RequireAuthorization()
+                .RequireAuthorization("BearerOrApiToken") // Yêu cầu xác thực bằng JWT hoặc API Token
                 .WithTags("TaiSan");
         }
     }
