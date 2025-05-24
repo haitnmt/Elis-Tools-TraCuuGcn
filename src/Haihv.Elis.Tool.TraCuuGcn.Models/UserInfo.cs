@@ -11,5 +11,4 @@ public class UserInfo
     public bool IsLocalAccount { get; set; }
     public bool HasUpdatePermission { get; set; }
     public List<string> Roles { get; set; } = [];
-       
 }

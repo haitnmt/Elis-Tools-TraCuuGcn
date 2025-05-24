@@ -1,5 +1,5 @@
 var builder = DistributedApplication.CreateBuilder(args);
-var cache  = builder.AddValkey("Cache",  6379);
+var cache = builder.AddValkey("Cache", 6379);
 var sdeApi = builder.AddGolangApp("sdeApi", "../Haihv.Elis.Tool.TraCuuGcn.Api.Sde")
     .WithHttpEndpoint(8151, 8151, "localhost", isProxied: false);
 var api = builder.AddProject<Projects.Haihv_Elis_Tool_TraCuuGcn_Api>("TraCuuGcn-api")
