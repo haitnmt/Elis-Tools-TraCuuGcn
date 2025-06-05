@@ -6,7 +6,8 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Web.App.Authentication;
 
 internal static partial class CookieOidcServiceCollectionExtensions
 {
-    public static IServiceCollection ConfigureCookieOidcRefresh(this IServiceCollection services, string cookieScheme, string oidcScheme)
+    public static void ConfigureCookieOidcRefresh(this IServiceCollection services, string cookieScheme,
+        string oidcScheme)
     {
         services.AddSingleton<CookieOidcRefresher>();
         services.AddOptions<CookieAuthenticationOptions>(cookieScheme).Configure<CookieOidcRefresher>((cookieOptions, refresher) =>
@@ -20,6 +21,5 @@ internal static partial class CookieOidcServiceCollectionExtensions
             // Store the refresh_token.
             oidcOptions.SaveTokens = true;
         });
-        return services;
     }
 }

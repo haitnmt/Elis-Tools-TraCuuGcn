@@ -7,7 +7,7 @@ namespace Haihv.Elis.Tool.TraCuuGcn.Web.App.Authentication;
 internal static class LoginLogoutEndpointRouteBuilderExtensions
 {
     public const string OidcSchemeName = "keycloak";
-    internal static IEndpointConventionBuilder MapLoginAndLogout(this IEndpointRouteBuilder endpoints)
+    internal static void MapLoginAndLogout(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("");
 
@@ -19,8 +19,6 @@ internal static class LoginLogoutEndpointRouteBuilderExtensions
         // without being able to choose another account.
         group.MapPost("/logout", ([FromForm] string? returnUrl) => TypedResults.SignOut(GetAuthProperties(returnUrl),
             [CookieAuthenticationDefaults.AuthenticationScheme, "keycloak"]));
-        
-        return group;
     }
 
     private static AuthenticationProperties GetAuthProperties(string? returnUrl)

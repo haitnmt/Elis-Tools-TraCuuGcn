@@ -7,11 +7,10 @@
 }
 @code 
 {
-    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
     [Inject] private IAppSettingsService AppSettingsService { get; set; } = null!;
     [Inject] ISnackbar Snackbar { get; set; } = null!;
 
-    private AppSettings? _appSettings = null!;
+    private AppSettings? _appSettings;
     private string? _version;
     protected override async Task OnInitializedAsync()
     {
