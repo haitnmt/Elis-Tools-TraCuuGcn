@@ -47,13 +47,11 @@ public class DcNhaRiengLe
     /// Số nhà
     /// </summary>
     [XmlElement("soNha")]
-    public string? SoNha { get; set; }
-
-    /// <summary>
-    /// Thời hạn sở hữu
-    /// </summary>
+    public string? SoNha { get; set; }    /// <summary>
+                                          /// Thời hạn sở hữu
+                                          /// </summary>
     [XmlElement("thoiHanSoHuu")]
-    public int? ThoiHanSoHuu { get; set; }
+    public string? ThoiHanSoHuu { get; set; }
 
     /// <summary>
     /// Diện tích xây dựng
@@ -279,9 +277,8 @@ public class DcNhaChungCu
 
     /// <summary>
     /// Thời hạn sở hữu
-    /// </summary>
-    [XmlElement("thoiHanSoHuu")]
-    public int? ThoiHanSoHuu { get; set; }
+    /// </summary>    [XmlElement("thoiHanSoHuu")]
+    public string? ThoiHanSoHuu { get; set; }
 
     /// <summary>
     /// Cấp hạng

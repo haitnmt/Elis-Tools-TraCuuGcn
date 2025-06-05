@@ -227,13 +227,11 @@ public class DcMucDichSuDung
     /// Diện tích
     /// </summary>
     [XmlElement("dienTich")]
-    public decimal? DienTich { get; set; }
-
-    /// <summary>
-    /// Thời hạn sử dụng
-    /// </summary>
+    public decimal? DienTich { get; set; }    /// <summary>
+                                              /// Thời hạn sử dụng
+                                              /// </summary>
     [XmlElement("thoiHanSuDung")]
-    public int? ThoiHanSuDung { get; set; }
+    public string? ThoiHanSuDung { get; set; }
 
     /// <summary>
     /// Ngày hết hạn sử dụng

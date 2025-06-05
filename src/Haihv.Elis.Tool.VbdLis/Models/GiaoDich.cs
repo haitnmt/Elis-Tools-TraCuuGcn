@@ -431,13 +431,11 @@ public class DcDangKyChungRieng
     /// Ngày hết hạn
     /// </summary>
     [XmlElement("ngayHetHan")]
-    public DateTime? NgayHetHan { get; set; }
-
-    /// <summary>
-    /// Thời hạn
-    /// </summary>
+    public DateTime? NgayHetHan { get; set; }    /// <summary>
+                                                 /// Thời hạn
+                                                 /// </summary>
     [XmlElement("thoiHan")]
-    public int? ThoiHan { get; set; }
+    public string? ThoiHan { get; set; }
 
     /// <summary>
     /// Chung riêng

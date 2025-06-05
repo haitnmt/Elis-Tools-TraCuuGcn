@@ -63,8 +63,7 @@ public class DcCongTrinhXayDung
 
     /// <summary>
     /// Số tầng hầm
-    /// </summary>
-    [XmlElement("soTangHam")]
+    /// </summary>    [XmlElement("soTangHam")]
     public int? SoTangHam { get; set; }
 
     /// <summary>
@@ -83,7 +82,7 @@ public class DcCongTrinhXayDung
     /// Thời hạn sở hữu
     /// </summary>
     [XmlElement("thoiHanSoHuu")]
-    public int? ThoiHanSoHuu { get; set; }
+    public string? ThoiHanSoHuu { get; set; }
 
     /// <summary>
     /// Cấp hạng
@@ -171,8 +170,7 @@ public class DcHangMucCongTrinh
 
     /// <summary>
     /// Kết cấu
-    /// </summary>
-    [XmlElement("ketCau")]
+    /// </summary>    [XmlElement("ketCau")]
     public string? KetCau { get; set; }
 
     /// <summary>
@@ -191,7 +189,7 @@ public class DcHangMucCongTrinh
     /// Thời hạn sở hữu
     /// </summary>
     [XmlElement("thoiHanSoHuu")]
-    public int? ThoiHanSoHuu { get; set; }
+    public string? ThoiHanSoHuu { get; set; }
 
     /// <summary>
     /// Cấp hạng
@@ -274,8 +272,7 @@ public class DcCongTrinhNgam
     /// <summary>
     /// Vị trí đấu nối
     /// </summary>
-    [XmlElement("viTriDauNoi")]
-    public string? ViTriDauNoi { get; set; }
+    [XmlElement("viTriDauNoi")] public string? ViTriDauNoi { get; set; }
 
     /// <summary>
     /// Năm xây dựng
@@ -293,7 +290,7 @@ public class DcCongTrinhNgam
     /// Thời hạn sở hữu
     /// </summary>
     [XmlElement("thoiHanSoHuu")]
-    public int? ThoiHanSoHuu { get; set; }
+    public string? ThoiHanSoHuu { get; set; }
 
     /// <summary>
     /// Địa chỉ
