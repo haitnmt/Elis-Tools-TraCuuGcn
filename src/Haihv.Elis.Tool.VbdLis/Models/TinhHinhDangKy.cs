@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Haihv.Elis.Tool.Models.VbdLis;
+namespace Haihv.Elis.Tool.VbdLis;
 
 /// <summary>
 /// Thông tin tình hình đăng ký - Trang 57
