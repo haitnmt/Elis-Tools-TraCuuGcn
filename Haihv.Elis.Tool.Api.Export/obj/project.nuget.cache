@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "xLn377dTfIY=",
+  "success": true,
+  "projectFilePath": "G:\\source\\haitnmt\\Elis-Tools-TraCuuGcn\\Haihv.Elis.Tool.Api.Export\\Haihv.Elis.Tool.Api.Export.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\haiti\\.nuget\\packages\\microsoft.aspnetcore.openapi\\9.0.5\\microsoft.aspnetcore.openapi.9.0.5.nupkg.sha512",
+    "C:\\Users\\haiti\\.nuget\\packages\\microsoft.openapi\\1.6.17\\microsoft.openapi.1.6.17.nupkg.sha512"
+  ],
+  "logs": []
+}
