@@ -1,5 +1,6 @@
-using Haihv.Elis.Tools.Data.Models;
-namespace Haihv.Elis.Tools.Data.DanhMuc;
+using Haihv.Elis.Tool.VbdLis.Models;
+
+namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 /// <summary>
 /// Danh mục các loại giấy chứng nhận quyền sử dụng đất, quyền sở hữu nhà ở và tài sản khác gắn liền với đất.

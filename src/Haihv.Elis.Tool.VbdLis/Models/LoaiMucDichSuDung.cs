@@ -1,4 +1,4 @@
-namespace Haihv.Elis.Tools.Data.Models;
+namespace Haihv.Elis.Tool.VbdLis.Models;
 
 /// <summary>
 /// Loại mục đích sử dụng đất.

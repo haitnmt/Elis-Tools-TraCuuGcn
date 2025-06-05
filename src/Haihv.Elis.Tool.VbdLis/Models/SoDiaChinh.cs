@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Haihv.Elis.Tool.VbdLis;
+namespace Haihv.Elis.Tool.VbdLis.Models;
 
 /// <summary>
 /// Wrapper cho thông tin sổ địa chính

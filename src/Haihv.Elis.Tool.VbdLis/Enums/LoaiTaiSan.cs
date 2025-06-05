@@ -1,6 +1,6 @@
 namespace Haihv.Elis.Tool.VbdLis.Enums;
 
-public enum LoaiTaiSanVbdLis
+public enum LoaiTaiSan
 {
     ThuaDat = 6,
     NhaRiengLe = 7,
@@ -15,19 +15,19 @@ public enum LoaiTaiSanVbdLis
 
 public static class LoaiTaiSanVbdLisExtensions
 {
-    public static string ToTenTiengViet(this LoaiTaiSanVbdLis loaiTaiSan)
+    public static string ToTenTiengViet(this LoaiTaiSan loaiTaiSan)
     {
         return loaiTaiSan switch
         {
-            LoaiTaiSanVbdLis.ThuaDat => "Thửa đất",
-            LoaiTaiSanVbdLis.NhaRiengLe => "Nhà riêng lẻ",
-            LoaiTaiSanVbdLis.CanHo => "Căn hộ",
-            LoaiTaiSanVbdLis.NhaChungCu => "Nhà chung cư",
-            LoaiTaiSanVbdLis.KhuChungCu => "Khu chung cư",
-            LoaiTaiSanVbdLis.CongTrinhXayDung => "Công trình xây dựng",
-            LoaiTaiSanVbdLis.CongTrinhNgam => "Công trình ngầm",
-            LoaiTaiSanVbdLis.RungTrong => "Rừng trồng",
-            LoaiTaiSanVbdLis.CayLauNam => "Cây lâu năm",
+            LoaiTaiSan.ThuaDat => "Thửa đất",
+            LoaiTaiSan.NhaRiengLe => "Nhà riêng lẻ",
+            LoaiTaiSan.CanHo => "Căn hộ",
+            LoaiTaiSan.NhaChungCu => "Nhà chung cư",
+            LoaiTaiSan.KhuChungCu => "Khu chung cư",
+            LoaiTaiSan.CongTrinhXayDung => "Công trình xây dựng",
+            LoaiTaiSan.CongTrinhNgam => "Công trình ngầm",
+            LoaiTaiSan.RungTrong => "Rừng trồng",
+            LoaiTaiSan.CayLauNam => "Cây lâu năm",
             _ => "Không xác định"
         };
     }

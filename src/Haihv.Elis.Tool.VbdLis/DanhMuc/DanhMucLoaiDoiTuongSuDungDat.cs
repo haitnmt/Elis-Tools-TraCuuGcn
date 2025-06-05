@@ -1,6 +1,6 @@
-using Haihv.Elis.Tools.Data.Models;
+using Haihv.Elis.Tool.VbdLis.Models;
 
-namespace Haihv.Elis.Tools.Data.DanhMuc;
+namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 /// <summary>
 /// Danh mục loại đối tượng sử dụng đất trong hệ thống.

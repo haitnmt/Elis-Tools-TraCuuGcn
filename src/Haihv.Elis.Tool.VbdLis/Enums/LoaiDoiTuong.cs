@@ -1,6 +1,6 @@
 namespace Haihv.Elis.Tool.VbdLis.Enums;
 
-public enum LoaiDoiTuongVbdLis
+public enum LoaiDoiTuong
 {
     CaNhan = 0,
     VoChong = 1,
@@ -10,15 +10,15 @@ public enum LoaiDoiTuongVbdLis
 }
 public static class LoaiDoiTuongVbdLisExtensions
 {
-    public static string ToTenTiengViet(this LoaiDoiTuongVbdLis loaiDoiTuong)
+    public static string ToTenTiengViet(this LoaiDoiTuong loaiDoiTuong)
     {
         return loaiDoiTuong switch
         {
-            LoaiDoiTuongVbdLis.CaNhan => "Cá nhân",
-            LoaiDoiTuongVbdLis.VoChong => "Vợ chồng",
-            LoaiDoiTuongVbdLis.HoGiaDinh => "Hộ gia đình",
-            LoaiDoiTuongVbdLis.ToChuc => "Tổ chức",
-            LoaiDoiTuongVbdLis.CongDong => "Cộng đồng",
+            LoaiDoiTuong.CaNhan => "Cá nhân",
+            LoaiDoiTuong.VoChong => "Vợ chồng",
+            LoaiDoiTuong.HoGiaDinh => "Hộ gia đình",
+            LoaiDoiTuong.ToChuc => "Tổ chức",
+            LoaiDoiTuong.CongDong => "Cộng đồng",
             _ => "Không xác định"
         };
     }

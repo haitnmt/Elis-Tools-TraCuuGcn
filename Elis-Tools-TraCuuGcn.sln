@@ -18,11 +18,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.TraCuuGcn.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.TraCuuGcn.Extensions", "src\ Haihv.Elis.Tool.TraCuuGcn.Extensions\Haihv.Elis.Tool.TraCuuGcn.Extensions.csproj", "{B056D6B7-408B-4C50-A1BC-A73807A7B58E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.Models.Elis", "src\Haihv.Elis.Tool.Models.Elis\Haihv.Elis.Tool.Models.Elis.csproj", "{4EC75AD7-BE42-4345-AA9D-A5F56899AD92}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.Models", "src\Haihv.Elis.Tool.Models\Haihv.Elis.Tool.Models.csproj", "{4EC75AD7-BE42-4345-AA9D-A5F56899AD92}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.Api.Export", "src\Haihv.Elis.Tool.Api.Export\Haihv.Elis.Tool.Api.Export.csproj", "{6EB6D6BF-0595-4286-B9ED-E86AC1008856}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.Models.VbdLis", "src\Haihv.Elis.Tool.Models.VbdLis\Haihv.Elis.Tool.Models.VbdLis.csproj", "{9E88C50E-1C51-44F8-B49D-4AD0A7111DFA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Haihv.Elis.Tool.VbdLis", "src\Haihv.Elis.Tool.VbdLis\Haihv.Elis.Tool.VbdLis.csproj", "{9E88C50E-1C51-44F8-B49D-4AD0A7111DFA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{6F85CDD4-6C6B-45D9-B2BE-AC5A7A29503E}"
 EndProject

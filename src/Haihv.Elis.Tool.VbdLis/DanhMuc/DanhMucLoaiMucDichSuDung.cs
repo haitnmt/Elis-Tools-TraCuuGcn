@@ -1,6 +1,6 @@
-using Haihv.Elis.Tools.Data.Models;
+using Haihv.Elis.Tool.VbdLis.Models;
 
-namespace Haihv.Elis.Tools.Data.DanhMuc;
+namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 /// <summary>
 /// Danh mục loại mục đích sử dụng đất sử dụng trong hệ thống. Cung cấp các phương thức lấy mã theo tên và ngược lại.

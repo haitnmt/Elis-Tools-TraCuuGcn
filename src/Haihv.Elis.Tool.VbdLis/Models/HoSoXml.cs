@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Haihv.Elis.Tool.VbdLis;
+namespace Haihv.Elis.Tool.VbdLis.Models;
 
 /// <summary>
 /// Hồ sơ XML chính chứa tất cả thông tin về giấy chứng nhận quyền sử dụng đất
