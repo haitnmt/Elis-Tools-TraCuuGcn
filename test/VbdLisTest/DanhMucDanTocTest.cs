@@ -26,9 +26,21 @@ public class DanhMucDanTocTest
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("tay"), Is.EqualTo(2));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("hmong"), Is.EqualTo(8));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("e de"), Is.EqualTo(11));
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("e ed"), Is.Not.EqualTo(11));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("cham"), Is.EqualTo(16));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("chut"), Is.EqualTo(43));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("o du"), Is.EqualTo(53));
+        });
+    }
+    [Test]
+    public void GetMaByTen_ReturnsNotCorrectCode_WithNormalization()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("king"), Is.Not.EqualTo(1));
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("e ed"), Is.Not.EqualTo(11));
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("chan"), Is.Not.EqualTo(16));
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("chtu"), Is.Not.EqualTo(43));
         });
     }
     [Test]
