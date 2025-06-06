@@ -1,308 +1,352 @@
-using Haihv.Elis.Tool.VbdLis.Models;
-
 namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 /// <summary>
-/// Danh mục loại mục đích sử dụng đất sử dụng trong hệ thống. Cung cấp các phương thức lấy mã theo tên và ngược lại.
+/// Danh mục các loại mục đích sử dụng đất.
 /// </summary>
 public static class DanhMucLoaiMucDichSuDung
 {
     /// <summary>
-    /// Đất an ninh (Mã: CAN)
+    /// Đất an ninh.
     /// </summary>
-    public static readonly LoaiMucDichSuDung CAN = new("CAN", "Đất an ninh");
+    public static readonly LoaiMucDichSuDung DatAnNinh = new("CAN", "Đất an ninh");
 
     /// <summary>
-    /// Đất bãi thải, xử lý chất thải (Mã: DRA)
+    /// Đất bãi thải, xử lý chất thải.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DRA = new("DRA", "Đất bãi thải, xử lý chất thải");
+    public static readonly LoaiMucDichSuDung DatBaiThaiXuLyChatThai = new("DRA", "Đất bãi thải, xử lý chất thải");
 
     /// <summary>
-    /// Đất bằng chưa sử dụng (Mã: BCS)
+    /// Đất bằng chưa sử dụng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung BCS = new("BCS", "Đất bằng chưa sử dụng");
+    public static readonly LoaiMucDichSuDung DatBangChuaSuDung = new("BCS", "Đất bằng chưa sử dụng");
 
     /// <summary>
-    /// Đất bằng trồng cây hàng năm khác (Mã: BHK)
+    /// Đất bằng trồng cây hàng năm khác.
     /// </summary>
-    public static readonly LoaiMucDichSuDung BHK = new("BHK", "Đất bằng trồng cây hàng năm khác");
+    public static readonly LoaiMucDichSuDung DatBangTrongCayHangNamKhac = new("BHK", "Đất bằng trồng cây hàng năm khác");
 
     /// <summary>
-    /// Đất chợ (Mã: DCH)
+    /// Đất chợ.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DCH = new("DCH", "Đất chợ");
+    public static readonly LoaiMucDichSuDung DatCho = new("DCH", "Đất chợ");
 
     /// <summary>
-    /// Đất chuyên trồng lúa nước (Mã: LUC)
+    /// Đất chuyên trồng lúa nước.
     /// </summary>
-    public static readonly LoaiMucDichSuDung LUC = new("LUC", "Đất chuyên trồng lúa nước");
+    public static readonly LoaiMucDichSuDung DatChuyenTrongLuaNuoc = new("LUC", "Đất chuyên trồng lúa nước");
 
     /// <summary>
-    /// Đất có danh lam thắng cảnh (Mã: DDL)
+    /// Đất có danh lam thắng cảnh.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DDL = new("DDL", "Đất có danh lam thắng cảnh");
+    public static readonly LoaiMucDichSuDung DatCoDanhLamThangCanh = new("DDL", "Đất có danh lam thắng cảnh");
 
     /// <summary>
-    /// Đất có di tích lịch sử - văn hóa (Mã: DDT)
+    /// Đất có di tích lịch sử - văn hóa.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DDT = new("DDT", "Đất có di tích lịch sử - văn hóa");
+    public static readonly LoaiMucDichSuDung DatCoDiTichLichSuVanHoa = new("DDT", "Đất có di tích lịch sử - văn hóa");
 
     /// <summary>
-    /// Đất có mặt nước chuyên dùng (Mã: MNC)
+    /// Đất có mặt nước chuyên dùng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung MNC = new("MNC", "Đất có mặt nước chuyên dùng");
+    public static readonly LoaiMucDichSuDung DatCoMatNuocChuyenDung = new("MNC", "Đất có mặt nước chuyên dùng");
 
     /// <summary>
-    /// Đất cơ sở sản xuất phi nông nghiệp (Mã: SKC)
+    /// Đất cơ sở sản xuất phi nông nghiệp.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SKC = new("SKC", "Đất cơ sở sản xuất phi nông nghiệp");
+    public static readonly LoaiMucDichSuDung DatCoSoSanXuatPhiNongNghiep = new("SKC", "Đất cơ sở sản xuất phi nông nghiệp");
 
     /// <summary>
-    /// Đất cơ sở tín ngưỡng (Mã: TIN)
+    /// Đất cơ sở tín ngưỡng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung TIN = new("TIN", "Đất cơ sở tín ngưỡng");
+    public static readonly LoaiMucDichSuDung DatCoSoTinNguong = new("TIN", "Đất cơ sở tín ngưỡng");
 
     /// <summary>
-    /// Đất cơ sở tôn giáo (Mã: TON)
+    /// Đất cơ sở tôn giáo.
     /// </summary>
-    public static readonly LoaiMucDichSuDung TON = new("TON", "Đất cơ sở tôn giáo");
+    public static readonly LoaiMucDichSuDung DatCoSoTonGiao = new("TON", "Đất cơ sở tôn giáo");
 
     /// <summary>
-    /// Đất công trình bưu chính, viễn thông (Mã: DBV)
+    /// Đất công trình bưu chính, viễn thông.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DBV = new("DBV", "Đất công trình bưu chính, viễn thông");
+    public static readonly LoaiMucDichSuDung DatCongTrinhBuuChinhVienThong = new("DBV", "Đất công trình bưu chính, viễn thông");
 
     /// <summary>
-    /// Đất công trình công cộng khác (Mã: DCK)
+    /// Đất công trình công cộng khác.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DCK = new("DCK", "Đất công trình công cộng khác");
+    public static readonly LoaiMucDichSuDung DatCongTrinhCongCongKhac = new("DCK", "Đất công trình công cộng khác");
 
     /// <summary>
-    /// Đất công trình năng lượng (Mã: DNL)
+    /// Đất công trình năng lượng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DNL = new("DNL", "Đất công trình năng lượng");
+    public static readonly LoaiMucDichSuDung DatCongTrinhNangLuong = new("DNL", "Đất công trình năng lượng");
 
     /// <summary>
-    /// Đất cụm công nghiệp (Mã: SKN)
+    /// Đất cụm công nghiệp.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SKN = new("SKN", "Đất cụm công nghiệp");
+    public static readonly LoaiMucDichSuDung DatCumCongNghiep = new("SKN", "Đất cụm công nghiệp");
 
     /// <summary>
-    /// Đất đồi núi chưa sử dụng (Mã: DCS)
+    /// Đất đồi núi chưa sử dụng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DCS = new("DCS", "Đất đồi núi chưa sử dụng");
+    public static readonly LoaiMucDichSuDung DatDoiNuiChuaSuDung = new("DCS", "Đất đồi núi chưa sử dụng");
 
     /// <summary>
-    /// Đất giao thông (Mã: DGT)
+    /// Đất giao thông.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DGT = new("DGT", "Đất giao thông");
+    public static readonly LoaiMucDichSuDung DatGiaoThong = new("DGT", "Đất giao thông");
 
     /// <summary>
-    /// Đất khu chế xuất (Mã: SKT)
+    /// Đất khu chế xuất.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SKT = new("SKT", "Đất khu chế xuất");
+    public static readonly LoaiMucDichSuDung DatKhuCheXuat = new("SKT", "Đất khu chế xuất");
 
     /// <summary>
-    /// Đất khu công nghiệp (Mã: SKK)
+    /// Đất khu công nghiệp.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SKK = new("SKK", "Đất khu công nghiệp");
+    public static readonly LoaiMucDichSuDung DatKhuCongNghiep = new("SKK", "Đất khu công nghiệp");
 
     /// <summary>
-    /// Đất khu vui chơi, giải trí công cộng (Mã: DKV)
+    /// Đất khu vui chơi, giải trí công cộng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DKV = new("DKV", "Đất khu vui chơi, giải trí công cộng");
+    public static readonly LoaiMucDichSuDung DatKhuVuiChoiGiaiTriCongCong = new("DKV", "Đất khu vui chơi, giải trí công cộng");
 
     /// <summary>
-    /// Đất làm muối (Mã: LMU)
+    /// Đất làm muối.
     /// </summary>
-    public static readonly LoaiMucDichSuDung LMU = new("LMU", "Đất làm muối");
+    public static readonly LoaiMucDichSuDung DatLamMuoi = new("LMU", "Đất làm muối");
 
     /// <summary>
-    /// Đất làm nghĩa trang, nghĩa địa, nhà tang lễ, nhà hỏa táng (Mã: NTD)
+    /// Đất làm nghĩa trang, nghĩa địa, nhà tang lễ, nhà hỏa táng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung NTD = new("NTD", "Đất làm nghĩa trang, nghĩa địa, nhà tang lễ, nhà hỏa táng");
+    public static readonly LoaiMucDichSuDung DatLamNghiaTrangNghiaDiaNhaTangLeNhaHoaTang = new("NTD", "Đất làm nghĩa trang, nghĩa địa, nhà tang lễ, nhà hỏa táng");
 
     /// <summary>
-    /// Đất nông nghiệp khác (Mã: NKH)
+    /// Đất nông nghiệp khác.
     /// </summary>
-    public static readonly LoaiMucDichSuDung NKH = new("NKH", "Đất nông nghiệp khác");
+    public static readonly LoaiMucDichSuDung DatNongNghiepKhac = new("NKH", "Đất nông nghiệp khác");
 
     /// <summary>
-    /// Đất nuôi trồng thủy sản (Mã: NTS)
+    /// Đất nuôi trồng thủy sản.
     /// </summary>
-    public static readonly LoaiMucDichSuDung NTS = new("NTS", "Đất nuôi trồng thủy sản");
+    public static readonly LoaiMucDichSuDung DatNuoiTrongThuySan = new("NTS", "Đất nuôi trồng thủy sản");
 
     /// <summary>
-    /// Đất nương rẫy trồng cây hàng năm khác (Mã: NHK)
+    /// Đất nương rẫy trồng cây hàng năm khác.
     /// </summary>
-    public static readonly LoaiMucDichSuDung NHK = new("NHK", "Đất nương rẫy trồng cây hàng năm khác");
+    public static readonly LoaiMucDichSuDung DatNuongRayTrongCayHangNamKhac = new("NHK", "Đất nương rẫy trồng cây hàng năm khác");
 
     /// <summary>
-    /// Đất ở tại đô thị (Mã: ODT)
+    /// Đất ở tại đô thị.
     /// </summary>
-    public static readonly LoaiMucDichSuDung ODT = new("ODT", "Đất ở tại đô thị");
+    public static readonly LoaiMucDichSuDung DatOTaiDoThi = new("ODT", "Đất ở tại đô thị");
 
     /// <summary>
-    /// Đất ở tại nông thôn (Mã: ONT)
+    /// Đất ở tại nông thôn.
     /// </summary>
-    public static readonly LoaiMucDichSuDung ONT = new("ONT", "Đất ở tại nông thôn");
+    public static readonly LoaiMucDichSuDung DatOTaiNongThon = new("ONT", "Đất ở tại nông thôn");
 
     /// <summary>
-    /// Đất phi nông nghiệp khác (Mã: PNK)
+    /// Đất phi nông nghiệp khác.
     /// </summary>
-    public static readonly LoaiMucDichSuDung PNK = new("PNK", "Đất phi nông nghiệp khác");
+    public static readonly LoaiMucDichSuDung DatPhiNongNghiepKhac = new("PNK", "Đất phi nông nghiệp khác");
 
     /// <summary>
-    /// Đất quốc phòng (Mã: CQP)
+    /// Đất quốc phòng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung CQP = new("CQP", "Đất quốc phòng");
+    public static readonly LoaiMucDichSuDung DatQuocPhong = new("CQP", "Đất quốc phòng");
 
     /// <summary>
-    /// Đất rừng đặc dụng (Mã: RDD)
+    /// Đất rừng đặc dụng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung RDD = new("RDD", "Đất rừng đặc dụng");
+    public static readonly LoaiMucDichSuDung DatRungDacDung = new("RDD", "Đất rừng đặc dụng");
 
     /// <summary>
-    /// Đất rừng phòng hộ (Mã: RPH)
+    /// Đất rừng phòng hộ.
     /// </summary>
-    public static readonly LoaiMucDichSuDung RPH = new("RPH", "Đất rừng phòng hộ");
+    public static readonly LoaiMucDichSuDung DatRungPhongHo = new("RPH", "Đất rừng phòng hộ");
 
     /// <summary>
-    /// Đất rừng sản xuất (Mã: RSX)
+    /// Đất rừng sản xuất.
     /// </summary>
-    public static readonly LoaiMucDichSuDung RSX = new("RSX", "Đất rừng sản xuất");
+    public static readonly LoaiMucDichSuDung DatRungSanXuat = new("RSX", "Đất rừng sản xuất");
 
     /// <summary>
-    /// Đất sản xuất vật liệu xây dựng, làm đồ gốm (Mã: SKX)
+    /// Đất sản xuất vật liệu xây dựng, làm đồ gốm.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SKX = new("SKX", "Đất sản xuất vật liệu xây dựng, làm đồ gốm");
+    public static readonly LoaiMucDichSuDung DatSanXuatVatLieuXayDungLamDoGom = new("SKX", "Đất sản xuất vật liệu xây dựng, làm đồ gốm");
 
     /// <summary>
-    /// Đất sinh hoạt cộng đồng (Mã: DSH)
+    /// Đất sinh hoạt cộng đồng.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DSH = new("DSH", "Đất sinh hoạt cộng đồng");
+    public static readonly LoaiMucDichSuDung DatSinhHoatCongDong = new("DSH", "Đất sinh hoạt cộng đồng");
 
     /// <summary>
-    /// Đất sông, ngòi, kênh, rạch, suối (Mã: SON)
+    /// Đất sông, ngòi, kênh, rạch, suối.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SON = new("SON", "Đất sông, ngòi, kênh, rạch, suối");
+    public static readonly LoaiMucDichSuDung DatSongNgoiKenhRachSuoi = new("SON", "Đất sông, ngòi, kênh, rạch, suối");
 
     /// <summary>
-    /// Đất sử dụng cho hoạt động khoáng sản (Mã: SKS)
+    /// Đất sử dụng cho hoạt động khoáng sản.
     /// </summary>
-    public static readonly LoaiMucDichSuDung SKS = new("SKS", "Đất sử dụng cho hoạt động khoáng sản");
+    public static readonly LoaiMucDichSuDung DatSuDungChoHoatDongKhoangSan = new("SKS", "Đất sử dụng cho hoạt động khoáng sản");
 
     /// <summary>
-    /// Đất thương mại, dịch vụ (Mã: TMD)
+    /// Đất thương mại, dịch vụ.
     /// </summary>
-    public static readonly LoaiMucDichSuDung TMD = new("TMD", "Đất thương mại, dịch vụ");
+    public static readonly LoaiMucDichSuDung DatThuongMaiDichVu = new("TMD", "Đất thương mại, dịch vụ");
 
     /// <summary>
-    /// Đất thủy lợi (Mã: DTL)
+    /// Đất thủy lợi.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DTL = new("DTL", "Đất thủy lợi");
+    public static readonly LoaiMucDichSuDung DatThuyLoi = new("DTL", "Đất thủy lợi");
 
     /// <summary>
-    /// Đất trồng cây lâu năm (Mã: CLN)
+    /// Đất trồng cây lâu năm.
     /// </summary>
-    public static readonly LoaiMucDichSuDung CLN = new("CLN", "Đất trồng cây lâu năm");
+    public static readonly LoaiMucDichSuDung DatTrongCayLauNam = new("CLN", "Đất trồng cây lâu năm");
 
     /// <summary>
-    /// Đất trồng lúa nước còn lại (Mã: LUK)
+    /// Đất trồng lúa nước còn lại.
     /// </summary>
-    public static readonly LoaiMucDichSuDung LUK = new("LUK", "Đất trồng lúa nước còn lại");
+    public static readonly LoaiMucDichSuDung DatTrongLuaNuocConLai = new("LUK", "Đất trồng lúa nước còn lại");
 
     /// <summary>
-    /// Đất trồng lúa nương (Mã: LUN)
+    /// Đất trồng lúa nương.
     /// </summary>
-    public static readonly LoaiMucDichSuDung LUN = new("LUN", "Đất trồng lúa nương");
+    public static readonly LoaiMucDichSuDung DatTrongLuaNuong = new("LUN", "Đất trồng lúa nương");
 
     /// <summary>
-    /// Đất xây dựng cơ sở dịch vụ xã hội (Mã: DXH)
+    /// Đất xây dựng cơ sở dịch vụ xã hội.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DXH = new("DXH", "Đất xây dựng cơ sở dịch vụ xã hội");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoDichVuXaHoi = new("DXH", "Đất xây dựng cơ sở dịch vụ xã hội");
 
     /// <summary>
-    /// Đất xây dựng cơ sở giáo dục và đào tạo (Mã: DGD)
+    /// Đất xây dựng cơ sở giáo dục và đào tạo.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DGD = new("DGD", "Đất xây dựng cơ sở giáo dục và đào tạo");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoGiaoDucVaDaoTao = new("DGD", "Đất xây dựng cơ sở giáo dục và đào tạo");
 
     /// <summary>
-    /// Đất xây dựng cơ sở khoa học và công nghệ (Mã: DKH)
+    /// Đất xây dựng cơ sở khoa học và công nghệ.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DKH = new("DKH", "Đất xây dựng cơ sở khoa học và công nghệ");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoKhoaHocVaCongNghe = new("DKH", "Đất xây dựng cơ sở khoa học và công nghệ");
 
     /// <summary>
-    /// Đất xây dựng cơ sở ngoại giao (Mã: DNG)
+    /// Đất xây dựng cơ sở ngoại giao.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DNG = new("DNG", "Đất xây dựng cơ sở ngoại giao");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoNgoaiGiao = new("DNG", "Đất xây dựng cơ sở ngoại giao");
 
     /// <summary>
-    /// Đất xây dựng cơ sở thể dục thể thao (Mã: DTT)
+    /// Đất xây dựng cơ sở thể dục thể thao.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DTT = new("DTT", "Đất xây dựng cơ sở thể dục thể thao");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoTheDucTheThao = new("DTT", "Đất xây dựng cơ sở thể dục thể thao");
 
     /// <summary>
-    /// Đất xây dựng cơ sở văn hóa (Mã: DVH)
+    /// Đất xây dựng cơ sở văn hóa.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DVH = new("DVH", "Đất xây dựng cơ sở văn hóa");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoVanHoa = new("DVH", "Đất xây dựng cơ sở văn hóa");
 
     /// <summary>
-    /// Đất xây dựng cơ sở y tế (Mã: DYT)
+    /// Đất xây dựng cơ sở y tế.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DYT = new("DYT", "Đất xây dựng cơ sở y tế");
+    public static readonly LoaiMucDichSuDung DatXayDungCoSoYTe = new("DYT", "Đất xây dựng cơ sở y tế");
 
     /// <summary>
-    /// Đất xây dựng công trình sự nghiệp khác (Mã: DSK)
+    /// Đất xây dựng công trình sự nghiệp khác.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DSK = new("DSK", "Đất xây dựng công trình sự nghiệp khác");
+    public static readonly LoaiMucDichSuDung DatXayDungCongTrinhSuNghiepKhac = new("DSK", "Đất xây dựng công trình sự nghiệp khác");
 
     /// <summary>
-    /// Đất xây dựng trụ sở cơ quan (Mã: TSC)
+    /// Đất xây dựng trụ sở cơ quan.
     /// </summary>
-    public static readonly LoaiMucDichSuDung TSC = new("TSC", "Đất xây dựng trụ sở cơ quan");
+    public static readonly LoaiMucDichSuDung DatXayDungTruSoCoQuan = new("TSC", "Đất xây dựng trụ sở cơ quan");
 
     /// <summary>
-    /// Đất xây dựng trụ sở của tổ chức sự nghiệp (Mã: DTS)
+    /// Đất xây dựng trụ sở của tổ chức sự nghiệp.
     /// </summary>
-    public static readonly LoaiMucDichSuDung DTS = new("DTS", "Đất xây dựng trụ sở của tổ chức sự nghiệp");
+    public static readonly LoaiMucDichSuDung DatXayDungTruSoCuaToChucSuNghiep = new("DTS", "Đất xây dựng trụ sở của tổ chức sự nghiệp");
 
     /// <summary>
-    /// Núi đá không có rừng cây (Mã: NCS)
+    /// Núi đá không có rừng cây.
     /// </summary>
-    public static readonly LoaiMucDichSuDung NCS = new("NCS", "Núi đá không có rừng cây");
+    public static readonly LoaiMucDichSuDung NuiDaKhongCoRungCay = new("NCS", "Núi đá không có rừng cây");
 
     /// <summary>
     /// Danh sách tất cả các loại mục đích sử dụng đất.
     /// </summary>
-    public static readonly IReadOnlyList<LoaiMucDichSuDung> TatCa =
-    [
-        CAN, DRA, BCS, BHK, DCH, LUC, DDL, DDT, MNC, SKC, TIN, 
-        TON, DBV, DCK, DNL, SKN, DCS, DGT, SKT, SKK, DKV, LMU, 
-        NTD, NKH, NTS, NHK, ODT, ONT, PNK, CQP, RDD, RPH, RSX, 
-        SKX, DSH, SON, SKS, TMD, DTL, CLN, LUK, LUN, DXH, DGD, 
-        DKH, DNG, DTT, DVH, DYT, DSK, TSC, DTS, NCS
-    ];
+    public static readonly IReadOnlyList<LoaiMucDichSuDung> TatCa = new[]
+    {
+        DatAnNinh,
+        DatBaiThaiXuLyChatThai,
+        DatBangChuaSuDung,
+        DatBangTrongCayHangNamKhac,
+        DatCho,
+        DatChuyenTrongLuaNuoc,
+        DatCoDanhLamThangCanh,
+        DatCoDiTichLichSuVanHoa,
+        DatCoMatNuocChuyenDung,
+        DatCoSoSanXuatPhiNongNghiep,
+        DatCoSoTinNguong,
+        DatCoSoTonGiao,
+        DatCongTrinhBuuChinhVienThong,
+        DatCongTrinhCongCongKhac,
+        DatCongTrinhNangLuong,
+        DatCumCongNghiep,
+        DatDoiNuiChuaSuDung,
+        DatGiaoThong,
+        DatKhuCheXuat,
+        DatKhuCongNghiep,
+        DatKhuVuiChoiGiaiTriCongCong,
+        DatLamMuoi,
+        DatLamNghiaTrangNghiaDiaNhaTangLeNhaHoaTang,
+        DatNongNghiepKhac,
+        DatNuoiTrongThuySan,
+        DatNuongRayTrongCayHangNamKhac,
+        DatOTaiDoThi,
+        DatOTaiNongThon,
+        DatPhiNongNghiepKhac,
+        DatQuocPhong,
+        DatRungDacDung,
+        DatRungPhongHo,
+        DatRungSanXuat,
+        DatSanXuatVatLieuXayDungLamDoGom,
+        DatSinhHoatCongDong,
+        DatSongNgoiKenhRachSuoi,
+        DatSuDungChoHoatDongKhoangSan,
+        DatThuongMaiDichVu,
+        DatThuyLoi,
+        DatTrongCayLauNam,
+        DatTrongLuaNuocConLai,
+        DatTrongLuaNuong,
+        DatXayDungCoSoDichVuXaHoi,
+        DatXayDungCoSoGiaoDucVaDaoTao,
+        DatXayDungCoSoKhoaHocVaCongNghe,
+        DatXayDungCoSoNgoaiGiao,
+        DatXayDungCoSoTheDucTheThao,
+        DatXayDungCoSoVanHoa,
+        DatXayDungCoSoYTe,
+        DatXayDungCongTrinhSuNghiepKhac,
+        DatXayDungTruSoCoQuan,
+        DatXayDungTruSoCuaToChucSuNghiep,
+        NuiDaKhongCoRungCay
+    };
 
     /// <summary>
-    /// Lấy mã mục đích sử dụng đất theo tên.
+    /// Tìm mã loại mục đích sử dụng đất theo tên.
     /// </summary>
-    /// <param name="ten">Tên mục đích sử dụng đất</param>
-    /// <returns>Mã mục đích sử dụng đất hoặc null nếu không tìm thấy</returns>
+    /// <param name="ten">Tên loại mục đích sử dụng đất.</param>
+    /// <returns>Mã loại mục đích sử dụng đất hoặc null nếu không tìm thấy.</returns>
     public static string? GetMaByTen(string ten)
     {
-        var item = TatCa.FirstOrDefault(x => x.Ten == ten);
-        return item?.Ma;
+        return TatCa.FirstOrDefault(x => x.Ten.Equals(ten, StringComparison.OrdinalIgnoreCase))?.Ma;
     }
 
     /// <summary>
-    /// Lấy tên mục đích sử dụng đất theo mã.
+    /// Tìm tên loại mục đích sử dụng đất theo mã.
     /// </summary>
-    /// <param name="ma">Mã mục đích sử dụng đất</param>
-    /// <returns>Tên mục đích sử dụng đất hoặc null nếu không tìm thấy</returns>
+    /// <param name="ma">Mã loại mục đích sử dụng đất.</param>
+    /// <returns>Tên loại mục đích sử dụng đất hoặc null nếu không tìm thấy.</returns>
     public static string? GetTenByMa(string ma)
     {
-        var item = TatCa.FirstOrDefault(x => x.Ma == ma);
-        return item?.Ten;
+        return TatCa.FirstOrDefault(x => x.Ma.Equals(ma, StringComparison.OrdinalIgnoreCase))?.Ten;
     }
 }
