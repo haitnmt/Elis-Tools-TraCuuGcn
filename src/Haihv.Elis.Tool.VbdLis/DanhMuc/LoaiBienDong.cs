@@ -1,4 +1,4 @@
-namespace Haihv.Elis.Tool.VbdLis.Models;
+namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 /// <summary>
 /// Loại Biến Động.

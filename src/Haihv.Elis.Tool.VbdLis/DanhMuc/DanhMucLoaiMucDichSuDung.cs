@@ -277,7 +277,11 @@ public static class DanhMucLoaiMucDichSuDung
     /// </summary>
     public static readonly IReadOnlyList<LoaiMucDichSuDung> TatCa =
     [
-        CAN, DRA, BCS, BHK, DCH, LUC, DDL, DDT, MNC, SKC, TIN, TON, DBV, DCK, DNL, SKN, DCS, DGT, SKT, SKK, DKV, LMU, NTD, NKH, NTS, NHK, ODT, ONT, PNK, CQP, RDD, RPH, RSX, SKX, DSH, SON, SKS, TMD, DTL, CLN, LUK, LUN, DXH, DGD, DKH, DNG, DTT, DVH, DYT, DSK, TSC, DTS, NCS
+        CAN, DRA, BCS, BHK, DCH, LUC, DDL, DDT, MNC, SKC, TIN, 
+        TON, DBV, DCK, DNL, SKN, DCS, DGT, SKT, SKK, DKV, LMU, 
+        NTD, NKH, NTS, NHK, ODT, ONT, PNK, CQP, RDD, RPH, RSX, 
+        SKX, DSH, SON, SKS, TMD, DTL, CLN, LUK, LUN, DXH, DGD, 
+        DKH, DNG, DTT, DVH, DYT, DSK, TSC, DTS, NCS
     ];
 
     /// <summary>

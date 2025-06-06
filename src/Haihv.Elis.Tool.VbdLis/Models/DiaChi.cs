@@ -65,15 +65,15 @@ public class DcDiaChi
     /// Tên tỉnh
     /// </summary>
     [XmlElement("tenTinh")]
-    public string? TenTinh { get; set; }
+    public string? TenTinh { get; set; }    /// <summary>
+                                            /// Địa chỉ chi tiết
+                                            /// </summary>
+    [XmlElement("diaChiChiTiet")]
+    public string? DiaChiChiTiet { get; set; }
 
     /// <summary>
-    /// Địa chỉ chi tiết
+    /// Trang
     /// </summary>
-    [XmlElement("diaChiChiTiet")]
-    public string? DiaChiChiTiet { get; set; }    /// <summary>
-                                                  /// Trang
-                                                  /// </summary>
     [XmlAttribute("Trang")]
     public string? Trang { get; set; }
 }

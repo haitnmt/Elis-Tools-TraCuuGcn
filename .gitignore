@@ -131,10 +131,17 @@ lcov.info
 # Backup files
 *.bak
 *.backup
-*.tmp
-*.temp
+
 
 # OS generated files
 Icon?
 .Spotlight-V100
 .Trashes
+
+# Thumbnails
+*.thumb
+
+# Temporary files
+*.tmp
+*.temp
+~$*.xlsx

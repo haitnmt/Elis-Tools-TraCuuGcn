@@ -1,4 +1,4 @@
-namespace Haihv.Elis.Tool.VbdLis.Enums;
+namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 public enum LoaiTaiSan
 {
