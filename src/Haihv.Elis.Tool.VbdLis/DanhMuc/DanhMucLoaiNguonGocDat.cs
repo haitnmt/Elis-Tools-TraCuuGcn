@@ -75,18 +75,16 @@ public static class DanhMucLoaiNguonGocDat
         ThueDatDoanhNghiepDauTuHaTangKhuCongNghiep,
         ThueDatTraTienHangNamDoanhNghiepDauTuHaTang,
         ThueDatTraTienMotLanDoanhNghiepDauTuHaTang
-    };
-
-    /// <summary>
-    /// Lấy mã dân tộc theo tên.
-    /// </summary>
-    /// <para>
-    /// Trả về mã tương ứng với tên dân tộc. Nếu không tìm thấy sẽ trả về null.
-    /// </para>
-    /// <para>
-    /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
-    /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
-    /// </para>
+    };    /// <summary>
+          /// Lấy mã loại nguồn gốc đất theo tên.
+          /// </summary>
+          /// <para>
+          /// Trả về mã tương ứng với tên loại nguồn gốc đất. Nếu không tìm thấy sẽ trả về null.
+          /// </para>
+          /// <para>
+          /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
+          /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
+          /// </para>
     public static string? GetMaByTen(string ten)
     {
         if (string.IsNullOrWhiteSpace(ten))

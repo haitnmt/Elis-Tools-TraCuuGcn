@@ -177,18 +177,16 @@ public static class DanhMucLoaiBienDong
     public static readonly IReadOnlyList<LoaiBienDong> TatCa =
     [
         CL, TL, CT, BN, CD, CP, DC, TG, CM, CN, GK, GT, XN, DG, GA, SN, GH, GP, LK, TQ, VC, TN, TA, SA, DH, HC, DT, TS, TD, TC, TH, TK, XT, XV, XC
-    ];
-
-    /// <summary>
-    /// Lấy mã dân tộc theo tên.
-    /// </summary>
-    /// <para>
-    /// Trả về mã tương ứng với tên dân tộc. Nếu không tìm thấy sẽ trả về null.
-    /// </para>
-    /// <para>
-    /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
-    /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
-    /// </para>
+    ];    /// <summary>
+          /// Lấy mã loại biến động theo tên.
+          /// </summary>
+          /// <para>
+          /// Trả về mã tương ứng với tên loại biến động. Nếu không tìm thấy sẽ trả về null.
+          /// </para>
+          /// <para>
+          /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
+          /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
+          /// </para>
     public static string? GetMaByTen(string ten)
     {
         if (string.IsNullOrWhiteSpace(ten))

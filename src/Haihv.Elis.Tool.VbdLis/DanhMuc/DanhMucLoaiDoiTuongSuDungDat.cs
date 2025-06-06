@@ -122,18 +122,16 @@ public static class DanhMucLoaiDoiTuongSuDungDat
     public static readonly IReadOnlyList<LoaiDoiTuongSuDungDat> TatCa =
     [
         NSD, NQL, UBS, TVN, CDS, UBQ, TKT, CNN, TKQ, TLD, GDC, TCN, NNG, CDQ, TKH, TPQ, TSN, TNG, TVD
-    ];
-
-    /// <summary>
-    /// Lấy mã dân tộc theo tên.
-    /// </summary>
-    /// <para>
-    /// Trả về mã tương ứng với tên dân tộc. Nếu không tìm thấy sẽ trả về null.
-    /// </para>
-    /// <para>
-    /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
-    /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
-    /// </para>
+    ];    /// <summary>
+          /// Lấy mã loại đối tượng sử dụng đất theo tên.
+          /// </summary>
+          /// <para>
+          /// Trả về mã tương ứng với tên loại đối tượng sử dụng đất. Nếu không tìm thấy sẽ trả về null.
+          /// </para>
+          /// <para>
+          /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
+          /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
+          /// </para>
     public static string? GetMaByTen(string ten)
     {
         if (string.IsNullOrWhiteSpace(ten))
