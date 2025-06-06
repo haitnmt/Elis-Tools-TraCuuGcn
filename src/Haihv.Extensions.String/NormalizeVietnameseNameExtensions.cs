@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Haihv.Extensions.String;
 
-public static class NormalizeVietnameseName
+public static class NormalizeVietnameseNameExtensions
 {
     /// <summary>
     /// Chuẩn hóa tên dân tộc để so sánh.

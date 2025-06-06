@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Haihv.Extensions.String\Haihv.Extensions.String.csproj" />
+    </ItemGroup>
+
 </Project>

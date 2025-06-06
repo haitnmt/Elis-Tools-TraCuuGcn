@@ -14,6 +14,7 @@ public class DanhMucDanTocTest
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("Tày"), Is.EqualTo(2));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("H'Mông"), Is.EqualTo(8));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("Ê Đê"), Is.EqualTo(11));
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("Ơ Đu"), Is.EqualTo(53));
         });
     }
     [Test]
@@ -26,7 +27,7 @@ public class DanhMucDanTocTest
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("hmong"), Is.EqualTo(8));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("e de"), Is.EqualTo(11));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("cham"), Is.EqualTo(16));
-            Assert.That(DanhMucLoaiDanToc.GetMaByTen("Ơ Đu"), Is.EqualTo(53));
+            Assert.That(DanhMucLoaiDanToc.GetMaByTen("chut"), Is.EqualTo(43));
             Assert.That(DanhMucLoaiDanToc.GetMaByTen("o du"), Is.EqualTo(53));
         });
     }

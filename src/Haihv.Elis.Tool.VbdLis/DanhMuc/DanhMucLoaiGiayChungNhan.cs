@@ -1,4 +1,5 @@
 using Haihv.Elis.Tool.VbdLis.Models;
+using Haihv.Extensions.String;
 
 namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
@@ -82,14 +83,22 @@ public static class DanhMucLoaiGiayChungNhan
     ];
 
     /// <summary>
-    /// Lấy mã loại giấy chứng nhận theo tên.
+    /// Lấy mã dân tộc theo tên.
     /// </summary>
-    /// <param name="ten">Tên loại giấy chứng nhận</param>
-    /// <returns>Mã loại giấy chứng nhận, trả về 0 nếu không tìm thấy</returns>
-    public static int GetMaByTen(string ten)
+    /// <para>
+    /// Trả về mã tương ứng với tên dân tộc. Nếu không tìm thấy sẽ trả về null.
+    /// </para>
+    /// <para>
+    /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
+    /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
+    /// </para>
+    public static int? GetMaByTen(string ten)
     {
-        var item = TatCa.FirstOrDefault(x => x.Ten == ten);
-        return item?.Ma ?? 0;
+        if (string.IsNullOrWhiteSpace(ten))
+            return null;
+
+        var normalizedInput = ten.NormalizeVietnameseName();
+        return TatCa.FirstOrDefault(x => x.Ten.NormalizeVietnameseName() == normalizedInput)?.Ma;
     }
 
     /// <summary>

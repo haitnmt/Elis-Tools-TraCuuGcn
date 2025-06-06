@@ -1,3 +1,5 @@
+using Haihv.Extensions.String;
+
 namespace Haihv.Elis.Tool.VbdLis.DanhMuc;
 
 /// <summary>
@@ -265,13 +267,22 @@ public static class DanhMucLoaiMucDichSuDungQuyHoach
     };
 
     /// <summary>
-    /// Tìm mã loại mục đích sử dụng quy hoạch theo tên.
+    /// Lấy mã dân tộc theo tên.
     /// </summary>
-    /// <param name="ten">Tên loại mục đích sử dụng quy hoạch.</param>
-    /// <returns>Mã loại mục đích sử dụng quy hoạch hoặc null nếu không tìm thấy.</returns>
+    /// <para>
+    /// Trả về mã tương ứng với tên dân tộc. Nếu không tìm thấy sẽ trả về null.
+    /// </para>
+    /// <para>
+    /// Phương thức này không phân biệt chữ hoa/thường, bỏ qua dấu cách và ký tự đặc biệt,
+    /// đồng thời chuẩn hóa các ký tự tiếng Việt (ví dụ: â, ă = a).
+    /// </para>
     public static string? GetMaByTen(string ten)
     {
-        return TatCa.FirstOrDefault(x => x.Ten.Equals(ten, StringComparison.OrdinalIgnoreCase))?.Ma;
+        if (string.IsNullOrWhiteSpace(ten))
+            return null;
+
+        var normalizedInput = ten.NormalizeVietnameseName();
+        return TatCa.FirstOrDefault(x => x.Ten.NormalizeVietnameseName() == normalizedInput)?.Ma;
     }
 
     /// <summary>
