@@ -26,8 +26,8 @@
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.12.0" />
         <PackageReference Include="Serilog.Extensions" Version="8.0.3" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
-        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.2.0" />
-        <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.2.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.3.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.3.0" />
     </ItemGroup>
     
     <ItemGroup>

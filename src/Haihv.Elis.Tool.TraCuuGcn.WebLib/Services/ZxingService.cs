@@ -13,10 +13,10 @@ public class ZxingService(IJSRuntime jsRuntime) : IAsyncDisposable
     private bool _isInitialized;
     private bool _isCheckedCamera;
     private bool _hasCamera;
-    private readonly string _urlZxingJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing/zxing.min.js" 
+    private readonly string _urlZxingJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScanner/zxing.min.js" 
                                           + "?v=" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     //private const string UrlZxingJs = "https://unpkg.com/@zxing/library@latest/umd/index.min.js";
-    private readonly string _urlBarcodeScannerJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/zxing/barcodeScannerZxing.js" + 
+    private readonly string _urlBarcodeScannerJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScanner/barcodeScannerZxing.js" + 
                                                    "?v=" + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     public async Task InitializeAsync()
     {

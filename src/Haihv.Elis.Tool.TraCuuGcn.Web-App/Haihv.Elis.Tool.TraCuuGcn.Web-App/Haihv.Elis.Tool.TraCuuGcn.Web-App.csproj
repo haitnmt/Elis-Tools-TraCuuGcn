@@ -17,8 +17,8 @@
         <PackageReference Include="Aspire.StackExchange.Redis.DistributedCaching" Version="9.3.0" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.5" />
         <PackageReference Include="Microsoft.Extensions.ServiceDiscovery.Yarp" Version="9.3.0" />
-        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.2.0" />
-        <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.2.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache" Version="2.3.0" />
+        <PackageReference Include="ZiggyCreatures.FusionCache.Serialization.SystemTextJson" Version="2.3.0" />
         <ProjectReference Include="..\..\ Haihv.Elis.Tool.TraCuuGcn.Extensions\Haihv.Elis.Tool.TraCuuGcn.Extensions.csproj" />
         <ProjectReference Include="..\..\ServiceDefaults\ServiceDefaults.csproj" />
         <ProjectReference Include="..\Haihv.Elis.Tool.TraCuuGcn.Web-App.Client\Haihv.Elis.Tool.TraCuuGcn.Web-App.Client.csproj" />

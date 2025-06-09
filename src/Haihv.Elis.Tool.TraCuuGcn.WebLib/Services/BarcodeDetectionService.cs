@@ -11,9 +11,9 @@ public class BarcodeDetectionService(IJSRuntime jsRuntime) : IAsyncDisposable
     private IJSObjectReference? _module;
 
     // Khởi tạo module JavaScript
-    private readonly string _urlBarcodeDetectionJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/BarcodeDetection/barcodeDetection.js" + "?v=" 
+    private readonly string _urlBarcodeDetectionJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScanner/barcodeScanner.js" + "?v=" 
         + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-    private readonly string _urlPolyfillJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/BarcodeDetection/polyfill.js" + "?v=" 
+    private readonly string _urlPolyfillJs = "./_content/Haihv.Elis.Tool.TraCuuGcn.WebLib/barcodeScanner/polyfill.js" + "?v=" 
         + System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
     public async Task InitializeAsync()
     {
